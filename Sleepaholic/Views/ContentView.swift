@@ -17,21 +17,8 @@ struct ContentView: View {
     var body: some View {
         VStack {
             // Header
-            HStack {
-                Text("Sleepaholic")
-                    .font(.title)
-                    .fontWeight(.bold)
-                
-                Spacer()
-                
-                Button(action: {
-                    // Settings action
-                }) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title2)
-                }
+            HeaderView {
             }
-            .padding()
             
             Spacer()
             
