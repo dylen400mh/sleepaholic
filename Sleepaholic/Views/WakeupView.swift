@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct WakeupView: View {
+    var resetToHome: () -> Void
     @State private var manualWakeTime = Date()
     
     var body: some View {
@@ -16,57 +17,41 @@ struct WakeupView: View {
             HeaderView {
                 // Settings action
             }
-            
             Spacer()
             
-            // Main text
             VStack(spacing: 16) {
                 Text("Log Wake Up")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
                 Text("Confirm your wake up time")
-                    .font(.body)
                     .foregroundColor(.gray)
             }
             .padding(.bottom, 30)
             
-            // Primary action button
-            Button(action: {
-                // Log current time action
-            }) {
-                Text("Log Current Time")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
+            Button("Log Current Time") {
+                resetToHome() // 🚀 jump back to home
             }
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+            .padding(.horizontal)
             .padding(.bottom, 40)
             
-            // Manual entry section
             VStack(spacing: 12) {
                 Text("Forgot to log? Enter manually")
-                    .font(.subheadline)
                     .foregroundColor(.gray)
                 
-                DatePicker(
-                    "",
-                    selection: $manualWakeTime,
-                    displayedComponents: [.hourAndMinute]
-                )
-                .labelsHidden()
-                .datePickerStyle(.wheel)
+                DatePicker("", selection: $manualWakeTime, displayedComponents: [.hourAndMinute])
+                    .labelsHidden()
+                    .datePickerStyle(.wheel)
                 
-                Button(action: {
-                    // Log manual time action
-                }) {
-                    Text("Log Manually")
-                        .font(.subheadline)
-                        .foregroundColor(.blue)
+                Button("Log Manually") {
+                    resetToHome() // 🚀 same behavior
                 }
+                .foregroundColor(.blue)
             }
             .padding(.horizontal)
             
@@ -76,5 +61,7 @@ struct WakeupView: View {
 }
 
 #Preview {
-    WakeupView()
+    WakeupView(resetToHome: {})
 }
+
+

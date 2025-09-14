@@ -13,9 +13,7 @@ struct BedtimeView: View {
             // Header
             HeaderView {
             }
-            
             Spacer()
-            
             // Main text
             VStack(spacing: 16) {
                 Text("Bedtime in progress")
@@ -35,10 +33,7 @@ struct BedtimeView: View {
             
             Spacer()
             
-            // Wake up button
-            Button(action: {
-                // Log wake up action
-            }) {
+            NavigationLink(value: Screen.wakeup) {
                 Text("Log Wake Up")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
@@ -50,10 +45,15 @@ struct BedtimeView: View {
             }
             .padding(.bottom, 30)
         }
+        .navigationBarBackButtonHidden(true)
     }
 }
 
 #Preview {
-    BedtimeView()
+    NavigationStack {
+        BedtimeView()
+    }
 }
+
+
 

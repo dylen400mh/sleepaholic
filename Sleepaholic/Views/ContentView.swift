@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ContentView: View {
-    // Example placeholder values
     @State private var streakDays = 5
     @State private var lastSleep = "11:00 PM → 7:00 AM (8h)"
     @State private var sleepDebt = "6h 30m"
@@ -19,38 +18,27 @@ struct ContentView: View {
             // Header
             HeaderView {
             }
-            
             Spacer()
             
-            // Streak
-            HStack {
-                Text("🔥 \(streakDays) day streak")
-                    .font(.headline)
-            }
-            
-            // Last sleep
+            Text("🔥 \(streakDays) day streak")
             Text("Last sleep: \(lastSleep)")
-                .font(.subheadline)
                 .foregroundColor(.gray)
-                .padding(.top, 4)
             
             Spacer()
             
-            // Circular progress bar with sleep debt inside
             ZStack {
                 Circle()
                     .stroke(Color.gray.opacity(0.2), lineWidth: 20)
                     .frame(width: 200, height: 200)
                 
                 Circle()
-                    .trim(from: 0.0, to: 0.7) // Placeholder progress
+                    .trim(from: 0.0, to: 0.7)
                     .stroke(Color.blue, style: StrokeStyle(lineWidth: 20, lineCap: .round))
                     .frame(width: 200, height: 200)
                     .rotationEffect(.degrees(-90))
                 
                 VStack {
                     Text("Your sleep debt is:")
-                        .font(.subheadline)
                         .foregroundColor(.gray)
                     Text(sleepDebt)
                         .font(.title2)
@@ -59,19 +47,14 @@ struct ContentView: View {
             }
             .padding(.top, 20)
             
-            // Recommendation
             Text(recommendation)
-                .font(.body)
                 .multilineTextAlignment(.center)
                 .padding(.top, 16)
                 .padding(.horizontal)
             
             Spacer()
             
-            // Bedtime button
-            Button(action: {
-                // Start bedtime action
-            }) {
+            NavigationLink(value: Screen.bedtime) {
                 Text("Start Bedtime")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
@@ -87,6 +70,11 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    NavigationStack {
+        ContentView()
+    }
 }
+
+
+
 
