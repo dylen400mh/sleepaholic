@@ -69,13 +69,15 @@ struct WindDownView: View {
                     Section {
                         Text("Meditation")
                             .font(.headline)
-                        Button("Start Meditation") {
-                            
+                        NavigationLink {
+                            MeditationView()
+                        } label: {
+                            Text("Start Meditation")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(12)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(12)
                     }
                     
                     // Sleep Tracking
