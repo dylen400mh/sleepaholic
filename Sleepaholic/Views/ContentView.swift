@@ -193,6 +193,7 @@ struct ContentView: View {
                     Divider()
                     NavigationLink {
                         WindDownView()
+                            .environmentObject(WindDownManager())
                     } label: {
                         Text(windDown.isActive ? "Continue Wind Down" : "Start Wind Down")
                             .font(.headline)

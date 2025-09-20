@@ -8,31 +8,66 @@
 import SwiftUI
 
 struct BedtimeView: View {
+    @EnvironmentObject var windDown: WindDownManager
+    @State private var goHome = false
+
     var body: some View {
-        VStack {
-            // Header
-            HeaderView {
-            }
+        VStack(spacing: 20) {
+            Text("Sleepaholic")
+                .font(.title)
+                .fontWeight(.bold)
+                .padding(.top)
+            
             Spacer()
-            // Main text
-            VStack(spacing: 16) {
+            
+            VStack(spacing: 20) {
                 Text("Bedtime in progress")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
-                Text("Your phone is restricted until you wake up")
+
+                Text("Target wake-up time: \(windDown.targetWakeup.formatted(date: .omitted, time: .shortened))")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+
+                Text("Your phone is in Sleep Mode")
                     .font(.body)
                     .foregroundColor(.gray)
-                
-                Text("Grayscale • Do Not Disturb • Low Brightness • Non-Essential Apps Disabled")
-                    .font(.subheadline)
-                    .multilineTextAlignment(.center)
+
+                if windDown.trackSleep {
+                    Text("Tracking sleep sounds…")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                if !windDown.selectedSounds.isEmpty {
+                    HStack {
+                        Text("Now Playing: \(windDown.selectedSounds.joined(separator: ", "))")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                        Spacer()
+                        Button(action: { windDown.isPlaying.toggle() }) {
+                            Image(systemName: windDown.isPlaying ? "pause.fill" : "play.fill")
+                        }
+                    }
                     .padding(.horizontal)
-                    .foregroundColor(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("The following features have been enabled to support your sleep:")
+                        .font(.headline)
+                        .padding(.top)
+
+                    if windDown.grayscale { Text("• Grayscale") }
+                    if windDown.doNotDisturb { Text("• Do Not Disturb") }
+                    if windDown.lowBrightness { Text("• Low Brightness") }
+                    if windDown.restrictApps { Text("• Non-Essential Apps Disabled") }
+                }
+                .padding(.horizontal)
             }
-            
+
             Spacer()
-            
+
+            // Log wake up button
             NavigationLink {
                 WakeupView()
             } label: {
@@ -45,17 +80,31 @@ struct BedtimeView: View {
                     .cornerRadius(12)
                     .padding(.horizontal)
             }
-            .padding(.bottom, 30)
+
+            // Quit link
+            Button("Quit") {
+                windDown.reset()
+                goHome = true
+            }
+            .foregroundColor(.red)
+            .padding(.bottom, 20)
         }
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $goHome) {
+            ContentView()
+                .navigationBarBackButtonHidden(true)
+                .environmentObject(WindDownManager())
+        }
     }
 }
 
 #Preview {
     NavigationStack {
         BedtimeView()
+            .environmentObject(WindDownManager())
     }
 }
+
 
 
 
