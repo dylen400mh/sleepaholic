@@ -33,7 +33,9 @@ struct BedtimeView: View {
             
             Spacer()
             
-            NavigationLink(value: Screen.wakeup) {
+            NavigationLink {
+                WakeupView()
+            } label: {
                 Text("Log Wake Up")
                     .font(.headline)
                     .frame(maxWidth: .infinity)

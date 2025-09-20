@@ -189,7 +189,9 @@ struct ContentView: View {
                 Spacer()
                 VStack(spacing: 0) {
                     Divider()
-                    NavigationLink(value: Screen.bedtime) {
+                    NavigationLink {
+                        BedtimeView()
+                    } label: {
                         Text("Start Wind Down")
                             .font(.headline)
                             .frame(maxWidth: .infinity)

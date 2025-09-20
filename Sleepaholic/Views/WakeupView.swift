@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct WakeupView: View {
-    var resetToHome: () -> Void
     @State private var manualWakeTime = Date()
+    @State private var goHome = false
     
     var body: some View {
         VStack {
@@ -29,7 +29,7 @@ struct WakeupView: View {
             .padding(.bottom, 30)
             
             Button("Log Current Time") {
-                resetToHome() // 🚀 jump back to home
+                goHome = true
             }
             .font(.headline)
             .frame(maxWidth: .infinity)
@@ -49,7 +49,7 @@ struct WakeupView: View {
                     .datePickerStyle(.wheel)
                 
                 Button("Log Manually") {
-                    resetToHome() // 🚀 same behavior
+                    goHome = true
                 }
                 .foregroundColor(.blue)
             }
@@ -57,11 +57,16 @@ struct WakeupView: View {
             
             Spacer()
         }
+        .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $goHome) {
+            ContentView()
+                .navigationBarBackButtonHidden(true)
+        }
     }
 }
 
 #Preview {
-    WakeupView(resetToHome: {})
+    WakeupView()
 }
 
 
