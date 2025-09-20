@@ -32,32 +32,27 @@ struct LogActivityView: View {
             
             Spacer()
             
-            // Buttons for activity types
             VStack(spacing: 16) {
-                Button("☕️ Caffeine") {
-                    // Handle caffeine logging
-                }
-                .activityButtonStyle()
+                Text("Select the activity you wish to log:")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .padding(.bottom, 8)
                 
-                Button("🏋️‍♂️ Workout") {
-                    // Handle workout logging
+                NavigationLink(destination: LogCaffeineView()) {
+                    Text("☕️ Caffeine").activityButtonStyle()
                 }
-                .activityButtonStyle()
-                
-                Button("🍷 Alcohol") {
-                    // Handle alcohol logging
+                NavigationLink(destination: LogWorkoutView()) {
+                    Text("🏋️‍♂️ Workout").activityButtonStyle()
                 }
-                .activityButtonStyle()
-                
-                Button("💊 Medication") {
-                    // Handle medication logging
+                NavigationLink(destination: LogAlcoholView()) {
+                    Text("🍷 Alcohol").activityButtonStyle()
                 }
-                .activityButtonStyle()
-                
-                Button("😴 Nap") {
-                    // Handle nap logging
+                NavigationLink(destination: LogMedicationView()) {
+                    Text("💊 Medication").activityButtonStyle()
                 }
-                .activityButtonStyle()
+                NavigationLink(destination: LogNapView()) {
+                    Text("😴 Nap").activityButtonStyle()
+                }
             }
             .padding(.horizontal, 20)
             
@@ -68,7 +63,7 @@ struct LogActivityView: View {
 }
 
 // MARK: - Reusable style
-extension Button {
+extension Text {
     func activityButtonStyle() -> some View {
         self.font(.headline)
             .frame(maxWidth: .infinity)
@@ -79,5 +74,7 @@ extension Button {
 }
 
 #Preview {
-    LogActivityView()
+    NavigationStack {
+        LogActivityView()
+    }
 }
