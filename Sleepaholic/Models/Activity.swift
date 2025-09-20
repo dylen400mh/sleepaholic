@@ -7,16 +7,16 @@
 
 import Foundation
 
-struct Activity: Identifiable {
-    let id = UUID()
-    var type: ActivityType
+struct Activity: Identifiable, Codable {
+    var id: String = UUID().uuidString
+    var type: String
     var loggedAt: Date
-}
-
-enum ActivityType {
-    case caffeine(kind: String, amount: String)
-    case workout(kind: String, otherDescription: String?, duration: TimeInterval)
-    case alcohol(drinks: Int)
-    case medication(name: String, dosage: String)
-    case nap(start: Date, end: Date)
+    var kind: String?
+    var otherDescription: String?
+    var amountMg: Int?
+    var durationMin: Int?
+    var drinks: Int?
+    var medication: String?
+    var start: Date?
+    var end: Date?
 }

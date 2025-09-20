@@ -18,29 +18,36 @@ struct ContentView: View {
     
     @State private var activities: [Activity] = [
         Activity(
-            type: .caffeine(kind: "Caffeine Pill", amount: "200mg"),
-            loggedAt: Calendar.current.date(bySettingHour: 17, minute: 30, second: 0, of: Date())!
+            type: "caffeine",
+            loggedAt: Calendar.current.date(bySettingHour: 17, minute: 30, second: 0, of: Date())!,
+            kind: "Caffeine Pill",
+            amountMg: 200
         ),
         Activity(
-            type: .workout(kind: "Strength", otherDescription: nil, duration: 1800),
-            loggedAt: Calendar.current.date(bySettingHour: 19, minute: 0, second: 0, of: Date())!
+            type: "workout",
+            loggedAt: Calendar.current.date(bySettingHour: 19, minute: 0, second: 0, of: Date())!,
+            kind: "Strength",
+            durationMin: 30 // minutes
         ),
         Activity(
-            type: .alcohol(drinks: 2),
-            loggedAt: Calendar.current.date(bySettingHour: 21, minute: 0, second: 0, of: Date())!
+            type: "alcohol",
+            loggedAt: Calendar.current.date(bySettingHour: 21, minute: 0, second: 0, of: Date())!,
+            drinks: 2
         ),
         Activity(
-            type: .medication(name: "Melatonin", dosage: "3mg"),
-            loggedAt: Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date())!
+            type: "medication",
+            loggedAt: Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date())!,
+            amountMg: 3,
+            medication: "Melatonin"
         ),
         Activity(
-            type: .nap(
-                start: Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!,
-                end: Calendar.current.date(bySettingHour: 14, minute: 30, second: 0, of: Date())!
-            ),
-            loggedAt: Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!
+            type: "nap",
+            loggedAt: Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!,
+            start: Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!,
+            end: Calendar.current.date(bySettingHour: 14, minute: 30, second: 0, of: Date())!
         )
     ]
+
     
     var body: some View {
         ZStack {
@@ -126,45 +133,7 @@ struct ContentView: View {
                             }
 
                             ForEach(activities) { activity in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    switch activity.type {
-                                    case .caffeine(let kind, let amount):
-                                        Text("☕️ Caffeine - \(activity.loggedAt.formatted(date: .omitted, time: .shortened))")
-                                            .fontWeight(.semibold)
-                                        Text("\(kind), \(amount)")
-                                            .foregroundColor(.gray)
-                                            .font(.subheadline)
-
-                                    case .workout(let kind, let other, let duration):
-                                        Text("🏋️‍♂️ Workout - \(activity.loggedAt.formatted(date: .omitted, time: .shortened))")
-                                            .fontWeight(.semibold)
-                                        Text("\(kind)\(other != nil ? " (\(other!))" : ""), \(Int(duration / 60)) min")
-                                            .foregroundColor(.gray)
-                                            .font(.subheadline)
-
-                                    case .alcohol(let drinks):
-                                        Text("🍷 Alcohol - \(activity.loggedAt.formatted(date: .omitted, time: .shortened))")
-                                            .fontWeight(.semibold)
-                                        Text("\(drinks) drinks")
-                                            .foregroundColor(.gray)
-                                            .font(.subheadline)
-
-                                    case .medication(let name, let dosage):
-                                        Text("💊 Medication - \(activity.loggedAt.formatted(date: .omitted, time: .shortened))")
-                                            .fontWeight(.semibold)
-                                        Text("\(name), \(dosage)")
-                                            .foregroundColor(.gray)
-                                            .font(.subheadline)
-
-                                    case .nap(let start, let end):
-                                        Text("😴 Nap")
-                                            .fontWeight(.semibold)
-                                        Text("\(start.formatted(date: .omitted, time: .shortened)) → \(end.formatted(date: .omitted, time: .shortened))")
-                                            .foregroundColor(.gray)
-                                            .font(.subheadline)
-                                    }
-                                }
-                                .padding(.vertical, 4)
+                                ActivityRow(activity: activity)
                             }
                         }
                         .padding(.horizontal)
