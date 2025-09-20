@@ -111,13 +111,16 @@ struct ContentView: View {
                                 Text("Today's Activities")
                                     .font(.headline)
                                 Spacer()
-                                Button("Log Activity") {
-                                    // action
+                                NavigationLink {
+                                    LogActivityView()
+                                } label: {
+                                    Text("Log Activity")
+                                        .font(.subheadline)
+                                        .padding(6)
+                                        .background(Color.blue.opacity(0.1))
+                                        .cornerRadius(8)
                                 }
-                                .font(.subheadline)
-                                .padding(6)
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(8)
+
                             }
 
                             ForEach(activities) { activity in
