@@ -9,11 +9,14 @@ import SwiftUI
 
 @main
 struct SleepaholicApp: App {
+    @StateObject private var windDownManager = WindDownManager()
+    
     var body: some Scene {
         WindowGroup {
             NavigationStack {
                 ContentView()
             }
+            .environmentObject(windDownManager)
         }
     }
 }

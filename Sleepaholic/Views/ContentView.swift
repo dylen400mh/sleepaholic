@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var windDown: WindDownManager
+    
     @State private var streakDays = 5
     @State private var lastSleep = "11:00 PM → 7:00 AM (8h)"
     @State private var sleepQuality: Int = 82
@@ -190,9 +192,9 @@ struct ContentView: View {
                 VStack(spacing: 0) {
                     Divider()
                     NavigationLink {
-                        BedtimeView()
+                        WindDownView()
                     } label: {
-                        Text("Start Wind Down")
+                        Text(windDown.isActive ? "Continue Wind Down" : "Start Wind Down")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -215,6 +217,7 @@ struct ContentView: View {
     NavigationStack {
         ContentView()
     }
+    .environmentObject(WindDownManager())
 }
 
 
