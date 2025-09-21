@@ -8,23 +8,33 @@
 import Foundation
 import FirebaseFirestore
 
-class FirestoreService {
-    static let shared = FirestoreService() // singleton for convenience
+final class FirestoreService {
+    static let shared = FirestoreService()
     private let db = Firestore.firestore()
 
     private init() {}
 
-    // MARK: - Test method
-    func addTestMessage() {
-        db.collection("test").addDocument(data: [
-            "message": "Hello Firebase!",
-            "timestamp": Date()
-        ]) { error in
-            if let error = error {
-                print("❌ Error writing test message: \(error)")
-            } else {
-                print("✅ Test message successfully written!")
-            }
-        }
+    // MARK: - Create / Update
+    func save<T: Codable & Identifiable>(_ item: T,
+                                         to collection: String) async throws {
+        let id = String(describing: item.id) // ensure String id
+        try db.collection(collection).document(id).setData(from: item, merge: true)
+    }
+
+    // MARK: - Read All
+    func fetchAll<T: Codable>(from collection: String) async throws -> [T] {
+        let snapshot = try await db.collection(collection).getDocuments()
+        return snapshot.documents.compactMap { try? $0.data(as: T.self) }
+    }
+
+    // MARK: - Read One
+    func fetch<T: Codable>(from collection: String, id: String) async throws -> T? {
+        let snapshot = try await db.collection(collection).document(id).getDocument()
+        return try snapshot.data(as: T.self)
+    }
+
+    // MARK: - Delete
+    func delete(from collection: String, id: String) async throws {
+        try await db.collection(collection).document(id).delete()
     }
 }
