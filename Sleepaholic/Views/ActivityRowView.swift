@@ -30,7 +30,7 @@ struct ActivityRow: View {
             case "alcohol":
                 Text("🍷 Alcohol - \(activity.loggedAt.formatted(date: .omitted, time: .shortened))")
                     .fontWeight(.semibold)
-                Text("\(activity.drinks ?? 0) drinks")
+                Text("\(activity.drinks ?? 0) drink\( (activity.drinks ?? 0) == 1 ? "" : "s")")
                     .foregroundColor(.gray)
                     .font(.subheadline)
 
