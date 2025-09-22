@@ -6,9 +6,11 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 struct SleepLog: Identifiable, Codable {
-    var id: String
+    @DocumentID var documentId: String?
+    var id: String { documentId ?? UUID().uuidString }
     var start: Date
     var end: Date
 }

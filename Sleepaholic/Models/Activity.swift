@@ -6,9 +6,11 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 struct Activity: Identifiable, Codable {
-    var id: String = UUID().uuidString
+    @DocumentID var documentId: String?
+    var id: String { documentId ?? UUID().uuidString }
     var type: String
     var loggedAt: Date
     var kind: String?

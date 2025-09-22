@@ -16,39 +16,8 @@ struct ContentView: View {
     @State private var sleepDebt = "6h 30m"
     @State private var recommendation = "Try going to bed 30 minutes earlier tonight."
     
-    @State private var activities: [Activity] = [
-        Activity(
-            type: "caffeine",
-            loggedAt: Calendar.current.date(bySettingHour: 17, minute: 30, second: 0, of: Date())!,
-            kind: "Caffeine Pill",
-            amountMg: 200
-        ),
-        Activity(
-            type: "workout",
-            loggedAt: Calendar.current.date(bySettingHour: 19, minute: 0, second: 0, of: Date())!,
-            kind: "Strength",
-            durationMin: 30 // minutes
-        ),
-        Activity(
-            type: "alcohol",
-            loggedAt: Calendar.current.date(bySettingHour: 21, minute: 0, second: 0, of: Date())!,
-            drinks: 2
-        ),
-        Activity(
-            type: "medication",
-            loggedAt: Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date())!,
-            amountMg: 3,
-            medication: "Melatonin"
-        ),
-        Activity(
-            type: "nap",
-            loggedAt: Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!,
-            start: Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!,
-            end: Calendar.current.date(bySettingHour: 14, minute: 30, second: 0, of: Date())!
-        )
-    ]
+    @StateObject private var activityViewModel = ActivityViewModel()
 
-    
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -132,7 +101,7 @@ struct ContentView: View {
 
                             }
 
-                            ForEach(activities) { activity in
+                            ForEach(activityViewModel.activities) { activity in
                                 ActivityRow(activity: activity)
                             }
                         }
@@ -178,8 +147,10 @@ struct ContentView: View {
                 .background(Color(.systemBackground)) // solid footer background
             }
         }
+        .task {
+            await activityViewModel.loadActivities()
+        }
     }
-
 }
 
 

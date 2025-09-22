@@ -6,9 +6,11 @@
 //
 
 import Foundation
+import FirebaseFirestore
 
 struct UserSettings: Identifiable, Codable {
-    var id: String
+    @DocumentID var documentId: String?
+    var id: String { documentId ?? UUID().uuidString }
     var bedtime: Date
     var wakeUpTime: Date
     var trackSleep: Bool

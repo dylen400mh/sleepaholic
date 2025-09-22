@@ -6,24 +6,30 @@
 //
 
 import Foundation
+import FirebaseAuth
 
 @MainActor
 final class ActivityViewModel: ObservableObject {
     @Published var activities: [Activity] = []
     private let service = FirestoreService.shared
-    private let collection = "activities"
+    
+    private func path(for userId: String) -> String {
+            return "users/\(userId)/activities"
+        }
 
     func loadActivities() async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            activities = try await service.fetchAll(from: collection)
+            activities = try await service.fetchAll(from: path(for: uid))
         } catch {
             print("Error loading activities: \(error)")
         }
     }
 
     func addActivity(_ activity: Activity) async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            try await service.save(activity, to: collection)
+            try await service.save(activity, to: path(for: uid))
             await loadActivities()
         } catch {
             print("Error saving activity: \(error)")
@@ -31,8 +37,9 @@ final class ActivityViewModel: ObservableObject {
     }
 
     func deleteActivity(_ activity: Activity) async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            try await service.delete(from: collection, id: activity.id)
+            try await service.delete(from: path(for: uid), id: activity.id)
             await loadActivities()
         } catch {
             print("Error deleting activity: \(error)")
