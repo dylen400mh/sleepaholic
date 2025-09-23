@@ -11,6 +11,9 @@ struct LogAlcoholView: View {
     @State private var drinks = 1
     @State private var time = Date()
     
+    @State private var goHome = false
+    @EnvironmentObject var activityViewModel: ActivityViewModel
+    
     var body: some View {
         VStack {
             FormHeader(title: "Log Alcohol")
@@ -22,23 +25,42 @@ struct LogAlcoholView: View {
             
             Spacer()
             
-            Button("Save") {
-                // TODO: Save activity
+            Button(action: {
+                Task {
+                    let newActivity = Activity(
+                        type: "alcohol",
+                        loggedAt: time,
+                        drinks: drinks
+                    )
+                    await activityViewModel.addActivity(newActivity)
+                    goHome = true
+                }
+            }) {
+                Text("Save")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                    .contentShape(Rectangle())
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-            .padding(.horizontal)
-            .padding(.bottom, 20)
         }
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $goHome) {
+            ContentView()
+                .navigationBarBackButtonHidden(true)
+                .environmentObject(WindDownManager())
+        }
     }
 }
 
 
 #Preview {
-    LogAlcoholView()
+    NavigationStack {
+        LogAlcoholView()
+            .environmentObject(ActivityViewModel())
+    }
 }

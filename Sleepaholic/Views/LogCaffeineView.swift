@@ -22,6 +22,9 @@ struct LogCaffeineView: View {
         "Other": 0
     ]
     
+    @State private var goHome = false
+    @EnvironmentObject var activityViewModel: ActivityViewModel
+    
     var body: some View {
         VStack {
             FormHeader(title: "Log Caffeine")
@@ -42,6 +45,10 @@ struct LogCaffeineView: View {
                     }
                 }
                 
+                if selectedKind == "Other" {
+                    TextField("Enter description", text: $customKind)
+                }
+                
                 // Amount (numbers only)
                 HStack {
                     Text("Amount (mg)")
@@ -57,22 +64,42 @@ struct LogCaffeineView: View {
             
             Spacer()
             
-            Button("Save") {
-                let finalKind = selectedKind == "Other" ? customKind : selectedKind
-                let finalAmount = Int(amount) ?? 0
-                print("Saved Caffeine: \(finalKind), \(finalAmount)mg at \(time)")
-                // TODO: Save activity
+            Button(action: {
+                Task {
+                    let finalKind = selectedKind
+                    let finalOtherDescription = selectedKind == "Other" ? customKind : nil
+                    let finalAmount = Int(amount) ?? 0
+                    
+                    let newActivity = Activity(
+                        type: "caffeine",
+                        loggedAt: time,
+                        kind: finalKind,
+                        otherDescription: finalOtherDescription,
+                        amountMg: finalAmount
+                    )
+                    
+                    await activityViewModel.addActivity(newActivity)
+                    goHome = true
+                }
+            }) {
+                Text("Save")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                    .contentShape(Rectangle())
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-            .padding(.horizontal)
-            .padding(.bottom, 20)
         }
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $goHome) {
+            ContentView()
+                .navigationBarBackButtonHidden(true)
+                .environmentObject(WindDownManager())
+        }
         .onAppear {
             // Pre-populate when view first loads
             if let defaultAmount = caffeineOptions[selectedKind] {
@@ -83,5 +110,8 @@ struct LogCaffeineView: View {
 }
 
 #Preview {
-    LogCaffeineView()
+    NavigationStack {
+        LogCaffeineView()
+            .environmentObject(ActivityViewModel())
+    }
 }
