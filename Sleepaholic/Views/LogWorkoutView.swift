@@ -39,19 +39,23 @@ struct LogWorkoutView: View {
             
             Spacer()
             
-            Button("Save") {
+            Button(action: {
                 let finalType = selectedType == "Other" ? otherDescription : selectedType
                 print("Saved Workout: \(finalType), \(duration) min at \(time)")
                 // TODO: Save activity
+            }) {
+                Text("Save")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                    .contentShape(Rectangle())
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-            .padding(.horizontal)
-            .padding(.bottom, 20)
+
         }
         .navigationBarBackButtonHidden(true)
     }

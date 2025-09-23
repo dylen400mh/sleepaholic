@@ -33,19 +33,22 @@ struct LogMedicationView: View {
             
             Spacer()
             
-            Button("Save") {
+            Button(action: {
                 let finalDosage = Int(dosage) ?? 0
                 print("Saved Medication: \(name), \(finalDosage)mg at \(time)")
                 // TODO: Save activity
+            }) {
+                Text("Save")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                    .contentShape(Rectangle())
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-            .padding(.horizontal)
-            .padding(.bottom, 20)
         }
         .navigationBarBackButtonHidden(true)
     }

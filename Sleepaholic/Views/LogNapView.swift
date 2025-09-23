@@ -22,17 +22,21 @@ struct LogNapView: View {
             
             Spacer()
             
-            Button("Save") {
+            Button(action: {
                 // TODO: Save activity
+            }) {
+                Text("Save")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                    .contentShape(Rectangle())
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-            .padding(.horizontal)
-            .padding(.bottom, 20)
+
         }
         .navigationBarBackButtonHidden(true)
     }
