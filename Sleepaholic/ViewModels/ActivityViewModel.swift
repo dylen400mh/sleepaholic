@@ -20,7 +20,9 @@ final class ActivityViewModel: ObservableObject {
     func loadActivities() async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            activities = try await service.fetchAll(from: path(for: uid))
+            var fetched = try await service.fetchAll(from: path(for: uid)) as [Activity]
+            fetched.sort { $0.loggedAt > $1.loggedAt }
+            activities = fetched
         } catch {
             print("Error loading activities: \(error)")
         }

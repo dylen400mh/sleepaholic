@@ -41,7 +41,7 @@ struct LogNapView: View {
                     
                     let newActivity = Activity(
                         type: "nap",
-                        loggedAt: startTime,
+                        loggedAt: finalEndTime,
                         start: startTime,
                         end: finalEndTime
                     )
