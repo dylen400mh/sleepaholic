@@ -13,6 +13,10 @@ struct LogWorkoutView: View {
     @State private var duration = 30
     @State private var time = Date()
     
+    @State private var goHome = false
+    @State private var showError = false
+    @EnvironmentObject var activityViewModel: ActivityViewModel
+    
     let workoutOptions = ["Strength", "Cardio", "Other"]
     
     var body: some View {
@@ -40,9 +44,30 @@ struct LogWorkoutView: View {
             Spacer()
             
             Button(action: {
-                let finalType = selectedType == "Other" ? otherDescription : selectedType
-                print("Saved Workout: \(finalType), \(duration) min at \(time)")
-                // TODO: Save activity
+                Task {
+                    if selectedType == "Other" {
+                        guard !otherDescription.trimmingCharacters(in: .whitespaces).isEmpty else {
+                            showError = true
+                            return
+                        }
+                    }
+                    
+                    guard duration > 0 else {
+                        showError = true
+                        return
+                    }
+                    
+                    let newActivity = Activity(
+                        type: "workout",
+                        loggedAt: time,
+                        kind: selectedType,
+                        otherDescription: selectedType == "Other" ? otherDescription : nil,
+                        durationMin: duration
+                    )
+                    
+                    await activityViewModel.addActivity(newActivity)
+                    goHome = true
+                }
             }) {
                 Text("Save")
                     .font(.headline)
@@ -55,13 +80,23 @@ struct LogWorkoutView: View {
                     .padding(.bottom, 20)
                     .contentShape(Rectangle())
             }
-
+            .alert("Please fill in all fields.", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            }
         }
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $goHome) {
+            ContentView()
+                .navigationBarBackButtonHidden(true)
+                .environmentObject(WindDownManager())
+        }
     }
 }
 
 
 #Preview {
-    LogWorkoutView()
+    NavigationStack {
+        LogWorkoutView()
+            .environmentObject(ActivityViewModel())
+    }
 }
