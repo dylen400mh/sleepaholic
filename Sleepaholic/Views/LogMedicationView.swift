@@ -12,6 +12,10 @@ struct LogMedicationView: View {
     @State private var dosage = ""
     @State private var time = Date()
     
+    @State private var showError = false
+    @State private var goHome = false
+    @EnvironmentObject var activityViewModel: ActivityViewModel
+    
     var body: some View {
         VStack {
             FormHeader(title: "Log Medication")
@@ -23,7 +27,7 @@ struct LogMedicationView: View {
                     Text("Dosage (mg)")
                     Spacer()
                     TextField("0", text: $dosage)
-                        .keyboardType(.numberPad) // ✅ numbers only
+                        .keyboardType(.numberPad)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 100)
                 }
@@ -34,9 +38,26 @@ struct LogMedicationView: View {
             Spacer()
             
             Button(action: {
-                let finalDosage = Int(dosage) ?? 0
-                print("Saved Medication: \(name), \(finalDosage)mg at \(time)")
-                // TODO: Save activity
+                Task {
+                    guard !name.trimmingCharacters(in: .whitespaces).isEmpty else {
+                        showError = true
+                        return
+                    }
+                    guard let finalDosage = Int(dosage), finalDosage > 0 else {
+                        showError = true
+                        return
+                    }
+                    
+                    let newActivity = Activity(
+                        type: "medication",
+                        loggedAt: time,
+                        amountMg: finalDosage,
+                        medication: name
+                    )
+                    
+                    await activityViewModel.addActivity(newActivity)
+                    goHome = true
+                }
             }) {
                 Text("Save")
                     .font(.headline)
@@ -49,13 +70,24 @@ struct LogMedicationView: View {
                     .padding(.bottom, 20)
                     .contentShape(Rectangle())
             }
+            .alert("Please fill in all fields.", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            }
         }
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $goHome) {
+            ContentView()
+                .navigationBarBackButtonHidden(true)
+                .environmentObject(WindDownManager())
+        }
     }
 }
 
 
 
 #Preview {
-    LogMedicationView()
+    NavigationStack {
+        LogMedicationView()
+            .environmentObject(ActivityViewModel())
+    }
 }
