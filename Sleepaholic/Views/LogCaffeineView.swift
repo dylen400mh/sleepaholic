@@ -22,6 +22,7 @@ struct LogCaffeineView: View {
         "Other": 0
     ]
     
+    @State private var showError = false
     @State private var goHome = false
     @EnvironmentObject var activityViewModel: ActivityViewModel
     
@@ -66,15 +67,21 @@ struct LogCaffeineView: View {
             
             Button(action: {
                 Task {
-                    let finalKind = selectedKind
-                    let finalOtherDescription = selectedKind == "Other" ? customKind : nil
-                    let finalAmount = Int(amount) ?? 0
+                    if selectedKind == "Other" && customKind.trimmingCharacters(in: .whitespaces).isEmpty {
+                        showError = true
+                        return
+                    }
+                    guard let finalAmount = Int(amount), finalAmount > 0 else {
+                        showError = true
+                        return
+                    }
                     
+                    // Save activity
                     let newActivity = Activity(
                         type: "caffeine",
                         loggedAt: time,
-                        kind: finalKind,
-                        otherDescription: finalOtherDescription,
+                        kind: selectedKind,
+                        otherDescription: selectedKind == "Other" ? customKind : nil,
                         amountMg: finalAmount
                     )
                     
@@ -92,6 +99,9 @@ struct LogCaffeineView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 20)
                     .contentShape(Rectangle())
+            }
+            .alert("Please fill in all fields.", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
             }
         }
         .navigationBarBackButtonHidden(true)
