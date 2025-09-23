@@ -11,6 +11,10 @@ struct LogNapView: View {
     @State private var startTime = Date()
     @State private var endTime = Date().addingTimeInterval(1800)
     
+    @State private var showError = false
+    @State private var goHome = false
+    @EnvironmentObject var activityViewModel: ActivityViewModel
+    
     var body: some View {
         VStack {
             FormHeader(title: "Log Nap")
@@ -23,7 +27,28 @@ struct LogNapView: View {
             Spacer()
             
             Button(action: {
-                // TODO: Save activity
+                Task {
+                    var finalEndTime = endTime
+                    if finalEndTime <= startTime {
+                        // assume nap ended next day
+                        finalEndTime = Calendar.current.date(byAdding: .day, value: 1, to: finalEndTime) ?? finalEndTime
+                    }
+                    
+                    guard finalEndTime > startTime else {
+                        showError = true
+                        return
+                    }
+                    
+                    let newActivity = Activity(
+                        type: "nap",
+                        loggedAt: startTime,
+                        start: startTime,
+                        end: finalEndTime
+                    )
+                    
+                    await activityViewModel.addActivity(newActivity)
+                    goHome = true
+                }
             }) {
                 Text("Save")
                     .font(.headline)
@@ -36,13 +61,23 @@ struct LogNapView: View {
                     .padding(.bottom, 20)
                     .contentShape(Rectangle())
             }
-
+            .alert("End time must be after start time.", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            }
         }
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(isPresented: $goHome) {
+            ContentView()
+                .navigationBarBackButtonHidden(true)
+                .environmentObject(WindDownManager())
+        }
     }
 }
 
 
 #Preview {
-    LogNapView()
+    NavigationStack {
+        LogNapView()
+            .environmentObject(ActivityViewModel())
+    }
 }
