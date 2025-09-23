@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct ContentView: View {
     @EnvironmentObject var windDown: WindDownManager
+    @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     
     @State private var streakDays = 5
     @State private var lastSleep = "11:00 PM → 7:00 AM (8h)"
@@ -131,7 +133,6 @@ struct ContentView: View {
                     Divider()
                     NavigationLink {
                         WindDownView()
-                            .environmentObject(WindDownManager())
                     } label: {
                         Text(windDown.isActive ? "Continue Wind Down" : "Start Wind Down")
                             .font(.headline)
@@ -149,6 +150,17 @@ struct ContentView: View {
         }
         .task {
             await activityViewModel.loadActivities()
+
+            await userSettingsViewModel.loadSettings()
+            if let s = userSettingsViewModel.settings {
+                windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
+                windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
+                windDown.trackSleep     = s.trackSleep
+                windDown.doNotDisturb   = s.doNotDisturb
+                windDown.grayscale      = s.grayscale
+                windDown.lowBrightness  = s.lowBrightness
+                windDown.restrictApps   = s.restrictApps
+            }
         }
     }
 }
@@ -159,6 +171,7 @@ struct ContentView: View {
         ContentView()
     }
     .environmentObject(WindDownManager())
+    .environmentObject(UserSettingsViewModel())
 }
 
 

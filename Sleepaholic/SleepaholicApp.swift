@@ -23,6 +23,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct SleepaholicApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var windDownManager = WindDownManager()
+    @StateObject private var userSettingsViewModel = UserSettingsViewModel()
     
     var body: some Scene {
         WindowGroup {
@@ -30,6 +31,7 @@ struct SleepaholicApp: App {
                 ContentView()
             }
             .environmentObject(windDownManager)
+            .environmentObject(userSettingsViewModel)
         }
     }
 }

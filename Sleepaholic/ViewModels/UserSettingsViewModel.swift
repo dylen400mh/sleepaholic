@@ -6,24 +6,32 @@
 //
 
 import Foundation
+import FirebaseAuth
 
 @MainActor
 final class UserSettingsViewModel: ObservableObject {
     @Published var settings: UserSettings?
     private let service = FirestoreService.shared
-    private let collection = "settings"
+    
+    private func path(for userId: String) -> String {
+        return "users/\(userId)/settings"
+    }
+    
+    private let docId = "settings"
 
-    func loadSettings(for userId: String) async {
+    func loadSettings() async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            settings = try await service.fetch(from: collection, id: userId)
+            settings = try await service.fetch(from: path(for: uid), id: docId)
         } catch {
             print("Error loading settings: \(error)")
         }
     }
 
     func saveSettings(_ settings: UserSettings) async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            try await service.save(settings, to: collection)
+            try await service.save(settings, to: path(for: uid), id: docId)
             self.settings = settings
         } catch {
             print("Error saving settings: \(error)")

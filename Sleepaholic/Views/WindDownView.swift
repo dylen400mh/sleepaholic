@@ -140,7 +140,6 @@ struct WindDownView: View {
                 
                 NavigationLink {
                     BedtimeView()
-                        .environmentObject(WindDownManager())
                 } label: {
                     Text("Start Bedtime")
                         .font(.headline)

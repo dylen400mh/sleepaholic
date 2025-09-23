@@ -11,8 +11,11 @@ import FirebaseFirestore
 struct UserSettings: Identifiable, Codable {
     @DocumentID var documentId: String?
     var id: String { documentId ?? UUID().uuidString }
-    var bedtime: Date
-    var wakeUpTime: Date
+    
+    // store as minutes since midnight
+    var bedtime: Int
+    var wakeUpTime: Int
+    
     var trackSleep: Bool
     var doNotDisturb: Bool
     var grayscale: Bool

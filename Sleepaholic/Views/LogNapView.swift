@@ -69,7 +69,6 @@ struct LogNapView: View {
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
-                .environmentObject(WindDownManager())
         }
     }
 }

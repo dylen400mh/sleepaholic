@@ -20,6 +20,13 @@ final class FirestoreService {
         let id = String(describing: item.id) // ensure String id
         try db.collection(collection).document(id).setData(from: item, merge: true)
     }
+    
+    // MARK: - Save with explicit ID
+    func save<T: Codable>(_ item: T,
+                          to collection: String,
+                          id: String) async throws {
+        try db.collection(collection).document(id).setData(from: item, merge: true)
+    }
 
     // MARK: - Read All
     func fetchAll<T: Codable>(from collection: String) async throws -> [T] {

@@ -108,7 +108,6 @@ struct LogCaffeineView: View {
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
-                .environmentObject(WindDownManager())
         }
         .onAppear {
             // Pre-populate when view first loads
