@@ -29,18 +29,20 @@ struct WakeupView: View {
             }
             .padding(.bottom, 30)
             
-            Button("Log Current Time") {
+            Button(action: {
                 Task {
                     await sleepLogViewModel.logWakeup(at: Date())
                     goHome = true
                 }
+            }) {
+                Text("Log Current Time")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
             }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
             .padding(.horizontal)
             .padding(.bottom, 40)
             
