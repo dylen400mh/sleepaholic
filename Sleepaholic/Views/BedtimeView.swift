@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BedtimeView: View {
     @EnvironmentObject var windDown: WindDownManager
+    @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @State private var goHome = false
 
     var body: some View {
@@ -94,14 +95,19 @@ struct BedtimeView: View {
             ContentView()
                 .navigationBarBackButtonHidden(true)
         }
+        .task {
+            // when bedtime starts, create a log
+            await sleepLogViewModel.startBedtime()
+        }
     }
 }
 
 #Preview {
     NavigationStack {
         BedtimeView()
-            .environmentObject(WindDownManager())
     }
+    .environmentObject(WindDownManager())
+    .environmentObject(SleepLogViewModel())
 }
 
 

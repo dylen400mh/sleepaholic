@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct WakeupView: View {
+    @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @State private var manualWakeTime = Date()
     @State private var goHome = false
     
@@ -29,7 +30,10 @@ struct WakeupView: View {
             .padding(.bottom, 30)
             
             Button("Log Current Time") {
-                goHome = true
+                Task {
+                    await sleepLogViewModel.logWakeup(at: Date())
+                    goHome = true
+                }
             }
             .font(.headline)
             .frame(maxWidth: .infinity)
@@ -49,7 +53,10 @@ struct WakeupView: View {
                     .datePickerStyle(.wheel)
                 
                 Button("Log Manually") {
-                    goHome = true
+                    Task {
+                        await sleepLogViewModel.logWakeup(at: manualWakeTime)
+                        goHome = true
+                    }
                 }
                 .foregroundColor(.blue)
             }
@@ -67,6 +74,7 @@ struct WakeupView: View {
 
 #Preview {
     WakeupView()
+        .environmentObject(SleepLogViewModel())
 }
 
 

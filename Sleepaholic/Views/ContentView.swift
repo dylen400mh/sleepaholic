@@ -11,14 +11,13 @@ import FirebaseAuth
 struct ContentView: View {
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
+    @EnvironmentObject var activityViewModel: ActivityViewModel
     
     @State private var streakDays = 5
     @State private var lastSleep = "11:00 PM → 7:00 AM (8h)"
     @State private var sleepQuality: Int = 82
     @State private var sleepDebt = "6h 30m"
     @State private var recommendation = "Try going to bed 30 minutes earlier tonight."
-    
-    @StateObject private var activityViewModel = ActivityViewModel()
 
     var body: some View {
         ZStack {
@@ -172,6 +171,8 @@ struct ContentView: View {
     }
     .environmentObject(WindDownManager())
     .environmentObject(UserSettingsViewModel())
+    .environmentObject(ActivityViewModel())
+    .environmentObject(SleepLogViewModel())
 }
 
 

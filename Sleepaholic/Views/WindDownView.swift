@@ -169,6 +169,7 @@ struct WindDownView: View {
         WindDownView()
     }
     .environmentObject(WindDownManager())
+    .environmentObject(SleepLogViewModel())
 }
 
 

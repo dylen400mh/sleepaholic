@@ -24,6 +24,8 @@ struct SleepaholicApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var windDownManager = WindDownManager()
     @StateObject private var userSettingsViewModel = UserSettingsViewModel()
+    @StateObject private var activityViewModel = ActivityViewModel()
+    @StateObject private var sleepLogViewModel = SleepLogViewModel()
     
     var body: some Scene {
         WindowGroup {
@@ -32,6 +34,8 @@ struct SleepaholicApp: App {
             }
             .environmentObject(windDownManager)
             .environmentObject(userSettingsViewModel)
+            .environmentObject(activityViewModel)
+            .environmentObject(sleepLogViewModel)
         }
     }
 }
