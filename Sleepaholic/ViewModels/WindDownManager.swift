@@ -17,9 +17,24 @@ class WindDownManager: ObservableObject, Codable {
     }
     
     // Settings applied during wind down
-    @Published var isActive: Bool = false { didSet { saveState() } }
-    @Published var targetBedtime: Date = Date() { didSet { saveState() } }
-    @Published var targetWakeup: Date = Date() { didSet { saveState() } }
+    @Published var isActive: Bool = false {
+        didSet {
+            saveState()
+            scheduleNotifications()
+        }
+    }
+    @Published var targetBedtime: Date = Date() {
+        didSet {
+            saveState()
+            scheduleNotifications()
+        }
+    }
+    @Published var targetWakeup: Date = Date() {
+        didSet {
+            saveState()
+            scheduleNotifications()
+        }
+    }
     @Published var trackSleep: Bool = false { didSet { saveState() } }
     @Published var doNotDisturb: Bool = false { didSet { saveState() } }
     @Published var grayscale: Bool = false { didSet { saveState() } }
@@ -119,6 +134,55 @@ class WindDownManager: ObservableObject, Codable {
     static func minutesFromDate(_ date: Date) -> Int {
         let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
         return (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
+    }
+    
+    func scheduleNotifications() {
+        guard isActive else {
+            cancelNotifications()
+            return
+        }
+        
+        // Cancel old ones before rescheduling
+        cancelNotifications()
+        
+        // Schedule bedtime
+        scheduleNotification(
+            id: "bedtime",
+            title: "Bedtime Reminder",
+            body: "It’s time to go to bed.",
+            date: targetBedtime
+        )
+        
+        // Schedule wakeup
+        scheduleNotification(
+            id: "wakeup",
+            title: "Wake Up",
+            body: "Good morning! Time to start your day.",
+            date: targetWakeup
+        )
+    }
+    
+    private func scheduleNotification(id: String, title: String, body: String, date: Date) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        
+        let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true) // repeats daily
+        
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ Error scheduling \(id): \(error)")
+            } else {
+                print("✅ Scheduled \(id) at \(comps.hour ?? 0):\(comps.minute ?? 0)")
+            }
+        }
+    }
+    
+    func cancelNotifications() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["bedtime", "wakeup"])
     }
 }
 

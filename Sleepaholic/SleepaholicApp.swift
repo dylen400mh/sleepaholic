@@ -7,16 +7,36 @@
 
 import SwiftUI
 import FirebaseCore
+import UserNotifications
 
-class AppDelegate: NSObject, UIApplicationDelegate {
-  func application(_ application: UIApplication,
-                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-    FirebaseApp.configure()
-      
-    AuthService.shared.signInAnonymously()
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        FirebaseApp.configure()
+        AuthService.shared.signInAnonymously()
+        
+        // Ask for notifications
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if let error = error {
+                print("❌ Notification permission error: \(error)")
+            } else {
+                print(granted ? "✅ Notifications allowed" : "⚠️ Notifications denied")
+            }
+        }
+        center.delegate = self   // ⬅️ AppDelegate keeps the reference alive
 
-    return true
-  }
+        return true
+    }
+
+    // Show notifications even when the app is in the foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler:
+                                @escaping (UNNotificationPresentationOptions) -> Void) {
+        print("📣 willPresent called for \(notification.request.identifier)")
+        completionHandler([.banner, .sound, .badge])
+    }
 }
 
 @main
