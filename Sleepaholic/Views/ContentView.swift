@@ -154,7 +154,7 @@ struct ContentView: View {
             await activityViewModel.loadActivities()
 
             await userSettingsViewModel.loadSettings()
-            if let s = userSettingsViewModel.settings {
+            if let s = userSettingsViewModel.settings, !windDown.isActive {
                 windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
                 windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
                 windDown.trackSleep     = s.trackSleep

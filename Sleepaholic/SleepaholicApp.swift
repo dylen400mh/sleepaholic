@@ -22,7 +22,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct SleepaholicApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject private var windDownManager = WindDownManager()
+    @StateObject private var windDownManager = WindDownManager.loadState()
     @StateObject private var userSettingsViewModel = UserSettingsViewModel()
     @StateObject private var activityViewModel = ActivityViewModel()
     @StateObject private var sleepLogViewModel = SleepLogViewModel()
