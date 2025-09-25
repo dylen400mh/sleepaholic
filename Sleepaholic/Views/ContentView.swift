@@ -142,6 +142,9 @@ struct ContentView: View {
                             .cornerRadius(12)
                             .padding(.horizontal)
                     }
+                    .simultaneousGesture(TapGesture().onEnded {
+                        windDown.isActive = true
+                    })
                     .padding(.vertical, 10)
                 }
                 .background(Color(.systemBackground)) // solid footer background

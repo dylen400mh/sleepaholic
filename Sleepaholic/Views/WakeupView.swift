@@ -9,6 +9,7 @@ import SwiftUI
 
 struct WakeupView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
+    @EnvironmentObject var windDown: WindDownManager
     @State private var manualWakeTime = Date()
     @State private var goHome = false
     
@@ -32,6 +33,7 @@ struct WakeupView: View {
             Button(action: {
                 Task {
                     await sleepLogViewModel.logWakeup(at: Date())
+                    windDown.isActive = false
                     goHome = true
                 }
             }) {
@@ -57,6 +59,7 @@ struct WakeupView: View {
                 Button("Log Manually") {
                     Task {
                         await sleepLogViewModel.logWakeup(at: manualWakeTime)
+                        windDown.isActive = false
                         goHome = true
                     }
                 }
@@ -77,6 +80,7 @@ struct WakeupView: View {
 #Preview {
     WakeupView()
         .environmentObject(SleepLogViewModel())
+        .environmentObject(WindDownManager())
 }
 
 
