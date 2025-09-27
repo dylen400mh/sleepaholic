@@ -137,7 +137,7 @@ class WindDownManager: ObservableObject, Codable {
     }
     
     func scheduleNotifications() {
-        cancelWindDownNotification()
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         
         // Schedule wind down notification regardless of whether wind down is active or not
         let reminderDate = Calendar.current.date(byAdding: .hour, value: -1, to: targetBedtime) ?? targetBedtime
@@ -148,13 +148,7 @@ class WindDownManager: ObservableObject, Codable {
             date: reminderDate
         )
         
-        guard isActive else {
-            cancelBedtimeAndWakeup()
-            return
-        }
-        
-        // Cancel old ones before rescheduling
-        cancelBedtimeAndWakeup()
+        guard isActive else { return }
         
         // Schedule bedtime
         scheduleNotification(
@@ -190,14 +184,6 @@ class WindDownManager: ObservableObject, Codable {
                 print("✅ Scheduled \(id) at \(comps.hour ?? 0):\(comps.minute ?? 0)")
             }
         }
-    }
-    
-    func cancelBedtimeAndWakeup() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["bedtime", "wakeup"])
-    }
-    
-    func cancelWindDownNotification() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["winddown"])
     }
 }
 
