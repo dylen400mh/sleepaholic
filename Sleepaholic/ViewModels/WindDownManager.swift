@@ -8,8 +8,11 @@
 import SwiftUI
 import Foundation
 import Combine
+import AVFoundation
 
 class WindDownManager: ObservableObject, Codable {
+    private var audioPlayers: [String: AVAudioPlayer] = [:]
+
     enum CodingKeys: String, CodingKey {
         case isActive, targetBedtime, targetWakeup, trackSleep,
              doNotDisturb, grayscale, lowBrightness, restrictApps,
@@ -102,14 +105,18 @@ class WindDownManager: ObservableObject, Codable {
         
     static func loadState() -> WindDownManager {
         if let data = UserDefaults.standard.data(forKey: storageKey),
-           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data) {
+           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data),
+           decoded.isActive {
+            // Only restore if wind down was active
             return decoded
         }
+        // Otherwise return a fresh manager (resets sounds/settings)
         return WindDownManager()
     }
 
     // Reset everything back to defaults
     func reset() {
+        stopAllSounds()
         isActive = false
         selectedSounds.removeAll()
         isPlaying = true
@@ -183,6 +190,85 @@ class WindDownManager: ObservableObject, Codable {
             } else {
                 print("✅ Scheduled \(id) at \(comps.hour ?? 0):\(comps.minute ?? 0)")
             }
+        }
+    }
+    
+    func setupAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("❌ Failed to set up audio session: \(error)")
+        }
+    }
+    
+    func playSound(named soundName: String) {
+        // setup audio session so sound can be played without the app open
+        setupAudioSession()
+        
+        let possibleExtensions = ["m4a", "wav"]
+        var foundURL: URL? = nil
+        
+        for ext in possibleExtensions {
+            if let url = Bundle.main.url(forResource: soundName, withExtension: ext) {
+                foundURL = url
+                break
+            }
+        }
+        
+        guard let url = foundURL else {
+            print("❌ Sound file \(soundName) not found")
+            return
+        }
+
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.numberOfLoops = -1 // loop indefinitely
+            player.prepareToPlay()
+            player.play()
+            audioPlayers[soundName] = player
+            resumeAllSounds() // play other sounds if we paused
+        } catch {
+            print("❌ Could not play sound \(soundName): \(error)")
+        }
+    }
+
+    func stopSound(named soundName: String) {
+        if let player = audioPlayers[soundName] {
+            player.stop()
+            audioPlayers.removeValue(forKey: soundName)
+        }
+    }
+
+    func stopAllSounds() {
+        for player in audioPlayers.values {
+            player.stop()
+        }
+        audioPlayers.removeAll()
+        isPlaying = false
+    }
+    
+    func pauseAllSounds() {
+        for (_, player) in audioPlayers {
+            player.pause()
+        }
+        isPlaying = false
+    }
+
+    func resumeAllSounds() {
+        for (_, player) in audioPlayers {
+            player.play()
+        }
+        isPlaying = true
+    }
+    
+    func toggleSound(_ soundName: String) {
+        if selectedSounds.contains(soundName) {
+            selectedSounds.remove(soundName)
+            stopSound(named: soundName)
+        } else {
+            selectedSounds.insert(soundName)
+            playSound(named: soundName)
         }
     }
 }

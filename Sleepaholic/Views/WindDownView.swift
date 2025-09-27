@@ -47,11 +47,7 @@ struct WindDownView: View {
                             .font(.headline)
                         ForEach(sounds, id: \.self) { sound in
                             Button(action: {
-                                if windDown.selectedSounds.contains(sound) {
-                                    windDown.selectedSounds.remove(sound)
-                                } else {
-                                    windDown.selectedSounds.insert(sound)
-                                }
+                                toggleSound(sound)
                             }) {
                                 HStack {
                                     Text(sound)
@@ -126,12 +122,21 @@ struct WindDownView: View {
                             .foregroundColor(.gray)
                         Spacer()
                         
-                        Button(action: { windDown.isPlaying.toggle() }) {
+                        Button(action: {
+                            if windDown.isPlaying {
+                                windDown.pauseAllSounds()
+                            } else {
+                                windDown.resumeAllSounds()
+                            }
+                        }) {
                             Image(systemName: windDown.isPlaying ? "pause.fill" : "play.fill")
                         }
                         .padding(.trailing, 8)
                         
-                        Button(action: { windDown.selectedSounds.removeAll() }) {
+                        Button(action: {
+                            windDown.stopAllSounds()
+                            windDown.selectedSounds.removeAll()
+                        }) {
                             Image(systemName: "xmark")
                         }
                     }
