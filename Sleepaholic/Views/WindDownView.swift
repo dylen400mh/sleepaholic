@@ -152,7 +152,7 @@ struct WindDownView: View {
                 }
                 
                 Button("Cancel Wind Down") {
-                    windDown.isActive = false
+                    windDown.reset()
                     dismiss()
                 }
                 .foregroundColor(.red)
