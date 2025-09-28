@@ -96,8 +96,12 @@ struct BedtimeView: View {
                 .navigationBarBackButtonHidden(true)
         }
         .task {
-            // when bedtime starts, create a log
-            await sleepLogViewModel.startBedtime()
+            if windDown.trackSleep, let log = sleepLogViewModel.activeLog {
+                windDown.startMonitoringSleep(logId: log.id)
+            }
+        }
+        .onDisappear {
+            windDown.stopMonitoringSleep()
         }
     }
 }
