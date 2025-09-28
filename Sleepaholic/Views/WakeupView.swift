@@ -33,7 +33,7 @@ struct WakeupView: View {
             Button(action: {
                 Task {
                     await sleepLogViewModel.logWakeup(at: Date())
-                    windDown.isActive = false
+                    windDown.reset()
                     goHome = true
                 }
             }) {
@@ -59,7 +59,7 @@ struct WakeupView: View {
                 Button("Log Manually") {
                     Task {
                         await sleepLogViewModel.logWakeup(at: manualWakeTime)
-                        windDown.isActive = false
+                        windDown.reset()
                         goHome = true
                     }
                 }
