@@ -16,13 +16,14 @@ final class SleepLogViewModel: ObservableObject {
     private let collection = "sleepLogs"
     
     // Keep track of current bedtime session
-    @Published private(set) var activeStart: Date?
-    private let activeKey = "activeStart"
+    @Published private(set) var activeLog: SleepLog?
+    private let activeKey = "activeLog"
     
     init() {
         // restore active session if app was restarted
-        if let t = UserDefaults.standard.object(forKey: activeKey) as? TimeInterval {
-            activeStart = Date(timeIntervalSince1970: t)
+        if let data = UserDefaults.standard.data(forKey: activeKey),
+           let decoded = try? JSONDecoder().decode(SleepLog.self, from: data) {
+            activeLog = decoded
         }
     }
     
@@ -42,16 +43,19 @@ final class SleepLogViewModel: ObservableObject {
     }
 
     func startBedtime() async {
-        guard activeStart == nil else { return }
-        let now = Date()
-        activeStart = now
-        UserDefaults.standard.set(now.timeIntervalSince1970, forKey: activeKey)
+        guard activeLog == nil else { return }
+        let log = SleepLog(start: Date(), end: Date()) // dummy end for now
+        activeLog = log
+        if let data = try? JSONEncoder().encode(log) {
+            UserDefaults.standard.set(data, forKey: activeKey)
+        }
     }
 
     func logWakeup(at wakeTime: Date) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let start = activeStart ?? wakeTime
-        let log = SleepLog(start: start, end: wakeTime)
+        guard var log = activeLog else { return }
+        
+        log.end = wakeTime
         do {
             try await service.save(log, to: path(for: uid))
         } catch {
@@ -59,7 +63,7 @@ final class SleepLogViewModel: ObservableObject {
         }
 
         // clear local state
-        activeStart = nil
+        activeLog = nil
         UserDefaults.standard.removeObject(forKey: activeKey)
 
         await loadSleepLogs()
