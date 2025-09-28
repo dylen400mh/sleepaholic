@@ -11,6 +11,7 @@ struct WindDownView: View {
     @Environment(\.dismiss) private var dismiss
     
     @EnvironmentObject var windDown: WindDownManager
+    @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     
     let sounds = ["White Noise", "Fan", "Ocean Waves", "Rain", "Crickets", "Campfire", "Birds", "Theta Waves"]
     
@@ -47,7 +48,7 @@ struct WindDownView: View {
                             .font(.headline)
                         ForEach(sounds, id: \.self) { sound in
                             Button(action: {
-                                toggleSound(sound)
+                                windDown.toggleSound(sound)
                             }) {
                                 HStack {
                                     Text(sound)
@@ -155,6 +156,11 @@ struct WindDownView: View {
                         .cornerRadius(12)
                         .padding(.horizontal)
                 }
+                .simultaneousGesture(TapGesture().onEnded {
+                    Task {
+                        await sleepLogViewModel.startBedtime()
+                    }
+                })
                 
                 Button("Cancel Wind Down") {
                     windDown.reset()
