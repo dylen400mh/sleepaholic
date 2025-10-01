@@ -9,9 +9,20 @@ import SwiftUI
 import Foundation
 import Combine
 import AVFoundation
+import FirebaseStorage
+import FirebaseAuth
 
 class WindDownManager: ObservableObject, Codable {
+    // sound player
     private var audioPlayers: [String: AVAudioPlayer] = [:]
+    
+    // recording sleep sounds
+    private var audioRecorder: AVAudioRecorder?
+    private var meterRecorder: AVAudioRecorder?
+    private var meterTimer: Timer?
+    private let silenceThreshold: Float = -45.0  // adjust dB level
+    private let silenceDuration: TimeInterval = 3
+    private var silenceStart: Date?
 
     enum CodingKeys: String, CodingKey {
         case isActive, targetBedtime, targetWakeup, trackSleep,
@@ -38,7 +49,12 @@ class WindDownManager: ObservableObject, Codable {
             scheduleNotifications()
         }
     }
-    @Published var trackSleep: Bool = false { didSet { saveState() } }
+    @Published var trackSleep: Bool = false {
+        didSet {
+            saveState()
+            AVAudioApplication.requestRecordPermission { _ in }
+        }
+    }
     @Published var doNotDisturb: Bool = false { didSet { saveState() } }
     @Published var grayscale: Bool = false { didSet { saveState() } }
     @Published var lowBrightness: Bool = false { didSet { saveState() } }
@@ -193,10 +209,15 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
     
-    func setupAudioSession() {
+    private func setupSharedAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(
+                .playAndRecord,
+                mode: .measurement,
+                options: [.allowBluetooth, .defaultToSpeaker, .mixWithOthers]
+            )
+            try session.setActive(true)
         } catch {
             print("❌ Failed to set up audio session: \(error)")
         }
@@ -204,7 +225,7 @@ class WindDownManager: ObservableObject, Codable {
     
     func playSound(named soundName: String) {
         // setup audio session so sound can be played without the app open
-        setupAudioSession()
+        setupSharedAudioSession()
         
         let possibleExtensions = ["m4a", "wav"]
         var foundURL: URL? = nil
@@ -269,6 +290,119 @@ class WindDownManager: ObservableObject, Codable {
         } else {
             selectedSounds.insert(soundName)
             playSound(named: soundName)
+        }
+    }
+    
+    func startMonitoringSleep(logId: String) {
+        setupSharedAudioSession()
+        setupMeterRecorder()
+        meterTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.checkAudioLevel(logId: logId)
+        }
+    }
+
+    func stopMonitoringSleep(logId: String) {
+        meterTimer?.invalidate()
+        meterTimer = nil
+        stopRecordingClip(logId: logId)
+        meterRecorder?.stop()
+        meterRecorder = nil
+        deactivateRecordingSession()
+    }
+    
+    private func deactivateRecordingSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false)
+        } catch {
+            print("❌ Could not deactivate recording session: \(error)")
+        }
+    }
+
+    private func startRecordingClip(logId: String) {
+        let filename = "\(UUID().uuidString).m4a"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        let settings: [String: Any] = [
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: 44100,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
+        ]
+
+        do {
+            audioRecorder = try AVAudioRecorder(url: url, settings: settings)
+            audioRecorder?.isMeteringEnabled = true
+            audioRecorder?.record()
+            print("🎙 Started recording \(filename)")
+        } catch {
+            print("❌ Failed to start recording: \(error)")
+        }
+    }
+
+    private func stopRecordingClip(logId: String) {
+        guard let recorder = audioRecorder else { return }
+        recorder.stop()
+        let url = recorder.url
+        audioRecorder = nil
+        print("⏹️ Stopped recording clip at \(url)")
+        
+        // Build storage path
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let storagePath = "users/\(uid)/sleepLogs/\(logId)/clips/\(timestamp).m4a"
+        
+        let storageRef = Storage.storage().reference().child(storagePath)
+        
+        // Upload the file
+        storageRef.putFile(from: url, metadata: nil) { metadata, error in
+            if let error = error {
+                print("❌ Upload failed: \(error)")
+            } else {
+                print("✅ Clip uploaded to \(storagePath)")
+            }
+        }
+    }
+    
+    private func setupMeterRecorder() {
+        let url = URL(fileURLWithPath: "/dev/null") // throwaway file
+        let settings: [String: Any] = [
+            AVFormatIDKey: Int(kAudioFormatAppleLossless),
+            AVSampleRateKey: 44100,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderAudioQualityKey: AVAudioQuality.min.rawValue
+        ]
+        
+        do {
+            meterRecorder = try AVAudioRecorder(url: url, settings: settings)
+            meterRecorder?.isMeteringEnabled = true
+            meterRecorder?.record()
+        } catch {
+            print("❌ Failed to start meter recorder: \(error)")
+        }
+    }
+
+    private func checkAudioLevel(logId: String) {
+        if let recorder = audioRecorder {
+            // already recording → check for silence
+            recorder.updateMeters()
+            let avg = recorder.averagePower(forChannel: 0)
+
+            if avg < silenceThreshold {
+                if silenceStart == nil { silenceStart = Date() }
+                if let start = silenceStart,
+                   Date().timeIntervalSince(start) > silenceDuration {
+                    stopRecordingClip(logId: logId)
+                    silenceStart = nil
+                }
+            } else {
+                silenceStart = nil
+            }
+        } else if let meter = meterRecorder {
+            // not recording → check if loud enough to start
+            meter.updateMeters()
+            let avg = meter.averagePower(forChannel: 0)
+            if avg >= silenceThreshold {
+                startRecordingClip(logId: logId)
+            }
         }
     }
 }

@@ -101,7 +101,9 @@ struct BedtimeView: View {
             }
         }
         .onDisappear {
-            windDown.stopMonitoringSleep()
+            if let logId = sleepLogViewModel.activeLog?.id {
+                windDown.stopMonitoringSleep(logId: logId)
+            }
         }
     }
 }

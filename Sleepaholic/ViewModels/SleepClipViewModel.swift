@@ -7,6 +7,7 @@
 
 import Foundation
 import FirebaseAuth
+import FirebaseStorage
 
 @MainActor
 final class SleepClipViewModel: ObservableObject {
@@ -45,6 +46,23 @@ final class SleepClipViewModel: ObservableObject {
             await loadClips(for: logId)
         } catch {
             print("Error deleting clip: \(error)")
+        }
+    }
+    
+    func uploadClip(for logId: String, fileURL: URL) async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let storageRef = Storage.storage().reference()
+            .child("users/\(uid)/sleepLogs/\(logId)/clips/\(UUID().uuidString).m4a")
+
+        do {
+            // Upload file
+            let _ = try await storageRef.putFileAsync(from: fileURL, metadata: nil)
+            
+            // Save Firestore reference
+            let path = storageRef.fullPath
+            await addClip(for: logId, storagePath: path)
+        } catch {
+            print("❌ Failed to upload clip: \(error)")
         }
     }
 }
