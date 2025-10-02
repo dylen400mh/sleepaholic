@@ -8,7 +8,7 @@
 import Foundation
 import FirebaseFirestore
 
-struct SleepLog: Identifiable, Codable {
+struct SleepLog: Identifiable, Codable, Equatable {
     @DocumentID var documentId: String?
     var id: String { documentId ?? UUID().uuidString }
     var start: Date

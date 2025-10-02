@@ -12,8 +12,9 @@ struct ContentView: View {
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     @EnvironmentObject var activityViewModel: ActivityViewModel
+    @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     
-    @State private var streakDays = 5
+    @State private var streakDays: Int = 0
     @State private var lastSleep = "11:00 PM → 7:00 AM (8h)"
     @State private var sleepQuality: Int = 82
     @State private var sleepDebt = "6h 30m"
@@ -152,14 +153,20 @@ struct ContentView: View {
         }
         .task {
             await activityViewModel.loadActivities()
-
             await userSettingsViewModel.loadSettings()
+            await sleepLogViewModel.loadSleepLogs()
+            
+            streakDays = sleepLogViewModel.calculateStreak()
+            
             if let s = userSettingsViewModel.settings, !windDown.isActive {
                 windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
                 windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
                 windDown.trackSleep     = s.trackSleep
                 windDown.restrictApps   = s.restrictApps
             }
+        }
+        .onChange(of: sleepLogViewModel.sleepLogs) {
+            streakDays = sleepLogViewModel.calculateStreak()
         }
     }
 }

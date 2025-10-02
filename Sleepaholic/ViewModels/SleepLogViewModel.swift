@@ -78,4 +78,34 @@ final class SleepLogViewModel: ObservableObject {
             print("Error deleting sleep log: \(error)")
         }
     }
+    
+    func calculateStreak() -> Int {
+        // use calendar to compare days
+        let calendar = Calendar.current
+        
+        let daysWithLogs: Set<Date> = Set(
+            sleepLogs.map { calendar.startOfDay(for: $0.end) }
+        )
+        guard !daysWithLogs.isEmpty else { return 0 }
+        
+        let todayStart = calendar.startOfDay(for: Date())
+        
+        // Anchor to today if logged, else to yesterday if logged, else 0
+        let anchor: Date? = {
+            if daysWithLogs.contains(todayStart) {
+                return todayStart
+            }
+            let yesterday = calendar.date(byAdding: .day, value: -1, to: todayStart)!
+            return daysWithLogs.contains(yesterday) ? yesterday : nil
+        }()
+
+        guard var day = anchor else { return 0 }
+
+        var streak = 0
+        while daysWithLogs.contains(day) {
+            streak += 1
+            day = calendar.date(byAdding: .day, value: -1, to: day)!
+        }
+        return streak
+    }
 }
