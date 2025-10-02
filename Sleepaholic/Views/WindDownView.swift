@@ -6,12 +6,18 @@
 //
 
 import SwiftUI
+import FamilyControls
 
 struct WindDownView: View {
     @Environment(\.dismiss) private var dismiss
     
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
+    
+    @State private var showPicker = false
+    @State private var requestingAuth = false
+    @State private var authError: String?
+
     
     let sounds = ["White Noise", "Fan", "Ocean Waves", "Rain", "Crickets", "Campfire", "Birds", "Theta Waves"]
     
@@ -84,25 +90,37 @@ struct WindDownView: View {
                         Toggle("Track Sleep with Microphone", isOn: $windDown.trackSleep)
                     }
                     
-                    // Restrictions
+                    // MARK: - Restrictions (Screen Time)
                     Section {
-                        Text("Restrictions")
-                            .font(.headline)
-                        Toggle("Restrict Apps", isOn: $windDown.restrictApps)
-                        
-                        if windDown.restrictApps {
-                            Button("Modify Restricted Apps") {
-                                // action
+                        Text("Restrictions").font(.headline)
+
+                        Toggle("Restrict Apps", isOn: Binding(
+                            get: { windDown.restrictApps },
+                            set: { newValue in
+                                if newValue {
+                                    // Request auth (if needed) then show picker
+                                    Task { await handleRestrictAppsOn() }
+                                } else {
+                                    showPicker = false
+                                    windDown.restrictApps = false
+                                }
                             }
-                            .foregroundColor(.blue)
-                            
-                            Text("Currently Restricted:")
+                        ))
+
+                        if windDown.restrictApps {
+                            Button("Modify Restricted Apps") { showPicker = true }
+                                .foregroundColor(.blue)
+
+                            // Simple summary for MVP
+                            Text(summaryText)
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
-                            ForEach(windDown.restrictedApps, id: \.self) { app in
-                                Text("• \(app)")
-                                    .foregroundColor(.secondary)
-                            }
+                        }
+
+                        if let authError {
+                            Text(authError)
+                                .font(.footnote)
+                                .foregroundColor(.red)
                         }
                     }
                 }
@@ -170,6 +188,33 @@ struct WindDownView: View {
             .background(Color(.systemBackground))
         }
         .navigationBarBackButtonHidden(true)
+        .familyActivityPicker(isPresented: $showPicker, selection: $windDown.restrictedApps)
+    }
+    
+    private var summaryText: String {
+        let a = windDown.restrictedApps.applicationTokens.count
+        let c = windDown.restrictedApps.categoryTokens.count
+        let w = windDown.restrictedApps.webDomainTokens.count
+        return "Selected \(a) apps, \(c) categories, \(w) websites"
+    }
+
+    // MARK: - Auth + Picker flow
+    private func handleRestrictAppsOn() async {
+        requestingAuth = true
+        authError = nil
+        do {
+            let status = AuthorizationCenter.shared.authorizationStatus
+            if status != .approved {
+                try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
+            }
+            // Mark enabled and prompt for the selection (first-time or to edit)
+            windDown.restrictApps = true
+            showPicker = true
+        } catch {
+            authError = "Screen Time permission was not granted."
+            windDown.restrictApps = false
+        }
+        requestingAuth = false
     }
 }
 

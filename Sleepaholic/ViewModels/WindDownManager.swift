@@ -11,6 +11,8 @@ import Combine
 import AVFoundation
 import FirebaseStorage
 import FirebaseAuth
+import FamilyControls
+import ManagedSettings
 
 class WindDownManager: ObservableObject, Codable {
     // sound player
@@ -23,6 +25,8 @@ class WindDownManager: ObservableObject, Codable {
     private let silenceThreshold: Float = -45.0  // adjust dB level
     private let silenceDuration: TimeInterval = 3
     private var silenceStart: Date?
+    
+    private let store = ManagedSettingsStore()
 
     enum CodingKeys: String, CodingKey {
         case isActive, targetBedtime, targetWakeup, trackSleep,
@@ -34,6 +38,11 @@ class WindDownManager: ObservableObject, Codable {
         didSet {
             saveState()
             scheduleNotifications()
+            if isActive {
+                applyShield()
+            } else {
+                clearShield()
+            }
         }
     }
     @Published var targetBedtime: Date = Date() {
@@ -54,8 +63,20 @@ class WindDownManager: ObservableObject, Codable {
             AVAudioApplication.requestRecordPermission { _ in }
         }
     }
-    @Published var restrictApps: Bool = false { didSet { saveState() } }
-    @Published var restrictedApps: [String] = [] { didSet { saveState() } }
+    @Published var restrictApps: Bool = false {
+        didSet
+        {
+            saveState()
+            if isActive && restrictApps { applyShield() }
+            if !restrictApps { clearShield() }
+        }
+    }
+    @Published var restrictedApps: FamilyActivitySelection = .init() {
+        didSet {
+            saveState()
+            if isActive && restrictApps { applyShield() }
+        }
+    }
     @Published var selectedSounds: Set<String> = [] { didSet { saveState() } }
     @Published var isPlaying: Bool = false { didSet { saveState() } }
 
@@ -69,7 +90,7 @@ class WindDownManager: ObservableObject, Codable {
         targetWakeup = try container.decode(Date.self, forKey: .targetWakeup)
         trackSleep = try container.decode(Bool.self, forKey: .trackSleep)
         restrictApps = try container.decode(Bool.self, forKey: .restrictApps)
-        restrictedApps = ["TikTok, Instagram, YouTube"]
+        restrictedApps = try container.decodeIfPresent(FamilyActivitySelection.self, forKey: .restrictedApps) ?? .init()
         selectedSounds = try container.decode(Set<String>.self, forKey: .selectedSounds)
         isPlaying = try container.decode(Bool.self, forKey: .isPlaying)
     }
@@ -96,7 +117,6 @@ class WindDownManager: ObservableObject, Codable {
             : Date()
         self.trackSleep = settings?.trackSleep ?? false
         self.restrictApps = settings?.restrictApps ?? false
-        self.restrictedApps = ["TikTok", "Instagram", "YouTube"]
     }
     
     
@@ -125,7 +145,29 @@ class WindDownManager: ObservableObject, Codable {
         isPlaying = true
         trackSleep = false
         restrictApps = false
-        restrictedApps = []
+    }
+    
+    // MARK: - Screen Time (Shielding)
+    private func applyShield() {
+        guard restrictApps else { return }
+
+        // Tokens the user selected via FamilyActivityPicker
+        let apps = restrictedApps.applicationTokens
+        let categories = restrictedApps.categoryTokens
+        let webDomains = restrictedApps.webDomainTokens
+
+        // Apply only what’s non-empty (Apple recommends nil when unused)
+        store.shield.applications = apps.isEmpty ? nil : apps
+        store.shield.applicationCategories = categories.isEmpty ? nil : .specific(categories)
+        store.shield.webDomains = webDomains.isEmpty ? nil : webDomains
+
+        print("🛡️ Shield applied. apps=\(apps.count) categories=\(categories.count) webDomains=\(webDomains.count)")
+    }
+
+
+    private func clearShield() {
+        store.clearAllSettings()
+        print("🧹 Shield cleared.")
     }
     
     // MARK: - Helpers
