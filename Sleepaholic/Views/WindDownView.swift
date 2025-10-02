@@ -88,9 +88,6 @@ struct WindDownView: View {
                     Section {
                         Text("Restrictions")
                             .font(.headline)
-                        Toggle("Do Not Disturb", isOn: $windDown.doNotDisturb)
-                        Toggle("Grayscale", isOn: $windDown.grayscale)
-                        Toggle("Low Brightness", isOn: $windDown.lowBrightness)
                         Toggle("Restrict Apps", isOn: $windDown.restrictApps)
                         
                         if windDown.restrictApps {

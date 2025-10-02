@@ -58,9 +58,6 @@ struct BedtimeView: View {
                         .font(.headline)
                         .padding(.top)
 
-                    if windDown.grayscale { Text("• Grayscale") }
-                    if windDown.doNotDisturb { Text("• Do Not Disturb") }
-                    if windDown.lowBrightness { Text("• Low Brightness") }
                     if windDown.restrictApps { Text("• Non-Essential Apps Disabled") }
                 }
                 .padding(.horizontal)

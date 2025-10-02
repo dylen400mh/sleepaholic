@@ -17,8 +17,5 @@ struct UserSettings: Identifiable, Codable {
     var wakeUpTime: Int
     
     var trackSleep: Bool
-    var doNotDisturb: Bool
-    var grayscale: Bool
-    var lowBrightness: Bool
     var restrictApps: Bool
 }

@@ -158,9 +158,6 @@ struct ContentView: View {
                 windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
                 windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
                 windDown.trackSleep     = s.trackSleep
-                windDown.doNotDisturb   = s.doNotDisturb
-                windDown.grayscale      = s.grayscale
-                windDown.lowBrightness  = s.lowBrightness
                 windDown.restrictApps   = s.restrictApps
             }
         }

@@ -26,8 +26,7 @@ class WindDownManager: ObservableObject, Codable {
 
     enum CodingKeys: String, CodingKey {
         case isActive, targetBedtime, targetWakeup, trackSleep,
-             doNotDisturb, grayscale, lowBrightness, restrictApps,
-             restrictedApps, selectedSounds, isPlaying
+        restrictApps, restrictedApps, selectedSounds, isPlaying
     }
     
     // Settings applied during wind down
@@ -55,9 +54,6 @@ class WindDownManager: ObservableObject, Codable {
             AVAudioApplication.requestRecordPermission { _ in }
         }
     }
-    @Published var doNotDisturb: Bool = false { didSet { saveState() } }
-    @Published var grayscale: Bool = false { didSet { saveState() } }
-    @Published var lowBrightness: Bool = false { didSet { saveState() } }
     @Published var restrictApps: Bool = false { didSet { saveState() } }
     @Published var restrictedApps: [String] = [] { didSet { saveState() } }
     @Published var selectedSounds: Set<String> = [] { didSet { saveState() } }
@@ -72,9 +68,6 @@ class WindDownManager: ObservableObject, Codable {
         targetBedtime = try container.decode(Date.self, forKey: .targetBedtime)
         targetWakeup = try container.decode(Date.self, forKey: .targetWakeup)
         trackSleep = try container.decode(Bool.self, forKey: .trackSleep)
-        doNotDisturb = try container.decode(Bool.self, forKey: .doNotDisturb)
-        grayscale = try container.decode(Bool.self, forKey: .grayscale)
-        lowBrightness = try container.decode(Bool.self, forKey: .lowBrightness)
         restrictApps = try container.decode(Bool.self, forKey: .restrictApps)
         restrictedApps = ["TikTok, Instagram, YouTube"]
         selectedSounds = try container.decode(Set<String>.self, forKey: .selectedSounds)
@@ -88,9 +81,6 @@ class WindDownManager: ObservableObject, Codable {
         try container.encode(targetBedtime, forKey: .targetBedtime)
         try container.encode(targetWakeup, forKey: .targetWakeup)
         try container.encode(trackSleep, forKey: .trackSleep)
-        try container.encode(doNotDisturb, forKey: .doNotDisturb)
-        try container.encode(grayscale, forKey: .grayscale)
-        try container.encode(lowBrightness, forKey: .lowBrightness)
         try container.encode(restrictApps, forKey: .restrictApps)
         try container.encode(restrictedApps, forKey: .restrictedApps)
         try container.encode(selectedSounds, forKey: .selectedSounds)
@@ -105,9 +95,6 @@ class WindDownManager: ObservableObject, Codable {
             ? WindDownManager.dateFromMinutes(settings!.wakeUpTime)
             : Date()
         self.trackSleep = settings?.trackSleep ?? false
-        self.doNotDisturb = settings?.doNotDisturb ?? false
-        self.grayscale = settings?.grayscale ?? false
-        self.lowBrightness = settings?.lowBrightness ?? false
         self.restrictApps = settings?.restrictApps ?? false
         self.restrictedApps = ["TikTok", "Instagram", "YouTube"]
     }
@@ -137,9 +124,6 @@ class WindDownManager: ObservableObject, Codable {
         selectedSounds.removeAll()
         isPlaying = true
         trackSleep = false
-        doNotDisturb = false
-        grayscale = false
-        lowBrightness = false
         restrictApps = false
         restrictedApps = []
     }
