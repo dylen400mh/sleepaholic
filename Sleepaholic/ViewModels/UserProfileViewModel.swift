@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FirebaseAuth
 
 @MainActor
 final class UserProfileViewModel: ObservableObject {
@@ -13,17 +14,19 @@ final class UserProfileViewModel: ObservableObject {
     private let service = FirestoreService.shared
     private let collection = "users"
 
-    func loadProfile(for userId: String) async {
+    func loadProfile() async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            profile = try await service.fetch(from: collection, id: userId)
+            profile = try await service.fetch(from: collection, id: uid)
         } catch {
             print("Error loading profile: \(error)")
         }
     }
 
     func saveProfile(_ profile: UserProfile) async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            try await service.save(profile, to: collection)
+            try await service.save(profile, to: "\(collection)/\(uid)")
             self.profile = profile
         } catch {
             print("Error saving profile: \(error)")

@@ -13,7 +13,23 @@ struct ContentView: View {
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     @EnvironmentObject var activityViewModel: ActivityViewModel
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
+    @EnvironmentObject var userProfileViewModel: UserProfileViewModel
 
+    var debtProgress: CGFloat {
+        let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
+        var totalMinutes = 0
+        for part in parts {
+            if part.contains("h") {
+                totalMinutes += (Int(part.replacingOccurrences(of: "h", with: "")) ?? 0) * 60
+            } else if part.contains("m") {
+                totalMinutes += Int(part.replacingOccurrences(of: "m", with: "")) ?? 0
+            }
+        }
+        // Cap between 0–1
+        let maxDebtMinutes = 14 * 60 // assuming 14 hours is max
+        return min(CGFloat(totalMinutes) / CGFloat(maxDebtMinutes), 1.0)
+    }
+    
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -64,7 +80,7 @@ struct ContentView: View {
                                 .frame(width: 200, height: 200)
 
                             Circle()
-                                .trim(from: 0.0, to: 0.7)
+                                .trim(from: 0.0, to: debtProgress)
                                 .stroke(Color.blue, style: StrokeStyle(lineWidth: 20, lineCap: .round))
                                 .frame(width: 200, height: 200)
                                 .rotationEffect(.degrees(-90))
@@ -146,9 +162,12 @@ struct ContentView: View {
             }
         }
         .task {
+            await userProfileViewModel.loadProfile()
             await activityViewModel.loadActivities()
             await userSettingsViewModel.loadSettings()
             await sleepLogViewModel.loadSleepLogs()
+            
+            sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
             
             if let s = userSettingsViewModel.settings, !windDown.isActive {
                 windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
@@ -169,6 +188,7 @@ struct ContentView: View {
     .environmentObject(UserSettingsViewModel())
     .environmentObject(ActivityViewModel())
     .environmentObject(SleepLogViewModel())
+    .environmentObject(UserProfileViewModel())
 }
 
 

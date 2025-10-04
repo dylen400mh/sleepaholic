@@ -46,6 +46,7 @@ struct SleepaholicApp: App {
     @StateObject private var userSettingsViewModel = UserSettingsViewModel()
     @StateObject private var activityViewModel = ActivityViewModel()
     @StateObject private var sleepLogViewModel = SleepLogViewModel()
+    @StateObject private var userProfileViewModel = UserProfileViewModel()
     
     var body: some Scene {
         WindowGroup {
@@ -56,6 +57,7 @@ struct SleepaholicApp: App {
             .environmentObject(userSettingsViewModel)
             .environmentObject(activityViewModel)
             .environmentObject(sleepLogViewModel)
+            .environmentObject(userProfileViewModel)
         }
     }
 }

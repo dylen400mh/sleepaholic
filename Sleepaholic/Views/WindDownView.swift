@@ -13,6 +13,7 @@ struct WindDownView: View {
     
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
+    @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     
     @State private var showPicker = false
     @State private var requestingAuth = false
@@ -46,6 +47,10 @@ struct WindDownView: View {
                     Section {
                         DatePicker("Target Bedtime", selection: $windDown.targetBedtime, displayedComponents: .hourAndMinute)
                         DatePicker("Target Wake-Up Time", selection: $windDown.targetWakeup, displayedComponents: .hourAndMinute)
+                        let targetHours = sleepLogViewModel.ageBasedTargetHours(for: userProfileViewModel.profile?.age)
+                        Text("Based on your age, we recommend at least \(Int(targetHours)) hours of sleep per night.")
+                            .font(.footnote)
+                            .foregroundColor(.gray)
                     }
                     
                     // Sounds
@@ -224,6 +229,7 @@ struct WindDownView: View {
     }
     .environmentObject(WindDownManager())
     .environmentObject(SleepLogViewModel())
+    .environmentObject(UserProfileViewModel())
 }
 
 

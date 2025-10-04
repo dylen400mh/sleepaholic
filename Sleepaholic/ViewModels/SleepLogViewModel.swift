@@ -51,8 +51,6 @@ final class SleepLogViewModel: ObservableObject {
             var fetched = try await service.fetchAll(from: path(for: uid)) as [SleepLog]
             fetched.sort { $0.start > $1.start }
             sleepLogs = fetched
-            
-            recalcStats()
         } catch {
             print("Error loading sleep logs: \(error)")
         }
@@ -154,7 +152,58 @@ final class SleepLogViewModel: ObservableObject {
         return lastSleep
     }
     
-    func recalcStats() {
+    func ageBasedTargetHours(for age: Int?) -> Double {
+        guard let age = age, age > 0 else {
+            return 8.0      // Default target hours if no age is provided
+        }
+        
+        switch age {
+        case ..<18:
+            return 9.0      // Teens (8-10 hours recommended)
+        case 18...64:
+            return 8.0      // Adults (7-9 hours recommended)
+        default:
+            return 7.5      // Seniors (7-8 hours recommended)
+        }
+    }
+    
+    private func calculateSleepDebt(for logs: [SleepLog], age: Int?) -> Int {
+        let targetMinutes = Int(ageBasedTargetHours(for: age) * 60)
+        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        var debt = 0
+
+        for log in logs where log.end >= sevenDaysAgo {
+            let actualMinutes = Int(log.end.timeIntervalSince(log.start) / 60)
+
+            if actualMinutes < targetMinutes {
+                // slept less → add debt
+                debt += targetMinutes - actualMinutes
+            } else {
+                // overslept → repay
+                debt -= actualMinutes - targetMinutes
+            }
+
+            // Cap at 0
+            if debt < 0 {
+                debt = 0
+            }
+        }
+
+        return debt
+    }
+    
+    private func formatMinutes(_ minutes: Int) -> String {
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+        
+        if hours > 0 {
+            return "\(hours)h \(remainingMinutes)m"
+        } else {
+            return "\(remainingMinutes)m"
+        }
+    }
+    
+    func recalcStats(userAge: Int?) {
         let defaults = UserDefaults.standard
 
         // 🔥 streak
@@ -166,8 +215,9 @@ final class SleepLogViewModel: ObservableObject {
         defaults.set(lastSleep, forKey: "lastSleep")
         
 
-        // 😴 sleep debt (placeholder for now)
-        sleepDebt = "6h 30m"
+        // 😴 sleep debt
+        let debtMinutes = calculateSleepDebt(for: sleepLogs, age: userAge)
+        sleepDebt = formatMinutes(debtMinutes)
         defaults.set(sleepDebt, forKey: "sleepDebt")
 
         // 📈 sleep quality (placeholder for now)
