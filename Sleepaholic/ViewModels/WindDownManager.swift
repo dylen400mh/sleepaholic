@@ -17,6 +17,7 @@ import ManagedSettings
 class WindDownManager: ObservableObject, Codable {
     // sound player
     private var audioPlayers: [String: AVAudioPlayer] = [:]
+    private var audioSessionConfigured = false
     
     // recording sleep sounds
     private var audioRecorder: AVAudioRecorder?
@@ -237,6 +238,7 @@ class WindDownManager: ObservableObject, Codable {
     }
     
     private func setupSharedAudioSession() {
+        guard !audioSessionConfigured else { return }
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(
@@ -245,13 +247,14 @@ class WindDownManager: ObservableObject, Codable {
                 options: [.allowBluetooth, .defaultToSpeaker, .mixWithOthers]
             )
             try session.setActive(true)
+            audioSessionConfigured = true
         } catch {
             print("❌ Failed to set up audio session: \(error)")
         }
     }
     
     func playSound(named soundName: String) {
-        // setup audio session so sound can be played without the app open
+        // setup audio session so sound can be played without the app open (this only happens once then we don't need to do it again)
         setupSharedAudioSession()
         
         let possibleExtensions = ["m4a", "wav"]
@@ -348,6 +351,7 @@ class WindDownManager: ObservableObject, Codable {
     private func deactivateRecordingSession() {
         do {
             try AVAudioSession.sharedInstance().setActive(false)
+            audioSessionConfigured = false
         } catch {
             print("❌ Could not deactivate recording session: \(error)")
         }
