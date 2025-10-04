@@ -131,6 +131,7 @@ class WindDownManager: ObservableObject, Codable {
            let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data),
            decoded.isActive {
             // Only restore if wind down was active
+            decoded.restoreSounds()
             return decoded
         }
         // Otherwise return a fresh manager (resets sounds/settings)
@@ -316,6 +317,14 @@ class WindDownManager: ObservableObject, Codable {
         } else {
             selectedSounds.insert(soundName)
             playSound(named: soundName)
+        }
+    }
+    
+    func restoreSounds() {
+        if isPlaying {
+            for sound in selectedSounds {
+                playSound(named: sound)
+            }
         }
     }
     
