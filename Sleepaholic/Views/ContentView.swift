@@ -13,12 +13,6 @@ struct ContentView: View {
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     @EnvironmentObject var activityViewModel: ActivityViewModel
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
-    
-    @State private var streakDays: Int = 0
-    @State private var lastSleep = "11:00 PM → 7:00 AM (8h)"
-    @State private var sleepQuality: Int = 82
-    @State private var sleepDebt = "6h 30m"
-    @State private var recommendation = "Try going to bed 30 minutes earlier tonight."
 
     var body: some View {
         ZStack {
@@ -33,9 +27,9 @@ struct ContentView: View {
                         // 🔥 streak + quality
                         HStack(spacing: 40) {
                             VStack {
-                                Text("🔥 \(streakDays) day streak")
+                                Text("🔥 \(sleepLogViewModel.streakDays) day streak")
                                     .font(.headline)
-                                Text("Last sleep: \(lastSleep)")
+                                Text("Last sleep: \(sleepLogViewModel.lastSleep)")
                                     .foregroundColor(.gray)
                                     .font(.subheadline)
                             }
@@ -46,13 +40,13 @@ struct ContentView: View {
                                     .frame(width: 80, height: 80)
 
                                 Circle()
-                                    .trim(from: 0.0, to: CGFloat(sleepQuality) / 100)
+                                    .trim(from: 0.0, to: CGFloat(sleepLogViewModel.sleepQuality) / 100)
                                     .stroke(Color.green, style: StrokeStyle(lineWidth: 10, lineCap: .round))
                                     .frame(width: 80, height: 80)
                                     .rotationEffect(.degrees(-90))
 
                                 VStack {
-                                    Text("\(sleepQuality)%")
+                                    Text("\(sleepLogViewModel.sleepQuality)%")
                                         .font(.headline)
                                         .fontWeight(.bold)
                                     Text("Quality")
@@ -78,7 +72,7 @@ struct ContentView: View {
                             VStack {
                                 Text("Your sleep debt is:")
                                     .foregroundColor(.gray)
-                                Text(sleepDebt)
+                                Text(sleepLogViewModel.sleepDebt)
                                     .font(.title2)
                                     .fontWeight(.bold)
                             }
@@ -114,7 +108,7 @@ struct ContentView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Sleep Recommendations")
                                 .font(.headline)
-                            Text(recommendation)
+                            Text(sleepLogViewModel.recommendation)
                                 .multilineTextAlignment(.center)
                                 .padding(.top, 4)
                                 .padding(.horizontal)
@@ -156,17 +150,12 @@ struct ContentView: View {
             await userSettingsViewModel.loadSettings()
             await sleepLogViewModel.loadSleepLogs()
             
-            streakDays = sleepLogViewModel.calculateStreak()
-            
             if let s = userSettingsViewModel.settings, !windDown.isActive {
                 windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
                 windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
                 windDown.trackSleep     = s.trackSleep
                 windDown.restrictApps   = s.restrictApps
             }
-        }
-        .onChange(of: sleepLogViewModel.sleepLogs) {
-            streakDays = sleepLogViewModel.calculateStreak()
         }
     }
 }

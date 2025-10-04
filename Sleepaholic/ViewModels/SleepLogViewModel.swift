@@ -19,12 +19,26 @@ final class SleepLogViewModel: ObservableObject {
     @Published private(set) var activeLog: SleepLog?
     private let activeKey = "activeLog"
     
+    @Published private(set) var streakDays: Int
+    @Published private(set) var lastSleep: String
+    @Published private(set) var sleepDebt: String
+    @Published private(set) var recommendation: String
+    @Published private(set) var sleepQuality: Int
+    
     init() {
         // restore active session if app was restarted
         if let data = UserDefaults.standard.data(forKey: activeKey),
            let decoded = try? JSONDecoder().decode(SleepLog.self, from: data) {
             activeLog = decoded
         }
+        
+        // load cached values (so UI has something right away)
+        let defaults = UserDefaults.standard
+        self.streakDays = defaults.integer(forKey: "streakDays")
+        self.lastSleep = defaults.string(forKey: "lastSleep") ?? ""
+        self.sleepDebt = defaults.string(forKey: "sleepDebt") ?? ""
+        self.recommendation = defaults.string(forKey: "recommendation") ?? ""
+        self.sleepQuality = defaults.integer(forKey: "sleepQuality")
     }
     
     private func path(for userId: String) -> String {
@@ -37,6 +51,8 @@ final class SleepLogViewModel: ObservableObject {
             var fetched = try await service.fetchAll(from: path(for: uid)) as [SleepLog]
             fetched.sort { $0.start > $1.start }
             sleepLogs = fetched
+            
+            recalcStats()
         } catch {
             print("Error loading sleep logs: \(error)")
         }
@@ -107,5 +123,28 @@ final class SleepLogViewModel: ObservableObject {
             day = calendar.date(byAdding: .day, value: -1, to: day)!
         }
         return streak
+    }
+    
+    func recalcStats() {
+        let defaults = UserDefaults.standard
+
+        // 🔥 streak
+        streakDays = calculateStreak()
+        defaults.set(streakDays, forKey: "streakDays")
+
+        // 🕒 last sleep
+        lastSleep = "11:00 PM → 7:00 AM (8h)"
+
+        // 😴 sleep debt (placeholder for now)
+        sleepDebt = "6h 30m"
+        defaults.set(sleepDebt, forKey: "sleepDebt")
+
+        // 📈 sleep quality (placeholder for now)
+        sleepQuality = 82
+        defaults.set(sleepQuality, forKey: "sleepQuality")
+
+        // 💡 recommendation (placeholder for now)
+        recommendation = "Try going to bed 30 minutes earlier tonight."
+        defaults.set(recommendation, forKey: "recommendation")
     }
 }
