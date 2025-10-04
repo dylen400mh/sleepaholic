@@ -125,6 +125,35 @@ final class SleepLogViewModel: ObservableObject {
         return streak
     }
     
+    func getLastSleep() -> String {
+        if let latest = sleepLogs.first {
+            let timeFormatter = DateFormatter()
+            timeFormatter.timeStyle = .short
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium // e.g., Oct 2, 2025
+
+            // Format times
+            let startStr = timeFormatter.string(from: latest.start)
+            let endStr = timeFormatter.string(from: latest.end)
+
+            // Duration
+            let duration = latest.end.timeIntervalSince(latest.start)
+            let hours = Int(duration / 3600)
+            let minutes = Int((duration.truncatingRemainder(dividingBy: 3600)) / 60)
+
+            // Example: "11:00 PM → 7:15 AM (8h 15m) • Oct 2, 2025"
+            if minutes > 0 {
+                lastSleep = "\(startStr) → \(endStr) (\(hours)h \(minutes)m) • \(dateFormatter.string(from: latest.end))"
+            } else {
+                lastSleep = "\(startStr) → \(endStr) (\(hours)h) • \(dateFormatter.string(from: latest.end))"
+            }
+        } else {
+            lastSleep = ""
+        }
+        return lastSleep
+    }
+    
     func recalcStats() {
         let defaults = UserDefaults.standard
 
@@ -133,7 +162,9 @@ final class SleepLogViewModel: ObservableObject {
         defaults.set(streakDays, forKey: "streakDays")
 
         // 🕒 last sleep
-        lastSleep = "11:00 PM → 7:00 AM (8h)"
+        lastSleep = getLastSleep()
+        defaults.set(lastSleep, forKey: "lastSleep")
+        
 
         // 😴 sleep debt (placeholder for now)
         sleepDebt = "6h 30m"
