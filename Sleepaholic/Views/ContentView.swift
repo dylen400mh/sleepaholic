@@ -14,6 +14,7 @@ struct ContentView: View {
     @EnvironmentObject var activityViewModel: ActivityViewModel
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
+    @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
 
     var debtProgress: CGFloat {
         let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
@@ -124,7 +125,7 @@ struct ContentView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Sleep Recommendations")
                                 .font(.headline)
-                            Text(sleepLogViewModel.recommendation)
+                            Text(sleepLogViewModel.recommendation != "" ? sleepLogViewModel.recommendation : "No recommendations yet. Start wind down and sleep to see recommendations!")
                                 .multilineTextAlignment(.center)
                                 .padding(.top, 4)
                                 .padding(.horizontal)
@@ -166,8 +167,30 @@ struct ContentView: View {
             await activityViewModel.loadActivities()
             await userSettingsViewModel.loadSettings()
             await sleepLogViewModel.loadSleepLogs()
+            // 💤 Load clips for the most recent sleep log (if available)
+            if let latestLog = sleepLogViewModel.sleepLogs.first {
+                await sleepClipViewModel.loadClips(for: latestLog.id)
+            }
             
             sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
+            
+            // Only generate new insights if new sleep log since last generation
+            let lastGenerated = UserDefaults.standard.object(forKey: "lastInsightGeneratedAt") as? Date
+            let latestSleepEnd = sleepLogViewModel.sleepLogs.first?.end
+
+            let shouldGenerateInsights: Bool = {
+                guard let latestEnd = latestSleepEnd else { return false }
+                guard let lastGen = lastGenerated else { return true } // never generated before
+                return latestEnd > lastGen // new log since last insight
+            }()
+
+            if shouldGenerateInsights {
+                await sleepLogViewModel.generateSleepInsights(
+                    profile: userProfileViewModel.profile,
+                    activities: activityViewModel.activities,
+                    audioClipsCount: sleepClipViewModel.clips.count
+                )
+            }
             
             if let s = userSettingsViewModel.settings, !windDown.isActive {
                 windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
@@ -189,6 +212,7 @@ struct ContentView: View {
     .environmentObject(ActivityViewModel())
     .environmentObject(SleepLogViewModel())
     .environmentObject(UserProfileViewModel())
+    .environmentObject(SleepClipViewModel())
 }
 
 

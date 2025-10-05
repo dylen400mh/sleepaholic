@@ -19,6 +19,8 @@ final class SleepLogViewModel: ObservableObject {
     @Published private(set) var activeLog: SleepLog?
     private let activeKey = "activeLog"
     
+    private let lastInsightKey = "lastInsightGeneratedAt"
+    
     @Published private(set) var streakDays: Int
     @Published private(set) var lastSleep: String
     @Published private(set) var sleepDebt: String
@@ -203,6 +205,75 @@ final class SleepLogViewModel: ObservableObject {
         }
     }
     
+    func buildInsightInput(
+        profile: UserProfile?,                // from UserProfileViewModel
+        activities: [Activity],               // from ActivityViewModel
+        audioClipsCount: Int                  // from SleepClipViewModel
+    ) -> SleepInsightInput? {
+
+        // get most recent sleep log
+        guard let latest = sleepLogs.first else { return nil }
+
+        // derive target sleep hours from age
+        let targetHours = ageBasedTargetHours(for: profile?.age)
+
+        // compute total sleep debt hours as Double (strip “h m” formatting)
+        let debtComponents = sleepDebt
+            .split(separator: " ")
+            .compactMap { Double($0.replacingOccurrences(of: "h", with: "")
+                                    .replacingOccurrences(of: "m", with: "")) }
+        let totalDebtHours = (debtComponents.first ?? 0) +
+                             ((debtComponents.count > 1 ? debtComponents[1] / 60 : 0))
+
+        // Get previous 7 sleeps, excluding the latest one
+        let recentSleeps = Array(sleepLogs.dropFirst().prefix(7))
+        
+        // build the struct
+        return SleepInsightInput(
+            age: profile?.age,
+            targetHours: targetHours,
+            streakDays: streakDays,
+            bedtime: latest.start,
+            wakeup: latest.end,
+            sleepDebtHours: totalDebtHours,
+            activities: activities,
+            audioClipsCount: audioClipsCount, // later on we will actually analyze the audio content
+            recentSleeps: recentSleeps
+        )
+    }
+    
+    func generateSleepInsights(
+        profile: UserProfile?,
+        activities: [Activity],
+        audioClipsCount: Int
+    ) async {
+        guard let input = buildInsightInput(
+            profile: profile,
+            activities: activities,
+            audioClipsCount: audioClipsCount
+        ) else {
+            print("⚠️ Missing sleep data for AI insights")
+            return
+        }
+
+        do {
+            let output = try await OpenAIService.shared.generateSleepInsights(from: input)
+            await MainActor.run {
+                self.sleepQuality = output.quality
+                self.recommendation = "• " + output.recommendations.joined(separator: "\n• ")
+            }
+
+            // Persist
+            UserDefaults.standard.set(self.sleepQuality, forKey: "sleepQuality")
+            UserDefaults.standard.set(self.recommendation, forKey: "recommendation")
+            
+            UserDefaults.standard.set(Date(), forKey: lastInsightKey)
+        } catch {
+            print("❌ Failed to generate insights: \(error.localizedDescription)")
+        }
+    }
+
+    
     func recalcStats(userAge: Int?) {
         let defaults = UserDefaults.standard
 
@@ -219,13 +290,5 @@ final class SleepLogViewModel: ObservableObject {
         let debtMinutes = calculateSleepDebt(for: sleepLogs, age: userAge)
         sleepDebt = formatMinutes(debtMinutes)
         defaults.set(sleepDebt, forKey: "sleepDebt")
-
-        // 📈 sleep quality (placeholder for now)
-        sleepQuality = 82
-        defaults.set(sleepQuality, forKey: "sleepQuality")
-
-        // 💡 recommendation (placeholder for now)
-        recommendation = "Try going to bed 30 minutes earlier tonight."
-        defaults.set(recommendation, forKey: "recommendation")
     }
 }

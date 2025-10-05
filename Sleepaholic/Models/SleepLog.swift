@@ -13,4 +13,8 @@ struct SleepLog: Identifiable, Codable, Equatable {
     var id: String { documentId ?? UUID().uuidString }
     var start: Date
     var end: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case start, end
+    }
 }

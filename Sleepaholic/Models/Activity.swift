@@ -21,4 +21,8 @@ struct Activity: Identifiable, Codable {
     var medication: String?
     var start: Date?
     var end: Date?
+    
+    enum CodingKeys: String, CodingKey {
+        case type, loggedAt, kind, otherDescription, amountMg, durationMin, drinks, medication, start, end
+    }
 }
