@@ -15,6 +15,8 @@ struct OnboardingView: View {
             switch currentStep {
             case 1:
                 WelcomeView(next: goToNext)
+            case 2:
+                AuthView(next: goToNext)
             default:
                 Text("Onboarding complete!") // placeholder for next step
             }

@@ -13,7 +13,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
-        AuthService.shared.signInAnonymously()
         
         // Ask for notifications
         let center = UNUserNotificationCenter.current()

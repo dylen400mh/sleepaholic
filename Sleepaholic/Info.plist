@@ -2,6 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>FirebaseAuth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-912154183945-ios-2ad27ca26e7a64fcebebd8</string>
+			</array>
+		</dict>
+	</array>
 	<key>OPENAI_API_KEY</key>
 	<string>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</string>
 	<key>UIBackgroundModes</key>
