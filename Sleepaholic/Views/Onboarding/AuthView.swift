@@ -7,8 +7,11 @@
 
 import SwiftUI
 import AuthenticationServices
+import FirebaseAuth
 
 struct AuthView: View {
+    @EnvironmentObject var userProfileViewModel: UserProfileViewModel
+
     let next: () -> Void
     @StateObject private var authService = AuthService.shared
     @State private var showError = false
@@ -32,6 +35,15 @@ struct AuthView: View {
                     Task {
                         do {
                             try await authService.handleAppleSignIn(result: result)
+                            if let user = Auth.auth().currentUser {
+                                let newProfile = UserProfile(
+                                    name: user.displayName ?? "",
+                                    age: 0,
+                                    gender: "",
+                                    createdAt: Date()
+                                )
+                                await userProfileViewModel.saveProfile(newProfile)
+                            }
                             next()
                         } catch {
                             showError = true
@@ -48,6 +60,15 @@ struct AuthView: View {
                     Task {
                         do {
                             try await authService.signInWithGoogle()
+                            if let user = Auth.auth().currentUser {
+                                let newProfile = UserProfile(
+                                    name: user.displayName ?? "",
+                                    age: 0,
+                                    gender: "",
+                                    createdAt: Date()
+                                )
+                                await userProfileViewModel.saveProfile(newProfile)
+                            }
                             next()
                         } catch {
                             showError = true

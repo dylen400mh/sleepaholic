@@ -26,7 +26,7 @@ final class UserProfileViewModel: ObservableObject {
     func saveProfile(_ profile: UserProfile) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            try await service.save(profile, to: "\(collection)/\(uid)")
+            try await service.save(profile, to: collection, id: uid)
             self.profile = profile
         } catch {
             print("Error saving profile: \(error)")
