@@ -17,6 +17,8 @@ struct OnboardingView: View {
                 WelcomeView(next: goToNext)
             case 2:
                 AuthView(next: goToNext)
+            case 3:
+                ProfileIntroView(next: goToNext)
             default:
                 Text("Onboarding complete!") // placeholder for next step
             }
