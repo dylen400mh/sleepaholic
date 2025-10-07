@@ -45,7 +45,7 @@ struct ProfileIntroView: View {
                     .foregroundColor(.primary)
 
                 ProfileCardView(
-                    name: userProfileViewModel.profile?.name ?? "User",
+                    name: userProfileViewModel.profile?.name ?? "",
                     streakDays: 0,
                     lastSleep: "—",
                     sleepDebt: "0h"

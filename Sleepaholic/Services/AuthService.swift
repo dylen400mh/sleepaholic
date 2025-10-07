@@ -46,7 +46,27 @@ class AuthService: NSObject, ObservableObject {
                                                            rawNonce: nonce,
                                                            fullName: appleIDCredential.fullName)
             let authResult = try await Auth.auth().signIn(with: credential)
-            print("✅ Signed in with Apple: \(authResult.user.uid)")
+            let user = authResult.user
+            print("✅ Signed in with Apple: \(user.uid)")
+
+            // Create Firestore profile only if it doesn’t exist
+            let service = FirestoreService.shared
+            let collection = "users"
+            Task {
+                if (try? await service.fetch(from: collection, id: user.uid) as UserProfile?) == nil {
+                    let displayName = user.displayName ?? ""
+                    let profile = UserProfile(
+                        name: displayName,
+                        age: 0,
+                        gender: "",
+                        createdAt: Date()
+                    )
+                    try? await service.save(profile, to: collection, id: user.uid)
+                    print("🆕 Created initial Firestore profile for Apple user: \(displayName)")
+                } else {
+                    print("ℹ️ Existing profile found — no overwrite.")
+                }
+            }
 
         case .failure(let error):
             throw error
@@ -73,6 +93,25 @@ class AuthService: NSObject, ObservableObject {
                         continuation.resume(throwing: error)
                     } else if let user = result?.user {
                         print("✅ Signed in with Google: \(user.uid)")
+                        
+                        // Create Firestore profile only if it doesn’t exist
+                        let service = FirestoreService.shared
+                        let collection = "users"
+                        Task {
+                            if (try? await service.fetch(from: collection, id: user.uid) as UserProfile?) == nil {
+                                let displayName = user.displayName ?? ""
+                                let profile = UserProfile(
+                                    name: displayName,
+                                    age: 0,
+                                    gender: "",
+                                    createdAt: Date()
+                                )
+                                try? await service.save(profile, to: collection, id: user.uid)
+                                print("🆕 Created initial Firestore profile for Google user: \(displayName)")
+                            } else {
+                                print("ℹ️ Existing profile found — no overwrite.")
+                            }
+                        }
                         continuation.resume(returning: ())
                     } else {
                         continuation.resume(throwing: URLError(.unknown))

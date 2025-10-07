@@ -35,9 +35,17 @@ final class QuizViewModel: ObservableObject {
         guard !questions.isEmpty else { return }
         if currentIndex < questions.count - 1 { currentIndex += 1 }
     }
+    
+    func previousQuestion() {
+        if currentIndex > 0 { currentIndex -= 1 }
+    }
 
     func skipQuestion() {
         if currentQuestion?.isRequired == false { nextQuestion() }
+    }
+    
+    func answerForCurrentQuestion() -> String? {
+        currentQuestion?.answer
     }
 
     func loadQuestions() {

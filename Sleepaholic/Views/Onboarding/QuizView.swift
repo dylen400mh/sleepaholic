@@ -24,13 +24,13 @@ struct QuizView: View {
 
     var body: some View {
         VStack(spacing: 32) {
+            // MARK: - Back Button
             HStack {
                 Button {
                     if viewModel.currentIndex > 0 {
-                        // Go back one question
-                        viewModel.currentIndex -= 1
+                        viewModel.previousQuestion()
+                        restorePreviousAnswer()
                     } else {
-                        // Already on first question → go back to previous onboarding screen
                         previous()
                     }
                 } label: {
@@ -42,7 +42,8 @@ struct QuizView: View {
                 Spacer()
             }
             .padding(.horizontal)
-            
+
+            // MARK: - Question
             if let q = viewModel.currentQuestion {
                 Spacer()
 
@@ -101,126 +102,157 @@ struct QuizView: View {
                 VStack(spacing: 12) {
                     if !q.isRequired {
                         Button {
-                            // Jump directly to question 11 (index 10)
-                            viewModel.currentIndex = 10
-                            selectedOption = nil
+                            viewModel.currentIndex = 10 // Jump directly to Q11
+                            restorePreviousAnswer()
                         } label: {
                             Text("Skip Quiz")
                                 .foregroundColor(.gray)
                         }
                     }
 
-                    if q.type == .multipleChoice {
-                        if selectedOption != nil {
-                            Button {
-                                viewModel.selectAnswer(selectedOption!)
-                                selectedOption = nil
-                                viewModel.nextQuestion()
-                            } label: {
-                                Text("Continue")
-                                    .fontWeight(.semibold)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.accentColor)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(12)
-                                    .padding(.horizontal)
-                            }
+                    Button {
+                        Task {
+                            saveCurrentAnswer(for: q)
                         }
-                    } else {
-                        Button {
-                            Task {
-                                if q.id == 11 {
-                                    // Save name + age to profile
-                                    let profile = UserProfile(
-                                        name: name,
-                                        age: Int(age) ?? 0,
-                                        gender: userProfileViewModel.profile?.gender ?? "",
-                                        createdAt: userProfileViewModel.profile?.createdAt ?? Date()
-                                    )
-                                    await userProfileViewModel.saveProfile(profile)
-                                } else if q.id == 12 || q.id == 13 {
-                                    // Save bedtime/wakeup to settings
-                                    let bedtimeMinutes = Calendar.current.component(.hour, from: bedtime) * 60 +
-                                                         Calendar.current.component(.minute, from: bedtime)
-                                    let wakeupMinutes = Calendar.current.component(.hour, from: wakeup) * 60 +
-                                                        Calendar.current.component(.minute, from: wakeup)
-
-                                    let currentSettings = userSettingsViewModel.settings ?? UserSettings(
-                                        bedtime: bedtimeMinutes,
-                                        wakeUpTime: wakeupMinutes,
-                                        trackSleep: false,
-                                        restrictApps: false
-                                    )
-                                    let updated = UserSettings(
-                                        bedtime: bedtimeMinutes,
-                                        wakeUpTime: wakeupMinutes,
-                                        trackSleep: currentSettings.trackSleep,
-                                        restrictApps: currentSettings.restrictApps
-                                    )
-                                    await userSettingsViewModel.saveSettings(updated)
-                                }
-
-                                // Save locally and continue
-                                if q.type == .textInput {
-                                    viewModel.selectAnswer("Name:\(name) | Age:\(age)")
-                                } else if q.type == .timePicker {
-                                    let fmt = DateFormatter()
-                                    fmt.timeStyle = .short
-                                    let time = q.id == 12 ? fmt.string(from: bedtime)
-                                                          : fmt.string(from: wakeup)
-                                    viewModel.selectAnswer(time)
-                                }
-
-                                if viewModel.isLastQuestion {
-                                    next()
-                                } else {
-                                    viewModel.nextQuestion()
-                                }
-                            }
-                        } label: {
-                            Text(viewModel.isLastQuestion ? "Finish" : "Continue")
-                                .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(canContinue(q) ? Color.accentColor : Color.gray.opacity(0.4))
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                                .padding(.horizontal)
-                        }
-                        .disabled(!canContinue(q))
+                    } label: {
+                        Text(viewModel.isLastQuestion ? "Finish" : "Continue")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(canContinue(q) ? Color.accentColor : Color.gray.opacity(0.4))
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                            .padding(.horizontal)
                     }
+                    .disabled(!canContinue(q))
                 }
             }
         }
-        .onAppear {
-            // Prefill name + age if available
-            if let profile = userProfileViewModel.profile {
-                if !profile.name.isEmpty {
-                    name = profile.name
-                }
-                if profile.age != 0 {
-                    age = String(profile.age)
-                }
-            }
-
-            // Prefill bedtime/wakeup if available
-            if let settings = userSettingsViewModel.settings {
-                let bedtimeDate = Calendar.current.date(bySettingHour: settings.bedtime / 60,
-                                                        minute: settings.bedtime % 60,
-                                                        second: 0, of: Date()) ?? Date()
-                let wakeupDate = Calendar.current.date(bySettingHour: settings.wakeUpTime / 60,
-                                                       minute: settings.wakeUpTime % 60,
-                                                       second: 0, of: Date()) ?? Date()
-                bedtime = bedtimeDate
-                wakeup = wakeupDate
-            }
+        .task {
+            // Prefill from profile/settings
+            await userProfileViewModel.loadProfile()
+            await userSettingsViewModel.loadSettings()
+            prefillUserData()
+            restorePreviousAnswer()
         }
         .animation(.easeInOut, value: viewModel.currentIndex)
     }
 
+    // MARK: - Logic
+
+    private func saveCurrentAnswer(for q: QuizQuestion) {
+        switch q.type {
+        case .multipleChoice:
+            if let selected = selectedOption {
+                viewModel.selectAnswer(selected)
+                
+                // Save gender if this is question 1
+                if q.id == 1 {
+                    let profile = UserProfile(
+                        name: userProfileViewModel.profile?.name ?? "",
+                        age: userProfileViewModel.profile?.age ?? 0,
+                        gender: selected,
+                        createdAt: userProfileViewModel.profile?.createdAt ?? Date()
+                    )
+                    Task { await userProfileViewModel.saveProfile(profile) }
+                }
+            }
+
+        case .textInput:
+            // Save profile info to Firestore
+            let profile = UserProfile(
+                name: name,
+                age: Int(age) ?? 0,
+                gender: userProfileViewModel.profile?.gender ?? "",
+                createdAt: userProfileViewModel.profile?.createdAt ?? Date()
+            )
+            Task { await userProfileViewModel.saveProfile(profile) }
+            viewModel.selectAnswer("Name:\(name) | Age:\(age)")
+
+        case .timePicker:
+            let fmt = DateFormatter()
+            fmt.timeStyle = .short
+            let time = q.id == 12 ? fmt.string(from: bedtime)
+                                  : fmt.string(from: wakeup)
+            viewModel.selectAnswer(time)
+
+            // Save settings to Firestore
+            let bedtimeMinutes = Calendar.current.component(.hour, from: bedtime) * 60 +
+                                 Calendar.current.component(.minute, from: bedtime)
+            let wakeupMinutes = Calendar.current.component(.hour, from: wakeup) * 60 +
+                                Calendar.current.component(.minute, from: wakeup)
+
+            let current = userSettingsViewModel.settings ?? UserSettings(
+                bedtime: bedtimeMinutes,
+                wakeUpTime: wakeupMinutes,
+                trackSleep: false,
+                restrictApps: false
+            )
+
+            let updated = UserSettings(
+                bedtime: bedtimeMinutes,
+                wakeUpTime: wakeupMinutes,
+                trackSleep: current.trackSleep,
+                restrictApps: current.restrictApps
+            )
+
+            Task { await userSettingsViewModel.saveSettings(updated) }
+        }
+
+        // Move forward
+        if viewModel.isLastQuestion {
+            next()
+        } else {
+            viewModel.nextQuestion()
+            restorePreviousAnswer()
+        }
+    }
+
+    private func restorePreviousAnswer() {
+        guard let q = viewModel.currentQuestion else { return }
+
+        if let saved = q.answer {
+            switch q.type {
+            case .multipleChoice:
+                selectedOption = saved
+
+            case .textInput:
+                let parts = saved.split(separator: "|")
+                if parts.count == 2 {
+                    name = parts[0].replacingOccurrences(of: "Name:", with: "").trimmingCharacters(in: .whitespaces)
+                    age = parts[1].replacingOccurrences(of: "Age:", with: "").trimmingCharacters(in: .whitespaces)
+                }
+
+            case .timePicker:
+                // Time already restored by DatePicker binding
+                break
+            }
+        } else {
+            // Reset if no stored answer
+            selectedOption = nil
+        }
+    }
+
+    private func prefillUserData() {
+        if let profile = userProfileViewModel.profile {
+            if !profile.name.isEmpty { name = profile.name }
+            if profile.age != 0 { age = String(profile.age) }
+        }
+
+        if let settings = userSettingsViewModel.settings {
+            let bedtimeDate = Calendar.current.date(bySettingHour: settings.bedtime / 60,
+                                                    minute: settings.bedtime % 60,
+                                                    second: 0, of: Date()) ?? Date()
+            let wakeupDate = Calendar.current.date(bySettingHour: settings.wakeUpTime / 60,
+                                                   minute: settings.wakeUpTime % 60,
+                                                   second: 0, of: Date()) ?? Date()
+            bedtime = bedtimeDate
+            wakeup = wakeupDate
+        }
+    }
+
     private func canContinue(_ q: QuizQuestion) -> Bool {
-        guard q.isRequired else { return true }
+        guard q.isRequired else { return selectedOption != nil || q.type != .multipleChoice }
         switch q.type {
         case .textInput:
             let ageOK = Int(age) != nil && !age.trimmingCharacters(in: .whitespaces).isEmpty

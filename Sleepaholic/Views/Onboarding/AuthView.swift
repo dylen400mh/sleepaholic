@@ -47,15 +47,6 @@ struct AuthView: View {
                     Task {
                         do {
                             try await authService.handleAppleSignIn(result: result)
-                            if let user = Auth.auth().currentUser {
-                                let newProfile = UserProfile(
-                                    name: user.displayName ?? "",
-                                    age: 0,
-                                    gender: "",
-                                    createdAt: Date()
-                                )
-                                await userProfileViewModel.saveProfile(newProfile)
-                            }
                             next()
                         } catch {
                             showError = true
@@ -72,15 +63,6 @@ struct AuthView: View {
                     Task {
                         do {
                             try await authService.signInWithGoogle()
-                            if let user = Auth.auth().currentUser {
-                                let newProfile = UserProfile(
-                                    name: user.displayName ?? "",
-                                    age: 0,
-                                    gender: "",
-                                    createdAt: Date()
-                                )
-                                await userProfileViewModel.saveProfile(newProfile)
-                            }
                             next()
                         } catch {
                             showError = true
