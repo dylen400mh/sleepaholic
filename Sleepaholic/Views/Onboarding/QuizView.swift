@@ -21,6 +21,7 @@ struct QuizView: View {
 
     let next: () -> Void
     let previous: () -> Void
+    let startAt: Int
 
     var body: some View {
         VStack(spacing: 32) {
@@ -150,6 +151,10 @@ struct QuizView: View {
             await userSettingsViewModel.loadSettings()
             prefillUserData()
             restorePreviousAnswer()
+            
+            if startAt > 0 && startAt < viewModel.questions.count {
+                viewModel.currentIndex = startAt
+            }
         }
         .animation(.easeInOut, value: viewModel.currentIndex)
     }
@@ -283,7 +288,7 @@ struct QuizView: View {
 }
 
 #Preview {
-    QuizView(next: {}, previous: {})
+    QuizView(next: {}, previous: {}, startAt: 0)
         .environmentObject(UserProfileViewModel())
         .environmentObject(UserSettingsViewModel())
 }

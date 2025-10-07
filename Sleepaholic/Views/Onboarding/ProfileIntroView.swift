@@ -76,6 +76,11 @@ struct ProfileIntroView: View {
         }
         .multilineTextAlignment(.center)
         .padding(.horizontal)
+        .onAppear {
+            Task {
+                await userProfileViewModel.loadProfile()
+            }
+        }
     }
 }
 

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct OnboardingView: View {
     @State private var currentStep: Int = 1
+    @State private var quizStartIndex = 0
 
     var body: some View {
         ZStack {
@@ -18,9 +19,23 @@ struct OnboardingView: View {
             case 2:
                 AuthView(next: goToNext, previous: goToPrevious)
             case 3:
-                ProfileIntroView(next: goToNext, previous: goToPrevious)
+                ProfileIntroView(
+                    next: {
+                        quizStartIndex = 0
+                        goToNext()
+                    },
+                    previous: goToPrevious
+                )
             case 4:
-                QuizView(next: goToNext, previous: goToPrevious)
+                QuizView(next: goToNext, previous: goToPrevious, startAt: quizStartIndex)
+            case 5:
+                AnalysisView(
+                    next: goToNext,
+                    previous: {
+                        quizStartIndex = 12
+                        goToPrevious()
+                    }
+                )
             default:
                 Text("Onboarding complete!") // placeholder for next step
             }
