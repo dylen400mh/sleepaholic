@@ -13,12 +13,24 @@ struct AuthView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
 
     let next: () -> Void
+    let previous: () -> Void
     @StateObject private var authService = AuthService.shared
     @State private var showError = false
     @State private var errorMessage = ""
 
     var body: some View {
         VStack(spacing: 24) {
+            HStack {
+                Button(action: previous) {
+                    Image(systemName: "chevron.left")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .padding(8)
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+
             Spacer()
 
             Text("Become a Sleepaholic")
@@ -109,5 +121,5 @@ struct AuthView: View {
 }
 
 #Preview {
-    AuthView(next: {})
+    AuthView(next: {}, previous: {})
 }

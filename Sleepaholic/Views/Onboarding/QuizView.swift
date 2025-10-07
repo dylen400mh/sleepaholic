@@ -20,9 +20,29 @@ struct QuizView: View {
     @State private var selectedOption: String? = nil
 
     let next: () -> Void
+    let previous: () -> Void
 
     var body: some View {
         VStack(spacing: 32) {
+            HStack {
+                Button {
+                    if viewModel.currentIndex > 0 {
+                        // Go back one question
+                        viewModel.currentIndex -= 1
+                    } else {
+                        // Already on first question → go back to previous onboarding screen
+                        previous()
+                    }
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .padding(8)
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+            
             if let q = viewModel.currentQuestion {
                 Spacer()
 
@@ -215,7 +235,7 @@ struct QuizView: View {
 }
 
 #Preview {
-    QuizView(next: {})
+    QuizView(next: {}, previous: {})
         .environmentObject(UserProfileViewModel())
         .environmentObject(UserSettingsViewModel())
 }

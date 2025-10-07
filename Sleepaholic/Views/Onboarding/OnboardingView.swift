@@ -16,11 +16,11 @@ struct OnboardingView: View {
             case 1:
                 WelcomeView(next: goToNext)
             case 2:
-                AuthView(next: goToNext)
+                AuthView(next: goToNext, previous: goToPrevious)
             case 3:
-                ProfileIntroView(next: goToNext)
+                ProfileIntroView(next: goToNext, previous: goToPrevious)
             case 4:
-                QuizView(next: goToNext)
+                QuizView(next: goToNext, previous: goToPrevious)
             default:
                 Text("Onboarding complete!") // placeholder for next step
             }
@@ -31,6 +31,12 @@ struct OnboardingView: View {
 
     private func goToNext() {
         currentStep += 1
+    }
+    
+    private func goToPrevious() {
+        if currentStep > 1 {
+            currentStep -= 1
+        }
     }
 }
 

@@ -10,9 +10,21 @@ import SwiftUI
 struct ProfileIntroView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     let next: () -> Void
+    let previous: () -> Void
 
     var body: some View {
         VStack(spacing: 30) {
+            HStack {
+                Button(action: previous) {
+                    Image(systemName: "chevron.left")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .padding(8)
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+            
             Spacer(minLength: 20)
 
             // MARK: - Welcome Header
@@ -68,7 +80,7 @@ struct ProfileIntroView: View {
 }
 
 #Preview {
-    ProfileIntroView(next: {})
+    ProfileIntroView(next: {}, previous: {})
         .environmentObject(UserProfileViewModel())
 }
 
