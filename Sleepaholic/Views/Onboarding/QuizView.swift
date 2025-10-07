@@ -42,6 +42,22 @@ struct QuizView: View {
                 Spacer()
             }
             .padding(.horizontal)
+            
+            VStack(spacing: 8) {
+                // MARK: - Progress Bar
+                ProgressView(value: Double(viewModel.currentIndex + 1),
+                             total: Double(viewModel.questions.count))
+                    .accentColor(.accentColor)
+                    .scaleEffect(x: 1, y: 2, anchor: .center)
+                    .padding(.horizontal)
+
+                // MARK: - Question Counter
+                Text("Question \(viewModel.currentIndex + 1) of \(viewModel.questions.count)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.bottom, 8)
+
 
             // MARK: - Question
             if let q = viewModel.currentQuestion {
