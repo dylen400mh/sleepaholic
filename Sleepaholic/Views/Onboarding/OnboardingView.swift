@@ -11,6 +11,9 @@ struct OnboardingView: View {
     @State private var currentStep: Int = 1
     @State private var quizStartIndex = 0
     @State private var skipAnalysisAnimation = false
+    
+    @StateObject private var quizViewModel = QuizViewModel()
+    @StateObject private var symptomsViewModel = SymptomsViewModel()
 
     var body: some View {
         ZStack {
@@ -36,6 +39,7 @@ struct OnboardingView: View {
                     previous: goToPrevious,
                     startAt: quizStartIndex
                 )
+                .environmentObject(quizViewModel)
             case 5:
                 AnalysisView(
                     next: goToNext,
@@ -52,6 +56,12 @@ struct OnboardingView: View {
                         skipAnalysisAnimation = true
                         goToPrevious()
                     }
+                )
+                .environmentObject(symptomsViewModel)
+            case 7:
+                RecoveryView(
+                    next: goToNext,
+                    previous: goToPrevious
                 )
             default:
                 Text("Onboarding complete!") // placeholder for next step

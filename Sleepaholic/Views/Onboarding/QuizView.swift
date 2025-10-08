@@ -11,7 +11,7 @@ struct QuizView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
 
-    @StateObject private var viewModel = QuizViewModel()
+    @EnvironmentObject private var viewModel: QuizViewModel
 
     @State private var name = ""
     @State private var age = ""

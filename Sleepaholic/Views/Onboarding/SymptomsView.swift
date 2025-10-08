@@ -10,11 +10,7 @@ import CoreHaptics
 
 struct SymptomsView: View {
     @State private var engine: CHHapticEngine?
-    @State private var selectedSymptoms: [String: Set<String>] = [
-        "Mental": [],
-        "Physical": [],
-        "Social/Emotional": []
-    ]
+    @EnvironmentObject private var viewModel: SymptomsViewModel
 
     let next: () -> Void
     let previous: () -> Void
@@ -76,7 +72,9 @@ struct SymptomsView: View {
                             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                                 ForEach(symptoms[category]!, id: \.self) { symptom in
                                     Button {
-                                        toggleSymptom(category: category, symptom: symptom)
+                                        viewModel.toggleSymptom(category: category, symptom: symptom)
+                                        let generator = UIImpactFeedbackGenerator(style: .light)
+                                        generator.impactOccurred()
                                     } label: {
                                         Text(symptom)
                                             .multilineTextAlignment(.center)
@@ -84,18 +82,18 @@ struct SymptomsView: View {
                                             .padding()
                                             .frame(maxWidth: .infinity)
                                             .background(
-                                                selectedSymptoms[category]?.contains(symptom) == true
+                                                viewModel.selectedSymptoms[category]?.contains(symptom) == true
                                                 ? Color.accentColor.opacity(0.2)
                                                 : Color(.secondarySystemBackground)
                                             )
                                             .cornerRadius(12)
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(selectedSymptoms[category]?.contains(symptom) == true
+                                                    .stroke(viewModel.selectedSymptoms[category]?.contains(symptom) == true
                                                             ? Color.accentColor
                                                             : Color.clear, lineWidth: 2)
                                             )
-                                            .animation(.easeInOut(duration: 0.15), value: selectedSymptoms)
+                                            .animation(.easeInOut(duration: 0.15), value: viewModel.selectedSymptoms)
                                     }
                                 }
                             }
@@ -117,34 +115,16 @@ struct SymptomsView: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(canContinue ? Color.accentColor : Color.gray.opacity(0.4))
+                    .background(Color.accentColor)
                     .foregroundColor(.white)
                     .cornerRadius(12)
                     .padding(.horizontal)
             }
-            .disabled(!canContinue)
 
             Spacer(minLength: 30)
         }
         .onAppear(perform: prepareHaptics)
         .navigationBarBackButtonHidden(true)
-    }
-
-    // MARK: - Helpers
-    private var canContinue: Bool {
-        !selectedSymptoms.values.allSatisfy { $0.isEmpty }
-    }
-
-    private func toggleSymptom(category: String, symptom: String) {
-        if selectedSymptoms[category]?.contains(symptom) == true {
-            selectedSymptoms[category]?.remove(symptom)
-        } else {
-            selectedSymptoms[category]?.insert(symptom)
-        }
-
-        // Light haptic on toggle
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred()
     }
 
     private func prepareHaptics() {
