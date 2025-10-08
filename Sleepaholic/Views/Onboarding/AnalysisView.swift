@@ -14,6 +14,7 @@ struct AnalysisView: View {
     @State private var showResults = false
     let next: () -> Void
     let previous: () -> Void
+    var skipAnimation: Bool = false
 
     // Timer for progress animation
     private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
@@ -77,7 +78,7 @@ struct AnalysisView: View {
                             .padding(.horizontal)
                     }
                     .onReceive(timer) { _ in
-                        guard !showResults else { return }
+                        guard !showResults && !skipAnimation else { return }
                         if progress < 1.0 {
                             progress += 0.01
                             vibrate()
@@ -85,7 +86,16 @@ struct AnalysisView: View {
                             completeAnalysis()
                         }
                     }
-                    .onAppear(perform: prepareHaptics)
+                    .onAppear {
+                        if skipAnimation {
+                            // Skip calculation and show results directly
+                            showResults = true
+                            progress = 1.0
+                        } else {
+                            prepareHaptics()
+                        }
+                    }
+
                 } else {
                     // MARK: - Results State
                     VStack(spacing: 30) {
@@ -112,14 +122,17 @@ struct AnalysisView: View {
                                 .font(.headline)
                                 .padding(.bottom, 4)
 
-                            HStack(spacing: 12) {
+                            HStack(alignment: .bottom, spacing: 24) {
                                 VStack {
                                     Text("You")
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
+
                                     Rectangle()
                                         .fill(Color.accentColor)
                                         .frame(width: 60, height: 150 * 0.72)
+                                        .cornerRadius(8)
+
                                     Text("72%")
                                         .font(.headline)
                                 }
@@ -131,11 +144,12 @@ struct AnalysisView: View {
                                     Rectangle()
                                         .fill(Color.gray.opacity(0.4))
                                         .frame(width: 60, height: 150 * 0.46)
+                                        .cornerRadius(8)
                                     Text("46%")
                                         .font(.headline)
                                 }
                             }
-                            .frame(height: 160)
+                            .frame(height: 160, alignment: .bottom)
                         }
 
                         Text("*This result is an indication only and not a medical diagnosis.*")

@@ -10,6 +10,7 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var currentStep: Int = 1
     @State private var quizStartIndex = 0
+    @State private var skipAnalysisAnimation = false
 
     var body: some View {
         ZStack {
@@ -27,12 +28,28 @@ struct OnboardingView: View {
                     previous: goToPrevious
                 )
             case 4:
-                QuizView(next: goToNext, previous: goToPrevious, startAt: quizStartIndex)
+                QuizView(
+                    next: {
+                        skipAnalysisAnimation = false
+                        goToNext()
+                    },
+                    previous: goToPrevious,
+                    startAt: quizStartIndex
+                )
             case 5:
                 AnalysisView(
                     next: goToNext,
                     previous: {
                         quizStartIndex = 12
+                        goToPrevious()
+                    },
+                    skipAnimation: skipAnalysisAnimation
+                )
+            case 6:
+                SymptomsView(
+                    next: goToNext,
+                    previous: {
+                        skipAnalysisAnimation = true
                         goToPrevious()
                     }
                 )
