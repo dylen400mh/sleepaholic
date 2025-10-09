@@ -76,6 +76,8 @@ struct OnboardingView: View {
                         goToPrevious()
                     }
                 )
+            case 9:
+                RecoveryGraphView(next: goToNext, previous: goToPrevious)
             default:
                 Text("Onboarding complete!") // placeholder for next step
             }
