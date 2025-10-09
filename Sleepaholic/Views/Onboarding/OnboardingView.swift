@@ -11,6 +11,7 @@ struct OnboardingView: View {
     @State private var currentStep: Int = 1
     @State private var quizStartIndex = 0
     @State private var skipAnalysisAnimation = false
+    @State private var recoveryStartIndex = 0
     
     @StateObject private var quizViewModel = QuizViewModel()
     @StateObject private var symptomsViewModel = SymptomsViewModel()
@@ -51,7 +52,10 @@ struct OnboardingView: View {
                 )
             case 6:
                 SymptomsView(
-                    next: goToNext,
+                    next: {
+                        recoveryStartIndex = 0
+                        goToNext()
+                    },
                     previous: {
                         skipAnalysisAnimation = true
                         goToPrevious()
@@ -61,7 +65,16 @@ struct OnboardingView: View {
             case 7:
                 RecoveryView(
                     next: goToNext,
-                    previous: goToPrevious
+                    previous: goToPrevious,
+                    startIndex: recoveryStartIndex
+                )
+            case 8:
+                RecoveryBenefitsView(
+                    next: goToNext,
+                    previous: {
+                        recoveryStartIndex = 10
+                        goToPrevious()
+                    }
                 )
             default:
                 Text("Onboarding complete!") // placeholder for next step

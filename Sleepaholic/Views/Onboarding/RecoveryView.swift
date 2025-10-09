@@ -42,6 +42,7 @@ struct RecoveryView: View {
     
     let next: () -> Void
     let previous: () -> Void
+    let startIndex: Int
 
     var body: some View {
         VStack {
@@ -121,10 +122,13 @@ struct RecoveryView: View {
             }
             .padding(.bottom, 40)
         }
+        .onAppear {
+            currentIndex = startIndex
+        }
         .animation(.easeInOut, value: currentIndex)
     }
 }
 
 #Preview {
-    RecoveryView(next: {}, previous: {})
+    RecoveryView(next: {}, previous: {}, startIndex: 0)
 }

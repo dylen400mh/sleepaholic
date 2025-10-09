@@ -111,6 +111,7 @@ struct QuizView: View {
                 VStack(spacing: 12) {
                     if !q.isRequired {
                         Button {
+                            HapticsManager.play(.light)
                             viewModel.currentIndex = 10 // Jump directly to Q11
                             restorePreviousAnswer()
                         } label: {
