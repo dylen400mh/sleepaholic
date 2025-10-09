@@ -26,7 +26,10 @@ struct WelcomeView: View {
 
             Spacer()
 
-            Button(action: next) {
+            Button(action: {
+                HapticsManager.play(.medium)
+                next()
+            }) {
                 Text("Start Quiz")
                     .font(.headline)
                     .padding()

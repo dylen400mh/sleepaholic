@@ -9,7 +9,6 @@ import SwiftUI
 import CoreHaptics
 
 struct SymptomsView: View {
-    @State private var engine: CHHapticEngine?
     @EnvironmentObject private var viewModel: SymptomsViewModel
 
     let next: () -> Void
@@ -39,16 +38,7 @@ struct SymptomsView: View {
     var body: some View {
         VStack(spacing: 24) {
             // MARK: - Header
-            HStack {
-                Button(action: previous) {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .padding(8)
-                }
-                Spacer()
-            }
-            .padding(.horizontal)
+            BackButtonView(previous: previous)
 
             VStack(spacing: 8) {
                 Text("Symptoms")
@@ -73,8 +63,7 @@ struct SymptomsView: View {
                                 ForEach(symptoms[category]!, id: \.self) { symptom in
                                     Button {
                                         viewModel.toggleSymptom(category: category, symptom: symptom)
-                                        let generator = UIImpactFeedbackGenerator(style: .light)
-                                        generator.impactOccurred()
+                                        HapticsManager.play(.light)
                                     } label: {
                                         Text(symptom)
                                             .multilineTextAlignment(.center)
@@ -108,7 +97,7 @@ struct SymptomsView: View {
 
             // MARK: - Continue Button
             Button(action: {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                HapticsManager.play(.medium)
                 next()
             }) {
                 Text("Fix My Sleep")
@@ -123,18 +112,7 @@ struct SymptomsView: View {
 
             Spacer(minLength: 30)
         }
-        .onAppear(perform: prepareHaptics)
         .navigationBarBackButtonHidden(true)
-    }
-
-    private func prepareHaptics() {
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-        do {
-            engine = try CHHapticEngine()
-            try engine?.start()
-        } catch {
-            print("Haptics error: \(error.localizedDescription)")
-        }
     }
 }
 

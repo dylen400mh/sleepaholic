@@ -20,16 +20,7 @@ struct AuthView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            HStack {
-                Button(action: previous) {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .padding(8)
-                }
-                Spacer()
-            }
-            .padding(.horizontal)
+            BackButtonView(previous: previous)
 
             Spacer()
 
@@ -42,13 +33,16 @@ struct AuthView: View {
             VStack(spacing: 16) {
                 // MARK: - Apple Sign-In
                 SignInWithAppleButton(.signIn) { request in
+                    HapticsManager.play(.light)
                     authService.signInWithApple(request: request)
                 } onCompletion: { result in
                     Task {
                         do {
                             try await authService.handleAppleSignIn(result: result)
+                            HapticsManager.play(.success)
                             next()
                         } catch {
+                            HapticsManager.play(.error)
                             showError = true
                             errorMessage = error.localizedDescription
                         }
@@ -60,11 +54,14 @@ struct AuthView: View {
 
                 // MARK: - Google Sign-In
                 Button(action: {
+                    HapticsManager.play(.medium)
                     Task {
                         do {
                             try await authService.signInWithGoogle()
+                            HapticsManager.play(.success)
                             next()
                         } catch {
+                            HapticsManager.play(.error)
                             showError = true
                             errorMessage = error.localizedDescription
                         }
@@ -86,6 +83,7 @@ struct AuthView: View {
 
                 // MARK: - Skip
                 Button("Skip for now") {
+                    HapticsManager.play(.light)
                     next()
                 }
                 .foregroundColor(.gray)

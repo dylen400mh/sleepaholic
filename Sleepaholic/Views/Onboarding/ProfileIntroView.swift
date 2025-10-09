@@ -14,16 +14,7 @@ struct ProfileIntroView: View {
 
     var body: some View {
         VStack(spacing: 30) {
-            HStack {
-                Button(action: previous) {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .padding(8)
-                }
-                Spacer()
-            }
-            .padding(.horizontal)
+            BackButtonView(previous: previous)
             
             Spacer(minLength: 20)
 
@@ -60,7 +51,10 @@ struct ProfileIntroView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
-                Button(action: next) {
+                Button(action: {
+                    HapticsManager.play(.medium)
+                    next()
+                }) {
                     Text("Next")
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)

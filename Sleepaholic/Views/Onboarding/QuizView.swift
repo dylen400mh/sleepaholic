@@ -26,23 +26,14 @@ struct QuizView: View {
     var body: some View {
         VStack(spacing: 32) {
             // MARK: - Back Button
-            HStack {
-                Button {
-                    if viewModel.currentIndex > 0 {
-                        viewModel.previousQuestion()
-                        restorePreviousAnswer()
-                    } else {
-                        previous()
-                    }
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .padding(8)
+            BackButtonView(previous: {
+                if viewModel.currentIndex > 0 {
+                    viewModel.previousQuestion()
+                    restorePreviousAnswer()
+                } else {
+                    previous()
                 }
-                Spacer()
-            }
-            .padding(.horizontal)
+            })
             
             VStack(spacing: 8) {
                 // MARK: - Progress Bar
@@ -77,6 +68,7 @@ struct QuizView: View {
                         VStack(spacing: 12) {
                             ForEach(q.options, id: \.self) { option in
                                 Button {
+                                    HapticsManager.play(.light)
                                     selectedOption = option
                                 } label: {
                                     Text(option)
@@ -128,6 +120,7 @@ struct QuizView: View {
                     }
 
                     Button {
+                        HapticsManager.play(.medium)
                         Task {
                             saveCurrentAnswer(for: q)
                         }

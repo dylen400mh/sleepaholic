@@ -27,16 +27,7 @@ struct AnalysisView: View {
             VStack {
                 // MARK: - Back Button
                 if showResults {
-                    HStack {
-                        Button(action: previous) {
-                            Image(systemName: "chevron.left")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                                .padding(8)
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal)
+                    BackButtonView(previous: previous)
                 }
 
                 Spacer()
@@ -161,7 +152,7 @@ struct AnalysisView: View {
                         Spacer()
 
                         Button(action: {
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            HapticsManager.play(.medium)
                             next()
                         }) {
                             Text("Check Your Symptoms")
@@ -223,7 +214,7 @@ struct AnalysisView: View {
     }
 
     func completeAnalysis() {
-        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        HapticsManager.play(.success)
         withAnimation(.easeInOut(duration: 0.6)) {
             showResults = true
         }

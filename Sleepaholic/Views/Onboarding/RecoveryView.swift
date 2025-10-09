@@ -46,23 +46,14 @@ struct RecoveryView: View {
     var body: some View {
         VStack {
             // Back button
-            HStack {
-                Button {
-                    if currentIndex > 0 {
-                        withAnimation(.easeInOut) { currentIndex -= 1 }
-                    } else {
-                        previous()
-                    }
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .padding(8)
+            BackButtonView(previous: {
+                if currentIndex > 0 {
+                    withAnimation(.easeInOut) { currentIndex -= 1 }
+                } else {
+                    previous()
                 }
-                Spacer()
-            }
-            .padding(.horizontal)
-
+            })
+            
             Spacer(minLength: 10)
 
             // Slide content
@@ -111,9 +102,11 @@ struct RecoveryView: View {
 
             // Next button
             Button {
+                HapticsManager.play(.medium)
                 if currentIndex < slides.count - 1 {
                     withAnimation(.easeInOut) { currentIndex += 1 }
                 } else {
+                    HapticsManager.play(.success)
                     next()
                 }
             } label: {
