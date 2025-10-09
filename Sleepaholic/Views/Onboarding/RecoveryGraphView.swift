@@ -156,6 +156,7 @@ struct RecoveryGraphView: View {
 
             // Continue Button
             Button {
+                HapticsManager.play(.medium)
                 next()
             } label: {
                 Text("Continue")
