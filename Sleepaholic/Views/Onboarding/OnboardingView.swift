@@ -16,6 +16,7 @@ struct OnboardingView: View {
     @StateObject private var quizViewModel = QuizViewModel()
     @StateObject private var symptomsViewModel = SymptomsViewModel()
     @StateObject private var goalsViewModel = GoalsViewModel()
+    @StateObject private var referralViewModel = ReferralViewModel()
 
     var body: some View {
         ZStack {
@@ -82,6 +83,9 @@ struct OnboardingView: View {
             case 10:
                 GoalsView(next: goToNext, previous: goToPrevious)
                     .environmentObject(goalsViewModel)
+            case 11:
+                ReferralView(next: goToNext, previous: goToPrevious)
+                    .environmentObject(referralViewModel)
             default:
                 Text("Onboarding complete!") // placeholder for next step
             }
