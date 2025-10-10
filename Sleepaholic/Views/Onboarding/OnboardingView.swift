@@ -88,7 +88,8 @@ struct OnboardingView: View {
                     .environmentObject(referralViewModel)
             case 12:
                 TestimonialsView(next: goToNext, previous: goToPrevious)
-
+            case 13:
+                FinalCalculateView(next: goToNext)
             default:
                 Text("Onboarding complete!") // placeholder for next step
             }
