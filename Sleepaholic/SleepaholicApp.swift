@@ -8,11 +8,18 @@
 import SwiftUI
 import FirebaseCore
 import UserNotifications
+import SuperwallKit
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        
+        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "SUPERWALL_API_KEY") as? String {
+            Superwall.configure(apiKey: apiKey)
+        } else {
+            fatalError("❌ Superwall API key missing from Info.plist")
+        }
         
         // Ask for notifications
         let center = UNUserNotificationCenter.current()

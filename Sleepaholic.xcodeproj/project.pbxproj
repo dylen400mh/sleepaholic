@@ -12,6 +12,7 @@
 		0F37A3B12E7F0BF20036C7EC /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0F37A3B02E7F0BF20036C7EC /* FirebaseCore */; };
 		0F37A3B32E7F0BF20036C7EC /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0F37A3B22E7F0BF20036C7EC /* FirebaseFirestore */; };
 		0F37A3B52E7F0BF20036C7EC /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 0F37A3B42E7F0BF20036C7EC /* FirebaseStorage */; };
+		0F4429CC2E99C95200B7F4A5 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4429CB2E99C95200B7F4A5 /* SuperwallKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +50,7 @@
 				0F37A3B12E7F0BF20036C7EC /* FirebaseCore in Frameworks */,
 				0F37A3B52E7F0BF20036C7EC /* FirebaseStorage in Frameworks */,
 				0F37A3AF2E7F0BF20036C7EC /* FirebaseAuth in Frameworks */,
+				0F4429CC2E99C95200B7F4A5 /* SuperwallKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,6 +98,7 @@
 				0F37A3B02E7F0BF20036C7EC /* FirebaseCore */,
 				0F37A3B22E7F0BF20036C7EC /* FirebaseFirestore */,
 				0F37A3B42E7F0BF20036C7EC /* FirebaseStorage */,
+				0F4429CB2E99C95200B7F4A5 /* SuperwallKit */,
 			);
 			productName = Sleepaholic;
 			productReference = 0F6EDBA12E7606E000A7595D /* Sleepaholic.app */;
@@ -127,6 +130,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0F37A3AB2E7F0BF10036C7EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				0F4429CA2E99C95200B7F4A5 /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0F6EDBA22E7606E000A7595D /* Products */;
@@ -391,6 +395,14 @@
 				minimumVersion = 12.3.0;
 			};
 		};
+		0F4429CA2E99C95200B7F4A5 /* XCRemoteSwiftPackageReference "Superwall-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/superwall/Superwall-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.8.3;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -418,6 +430,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0F37A3AB2E7F0BF10036C7EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		0F4429CB2E99C95200B7F4A5 /* SuperwallKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F4429CA2E99C95200B7F4A5 /* XCRemoteSwiftPackageReference "Superwall-iOS" */;
+			productName = SuperwallKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
