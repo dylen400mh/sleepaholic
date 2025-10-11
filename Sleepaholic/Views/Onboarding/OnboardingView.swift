@@ -7,8 +7,26 @@
 
 import SwiftUI
 
+enum OnboardingStep: Int, CaseIterable {
+    case welcome = 1
+    case auth
+    case profileIntro
+    case quiz
+    case analysis
+    case symptoms
+    case recovery
+    case recoveryBenefits
+    case recoveryGraph
+    case goals
+    case referral
+    case testimonials
+    case finalCalculate
+    case paywall
+}
+
+
 struct OnboardingView: View {
-    @State private var currentStep: Int = 1
+    @State private var currentStep: OnboardingStep = .welcome
     @State private var quizStartIndex = 0
     @State private var didSkipQuiz = false
     @State private var skipAnalysisAnimation = false
@@ -22,11 +40,11 @@ struct OnboardingView: View {
     var body: some View {
         ZStack {
             switch currentStep {
-            case 1:
+            case .welcome:
                 WelcomeView(next: goToNext)
-            case 2:
+            case .auth:
                 AuthView(next: goToNext, previous: goToPrevious)
-            case 3:
+            case .profileIntro:
                 ProfileIntroView(
                     next: {
                         didSkipQuiz = false
@@ -35,7 +53,7 @@ struct OnboardingView: View {
                     },
                     previous: goToPrevious
                 )
-            case 4:
+            case .quiz:
                 QuizView(
                     next: {
                         skipAnalysisAnimation = false
@@ -46,7 +64,7 @@ struct OnboardingView: View {
                     didSkipQuiz: $didSkipQuiz
                 )
                 .environmentObject(quizViewModel)
-            case 5:
+            case .analysis:
                 AnalysisView(
                     next: goToNext,
                     previous: {
@@ -55,7 +73,7 @@ struct OnboardingView: View {
                     },
                     skipAnimation: skipAnalysisAnimation
                 )
-            case 6:
+            case .symptoms:
                 SymptomsView(
                     next: {
                         recoveryStartIndex = 0
@@ -67,13 +85,13 @@ struct OnboardingView: View {
                     }
                 )
                 .environmentObject(symptomsViewModel)
-            case 7:
+            case .recovery:
                 RecoveryView(
                     next: goToNext,
                     previous: goToPrevious,
                     startIndex: recoveryStartIndex
                 )
-            case 8:
+            case .recoveryBenefits:
                 RecoveryBenefitsView(
                     next: goToNext,
                     previous: {
@@ -81,17 +99,17 @@ struct OnboardingView: View {
                         goToPrevious()
                     }
                 )
-            case 9:
+            case .recoveryGraph:
                 RecoveryGraphView(next: goToNext, previous: goToPrevious)
-            case 10:
+            case .goals:
                 GoalsView(next: goToNext, previous: goToPrevious)
                     .environmentObject(goalsViewModel)
-            case 11:
+            case .referral:
                 ReferralView(next: goToNext, previous: goToPrevious)
                     .environmentObject(referralViewModel)
-            case 12:
+            case .testimonials:
                 TestimonialsView(next: goToNext, previous: goToPrevious)
-            case 13:
+            case .finalCalculate:
                 FinalCalculateView(next: goToNext)
             default:
                 PaywallView()
@@ -102,20 +120,32 @@ struct OnboardingView: View {
     }
 
     private func goToNext() {
-        if currentStep == 4 && didSkipQuiz {
-            currentStep = 6
-            return
+        switch currentStep {
+        case .quiz where didSkipQuiz:
+            currentStep = .symptoms
+            break
+        case .paywall:
+            break
+        default:
+            if let nextStep = OnboardingStep(rawValue: currentStep.rawValue + 1) {
+                currentStep = nextStep
+            }
+            break
         }
-        currentStep += 1
     }
     
     private func goToPrevious() {
-        if currentStep == 6 && didSkipQuiz {
-            currentStep = 4
-            return
-        }
-        if currentStep > 1 {
-            currentStep -= 1
+        switch currentStep {
+        case .symptoms where didSkipQuiz:
+            currentStep = .quiz
+            break
+        case .welcome:
+            break
+        default:
+            if let previousStep = OnboardingStep(rawValue: currentStep.rawValue - 1) {
+                currentStep = previousStep
+            }
+            break
         }
     }
 }
