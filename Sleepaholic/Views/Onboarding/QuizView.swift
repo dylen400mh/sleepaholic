@@ -22,6 +22,7 @@ struct QuizView: View {
     let next: () -> Void
     let previous: () -> Void
     let startAt: Int
+    @Binding var didSkipQuiz: Bool
 
     var body: some View {
         VStack(spacing: 32) {
@@ -112,6 +113,7 @@ struct QuizView: View {
                     if !q.isRequired {
                         Button {
                             HapticsManager.play(.light)
+                            didSkipQuiz = true
                             viewModel.currentIndex = 10 // Jump directly to Q11
                             restorePreviousAnswer()
                         } label: {
@@ -282,7 +284,7 @@ struct QuizView: View {
 }
 
 #Preview {
-    QuizView(next: {}, previous: {}, startAt: 0)
+    QuizView(next: {}, previous: {}, startAt: 0, didSkipQuiz: .constant(false))
         .environmentObject(UserProfileViewModel())
         .environmentObject(UserSettingsViewModel())
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var currentStep: Int = 1
     @State private var quizStartIndex = 0
+    @State private var didSkipQuiz = false
     @State private var skipAnalysisAnimation = false
     @State private var recoveryStartIndex = 0
     
@@ -28,6 +29,7 @@ struct OnboardingView: View {
             case 3:
                 ProfileIntroView(
                     next: {
+                        didSkipQuiz = false
                         quizStartIndex = 0
                         goToNext()
                     },
@@ -40,7 +42,8 @@ struct OnboardingView: View {
                         goToNext()
                     },
                     previous: goToPrevious,
-                    startAt: quizStartIndex
+                    startAt: quizStartIndex,
+                    didSkipQuiz: $didSkipQuiz
                 )
                 .environmentObject(quizViewModel)
             case 5:
@@ -99,10 +102,18 @@ struct OnboardingView: View {
     }
 
     private func goToNext() {
+        if currentStep == 4 && didSkipQuiz {
+            currentStep = 6
+            return
+        }
         currentStep += 1
     }
     
     private func goToPrevious() {
+        if currentStep == 6 && didSkipQuiz {
+            currentStep = 4
+            return
+        }
         if currentStep > 1 {
             currentStep -= 1
         }
