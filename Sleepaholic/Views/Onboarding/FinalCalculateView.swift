@@ -46,7 +46,7 @@ struct FinalCalculateView: View {
                 // Profile card after message 2
                 if messageIndex >= 2 {
                     ProfileCardView(
-                        name: userName,
+                        name: userProfileViewModel.profile?.name ?? "",
                         streakDays: 0,
                         lastSleep: "—",
                         sleepDebt: "0h"

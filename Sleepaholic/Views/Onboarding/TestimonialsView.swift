@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-struct Testimonial: Identifiable {
-    let id = UUID()
-    let name: String
-    let review: String
-    let imageName: String
-}
-
 struct TestimonialsView: View {
     let next: () -> Void
     let previous: () -> Void

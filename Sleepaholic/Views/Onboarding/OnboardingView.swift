@@ -91,7 +91,7 @@ struct OnboardingView: View {
             case 13:
                 FinalCalculateView(next: goToNext)
             default:
-                Text("Onboarding complete!") // placeholder for next step
+                PaywallView()
             }
         }
         .animation(.easeInOut, value: currentStep)

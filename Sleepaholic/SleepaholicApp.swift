@@ -15,11 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
         
-        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "SUPERWALL_API_KEY") as? String {
-            Superwall.configure(apiKey: apiKey)
-        } else {
-            fatalError("❌ Superwall API key missing from Info.plist")
-        }
+        SuperwallService.shared.configure()
         
         // Ask for notifications
         let center = UNUserNotificationCenter.current()
@@ -58,7 +54,7 @@ struct SleepaholicApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                ContentView()
+                OnboardingView()
             }
             .environmentObject(windDownManager)
             .environmentObject(userSettingsViewModel)
