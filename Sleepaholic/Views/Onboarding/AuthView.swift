@@ -80,14 +80,6 @@ struct AuthView: View {
                     .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
                 }
                 .padding(.horizontal)
-
-                // MARK: - Skip
-                Button("Skip for now") {
-                    HapticsManager.play(.light)
-                    next()
-                }
-                .foregroundColor(.gray)
-                .padding(.top, 4)
             }
 
             Spacer()
