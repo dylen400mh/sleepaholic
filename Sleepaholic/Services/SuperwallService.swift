@@ -51,10 +51,44 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
         switch eventInfo.event {
         case .paywallOpen(_):
             print("🟢 Paywall opened")
+            scheduleDiscountNotification()
         case .transactionComplete(_, let product, _, _):
             print("💰 Transaction complete for product \(product.productIdentifier)")
         default:
             break
+        }
+    }
+    
+    private func scheduleDiscountNotification() {
+        let key = "discountFireTime"
+        guard UserDefaults.standard.object(forKey: key) == nil else { return }
+
+        // Fetch user name for personalization
+        Task {
+            await userProfileViewModel.loadProfile()
+            let userName = userProfileViewModel.profile?.name.components(separatedBy: " ").first ?? "Hey"
+            
+            let fireTime = Date().addingTimeInterval(300)
+            UserDefaults.standard.set(fireTime, forKey: key)
+
+            // Remove any prior notifications
+            let center = UNUserNotificationCenter.current()
+            center.removePendingNotificationRequests(withIdentifiers: ["discount_offer"])
+            center.removeDeliveredNotifications(withIdentifiers: ["discount_offer"])
+            
+            // Create the content
+            let content = UNMutableNotificationContent()
+            content.title = "\(userName), we didn’t give up on you."
+            content.body = "🎁⏳ Limited-time offer: Get 80% off Sleepaholic Premium and finally fix your sleep for good."
+            content.sound = .default
+            
+            // Schedule the notification
+            let interval = max(fireTime.timeIntervalSinceNow, 1)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+            let request = UNNotificationRequest(identifier: "discount_offer", content: content, trigger: trigger)
+            try? await center.add(request)
+            
+            print("📅 Scheduled discount 5 minutes after paywall opened: \(fireTime)")
         }
     }
 }

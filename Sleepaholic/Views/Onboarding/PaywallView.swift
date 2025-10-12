@@ -35,6 +35,9 @@ struct PaywallView: View {
                         .padding(.horizontal, 40)
                 }
                 .padding(.top, 50)
+                
+                DiscountView()
+                    .padding(.horizontal)
 
                 // MARK: - Benefits (Part 1)
                 VStack(spacing: 16) {
@@ -79,8 +82,9 @@ struct PaywallView: View {
                 VStack(spacing: 16) {
                     Button {
                         HapticsManager.play(.medium)
-                        SuperwallService.shared.presentPaywall(placement: "default")
-                        scheduleDiscountNotification()
+                        Task {
+                            await pressedButton()
+                        }
                     } label: {
                         Text("Unlock My Sleep Plan")
                             .fontWeight(.semibold)
@@ -146,21 +150,21 @@ struct PaywallView: View {
             print("✅ User marked as onboarded (PaywallView)")
         }
     }
+    
+    private func pressedButton() async {
+        let userAge = userProfileViewModel.profile?.age ?? 0
 
-    // MARK: - Notification
-    private func scheduleDiscountNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "\(userName.isEmpty ? "Hey" : userName), we didn’t give up on you."
-        content.body = "🎁⏳ Limited-time offer: Get 80% off Sleepaholic Premium and finally fix your sleep for good."
-        content.sound = .default
-        
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 180, repeats: false)
-        let request = UNNotificationRequest(
-            identifier: "discount_offer_\(UUID().uuidString)",
-            content: content,
-            trigger: trigger
-        )
-        UNUserNotificationCenter.current().add(request)
+        if userAge < 18 {
+            SuperwallService.shared.presentPaywall(placement: "under18")
+        } else if userAge <= 22 {
+            SuperwallService.shared.presentPaywall(placement: "age18to22")
+        } else if userAge <= 28 {
+            SuperwallService.shared.presentPaywall(placement: "age23to28")
+        } else if userAge <= 40 {
+            SuperwallService.shared.presentPaywall(placement: "age29to40")
+        } else {
+            SuperwallService.shared.presentPaywall(placement: "over40")
+        }
     }
 }
 
