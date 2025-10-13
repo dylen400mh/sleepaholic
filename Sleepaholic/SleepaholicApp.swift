@@ -9,9 +9,46 @@ import SwiftUI
 import FirebaseCore
 import UserNotifications
 import SuperwallKit
+import UIKit
 
 enum QuickAction: String {
     case sendFeedback = "com.sleepaholic.sendFeedback"
+}
+
+@MainActor
+final class SceneDelegate: NSObject, UIWindowSceneDelegate {
+
+    // Called on cold launch when the app is opened via a quick action
+    func scene(_ scene: UIScene,
+               willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
+        if let shortcutItem = connectionOptions.shortcutItem {
+            // Cache for SwiftUI to consume once UI is ready
+            AppDelegate.pendingQuickAction = QuickAction(rawValue: shortcutItem.type)
+            // Also post for warm-ish cases
+            NotificationCenter.default.post(
+                name: .didTriggerQuickAction,
+                object: nil,
+                userInfo: ["action": AppDelegate.pendingQuickAction as Any]
+            )
+        }
+    }
+
+    // Called when app is already running (warm) and the user picks a quick action
+    func windowScene(_ windowScene: UIWindowScene,
+                     performActionFor shortcutItem: UIApplicationShortcutItem,
+                     completionHandler: @escaping (Bool) -> Void) {
+        let handled = QuickAction(rawValue: shortcutItem.type) != nil
+        if let action = QuickAction(rawValue: shortcutItem.type) {
+            AppDelegate.pendingQuickAction = action
+            NotificationCenter.default.post(
+                name: .didTriggerQuickAction,
+                object: nil,
+                userInfo: ["action": action]
+            )
+        }
+        completionHandler(handled)
+    }
 }
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -58,33 +95,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         completionHandler()
     }
     
-    // MARK: - Quick Action handling
-
-    func application(
-        _ application: UIApplication,
-        performActionFor shortcutItem: UIApplicationShortcutItem,
-        completionHandler: @escaping (Bool) -> Void
-    ) {
-        let handled = handle(shortcutItem: shortcutItem)
-        completionHandler(handled)
-    }
-
-    @discardableResult
-    private func handle(shortcutItem: UIApplicationShortcutItem) -> Bool {
-        guard let action = QuickAction(rawValue: shortcutItem.type) else { return false }
-        AppDelegate.pendingQuickAction = action
-
-        // Notify SwiftUI (warm app)
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(
-                name: .didTriggerQuickAction,
-                object: nil,
-                userInfo: ["action": action]
-            )
-        }
-        return true
-    }
-
     private func updateQuickActions(for application: UIApplication) {
         let feedbackItem = UIApplicationShortcutItem(
             type: QuickAction.sendFeedback.rawValue,
@@ -94,6 +104,14 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         )
 
         application.shortcutItems = [feedbackItem]
+    }
+    
+    func application(_ application: UIApplication,
+                     configurationForConnecting connectingSceneSession: UISceneSession,
+                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        let config = UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
+        config.delegateClass = SceneDelegate.self   // 👈 This connects your SceneDelegate!
+        return config
     }
 }
 
@@ -114,7 +132,7 @@ struct SleepaholicApp: App {
     @StateObject private var userProfileViewModel = UserProfileViewModel()
     @StateObject private var sleepClipViewModel = SleepClipViewModel()
     
-    private let feedbackFormURL = URL(string: "https://forms.gle/sleepaholic-feedback")!
+    private let feedbackFormURL = URL(string: "https://forms.gle/r9qt8PP5YFs8SzWSA")!
     
     var body: some Scene {
         WindowGroup {
@@ -133,9 +151,18 @@ struct SleepaholicApp: App {
                     handleQuickAction(action)
                 }
             }
+            .onAppear { consumePendingQuickActionIfAny() }
         }
     }
     
+    @MainActor private func consumePendingQuickActionIfAny() {
+        if let action = AppDelegate.pendingQuickAction {
+            AppDelegate.pendingQuickAction = nil
+            handleQuickAction(action)
+        }
+    }
+    
+    @MainActor
     private func handleQuickAction(_ action: QuickAction) {
         switch action {
         case .sendFeedback:
