@@ -61,7 +61,6 @@ class WindDownManager: ObservableObject, Codable {
     @Published var trackSleep: Bool = false {
         didSet {
             saveState()
-            AVAudioApplication.requestRecordPermission { _ in }
         }
     }
     @Published var restrictApps: Bool = false {
@@ -332,10 +331,19 @@ class WindDownManager: ObservableObject, Codable {
     }
     
     func startMonitoringSleep(logId: String) {
-        setupSharedAudioSession()
-        setupMeterRecorder()
-        meterTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            self?.checkAudioLevel(logId: logId)
+        AVAudioApplication.requestRecordPermission { granted in
+            DispatchQueue.main.async {
+                if granted {
+                    self.setupSharedAudioSession()
+                    self.setupMeterRecorder()
+                    self.meterTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+                        self?.checkAudioLevel(logId: logId)
+                    }
+                    print("🎧 Sleep monitoring started")
+                } else {
+                    print("🚫 Microphone permission denied — sleep tracking not started.")
+                }
+            }
         }
     }
 
