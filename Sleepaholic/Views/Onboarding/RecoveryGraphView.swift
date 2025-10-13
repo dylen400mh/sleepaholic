@@ -171,6 +171,9 @@ struct RecoveryGraphView: View {
             .padding(.bottom, 30)
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "recovery_graph_viewed")
+        }
     }
 }
 

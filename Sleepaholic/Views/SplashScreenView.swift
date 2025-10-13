@@ -34,9 +34,6 @@ struct SplashScreenView: View {
     private func startLoading() async {
         let startTime = Date()
 
-        // Attempt to load the user profile
-        await userProfileViewModel.loadProfile()
-
         // Ensure splash shows at least 1 second
         let elapsed = Date().timeIntervalSince(startTime)
         let remaining = max(1.0 - elapsed, 0)

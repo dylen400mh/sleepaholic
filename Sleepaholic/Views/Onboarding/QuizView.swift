@@ -142,8 +142,9 @@ struct QuizView: View {
             }
         }
         .task {
+            AnalyticsService.shared.trackEvent(eventName: "quiz_viewed")
+            
             // Prefill from profile/settings
-            await userProfileViewModel.loadProfile()
             await userSettingsViewModel.loadSettings()
             prefillUserData()
             restorePreviousAnswer()

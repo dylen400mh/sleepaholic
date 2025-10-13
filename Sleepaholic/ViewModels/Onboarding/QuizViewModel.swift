@@ -29,6 +29,16 @@ final class QuizViewModel: ObservableObject {
     func selectAnswer(_ answer: String) {
         guard questions.indices.contains(currentIndex) else { return }
         questions[currentIndex].answer = answer
+        
+        let answersDict = questions.reduce(into: [String: Any]()) { result, question in
+            result["Q\(question.id)"] = question.answer ?? "none"
+        }
+
+        AnalyticsService.shared.updateUserAttributes(
+            attributes: [
+                "quiz_answers": answersDict
+            ]
+        )
     }
 
     func nextQuestion() {

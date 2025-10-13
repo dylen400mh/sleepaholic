@@ -52,8 +52,30 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
         case .paywallOpen(_):
             print("🟢 Paywall opened")
             scheduleDiscountNotification()
-        case .transactionComplete(_, let product, _, _):
+        case .transactionComplete(_, let product, let transactionType, let paywallInfo):
             print("💰 Transaction complete for product \(product.productIdentifier)")
+
+            // Safely unwrap values
+            let paywallName = paywallInfo.name
+            let transactionKind = transactionType.rawValue
+
+            // Track successful purchase
+            AnalyticsService.shared.trackEvent(
+                eventName: "paywall_purchase_successful",
+                properties: [
+                    "paywall_name": paywallName,
+                    "transaction_type": transactionKind,
+                    "product_id": product.productIdentifier,
+                    "price": product.localizedPrice,
+                    "raw_price": product.price,
+                    "currency": product.currencyCode ?? "",
+                    "subscription_period": product.period
+                ]
+            )
+
+            // Remove notifications
+            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["discount_offer"])
         default:
             break
         }
@@ -65,7 +87,6 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
 
         // Fetch user name for personalization
         Task {
-            await userProfileViewModel.loadProfile()
             let userName = userProfileViewModel.profile?.name.components(separatedBy: " ").first ?? "Hey"
             
             let fireTime = Date().addingTimeInterval(300)

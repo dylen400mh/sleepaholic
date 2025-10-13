@@ -78,6 +78,8 @@ struct AnalysisView: View {
                         }
                     }
                     .onAppear {
+                        AnalyticsService.shared.trackEvent(eventName: "analysis_viewed")
+                        
                         if skipAnimation {
                             // Skip calculation and show results directly
                             showResults = true

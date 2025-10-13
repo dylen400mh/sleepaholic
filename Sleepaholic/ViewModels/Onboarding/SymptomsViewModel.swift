@@ -22,5 +22,16 @@ final class SymptomsViewModel: ObservableObject {
         } else {
             selectedSymptoms[category]?.insert(symptom)
         }
+        
+        // Flatten selected symptoms
+        let selected = selectedSymptoms
+            .flatMap { category, symptoms in
+                symptoms.map { "\(category): \($0)" }
+            }
+
+        // Save to user attributes
+        AnalyticsService.shared.updateUserAttributes(
+            attributes: ["selected_symptoms": selected]
+        )
     }
 }

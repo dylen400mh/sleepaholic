@@ -84,6 +84,9 @@ struct AuthView: View {
 
             Spacer()
         }
+        .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "auth_viewed")
+        }
         .alert("Sign-In Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
         } message: {

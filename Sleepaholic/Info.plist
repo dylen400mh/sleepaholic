@@ -15,6 +15,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>MIXPANEL_TOKEN</key>
+	<string>0f3ef66dfaa8426ff2eac05d2e0142c4</string>
 	<key>OPENAI_API_KEY</key>
 	<string>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</string>
 	<key>SUPERWALL_API_KEY</key>

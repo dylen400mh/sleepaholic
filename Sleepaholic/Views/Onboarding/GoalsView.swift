@@ -104,6 +104,9 @@ struct GoalsView: View {
             .padding(.bottom, 30)
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "goals_viewed")
+        }
     }
 }
 

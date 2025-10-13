@@ -42,6 +42,9 @@ struct WelcomeView: View {
 
             Spacer()
         }
+        .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "welcome_viewed")
+        }
     }
 }
 

@@ -61,6 +61,9 @@ struct ReferralView: View {
             .padding(.bottom, 40)
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "referral_viewed")
+        }
         .animation(.easeInOut, value: viewModel.referralCode)
     }
 }

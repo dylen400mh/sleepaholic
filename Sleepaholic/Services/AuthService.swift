@@ -48,6 +48,13 @@ class AuthService: NSObject, ObservableObject {
             let authResult = try await Auth.auth().signIn(with: credential)
             let user = authResult.user
             print("✅ Signed in with Apple: \(user.uid)")
+            
+            // Identify user for analytics
+            AnalyticsService.shared.identify(
+                name: user.displayName,
+                userId: user.uid,
+                email: user.email ?? ""
+            )
 
             // Create Firestore profile only if it doesn’t exist
             let service = FirestoreService.shared
@@ -93,6 +100,13 @@ class AuthService: NSObject, ObservableObject {
                         continuation.resume(throwing: error)
                     } else if let user = result?.user {
                         print("✅ Signed in with Google: \(user.uid)")
+                        
+                        // Identify user for analytics
+                        AnalyticsService.shared.identify(
+                            name: user.displayName,
+                            userId: user.uid,
+                            email: user.email ?? ""
+                        )
                         
                         // Create Firestore profile only if it doesn’t exist
                         let service = FirestoreService.shared

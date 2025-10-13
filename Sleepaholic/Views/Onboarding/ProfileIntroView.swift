@@ -74,6 +74,8 @@ struct ProfileIntroView: View {
             Task {
                 await userProfileViewModel.loadProfile()
             }
+            
+            AnalyticsService.shared.trackEvent(eventName: "profile_intro_viewed")
         }
     }
 }

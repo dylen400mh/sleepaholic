@@ -100,11 +100,13 @@ struct PaywallView: View {
             }
         }
         .task {
-            await userProfileViewModel.loadProfile()
             if let name = userProfileViewModel.profile?.name {
                 userName = name.components(separatedBy: " ").first ?? ""
             }
             await markUserOnboardedOnce()
+        }
+        .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "paywall_viewed")
         }
     }
 

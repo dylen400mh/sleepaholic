@@ -60,8 +60,9 @@ struct FinalCalculateView: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "final_calculate_viewed")
+            
             Task {
-                await userProfileViewModel.loadProfile()
                 if let name = userProfileViewModel.profile?.name,
                    !name.trimmingCharacters(in: .whitespaces).isEmpty {
                     userName = name.components(separatedBy: " ").first ?? ""

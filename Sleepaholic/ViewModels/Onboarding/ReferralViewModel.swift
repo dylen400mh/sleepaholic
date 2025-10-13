@@ -9,7 +9,11 @@ import Foundation
 import SwiftUI
 
 final class ReferralViewModel: ObservableObject {
-    @Published var referralCode: String = ""
+    @Published var referralCode: String = "" {
+        didSet {
+            AnalyticsService.shared.updateUserAttributes(attributes: ["referral_code": referralCode])
+        }
+    }
     
     func clear() {
         referralCode = ""

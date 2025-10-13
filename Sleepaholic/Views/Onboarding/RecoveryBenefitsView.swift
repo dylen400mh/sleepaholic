@@ -123,6 +123,9 @@ struct RecoveryBenefitsView: View {
             .padding(.bottom, 30)
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "recovery_benefits_viewed")
+        }
     }
 }
 

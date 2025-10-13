@@ -114,6 +114,7 @@ struct TestimonialsView: View {
         .navigationBarBackButtonHidden(true)
         .onAppear {
             requestReview()
+            AnalyticsService.shared.trackEvent(eventName: "testimonials_viewed")
         }
     }
 }

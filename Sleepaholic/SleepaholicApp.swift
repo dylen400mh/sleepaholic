@@ -10,6 +10,8 @@ import FirebaseCore
 import UserNotifications
 import SuperwallKit
 import UIKit
+import Mixpanel
+import FirebaseAuth
 
 enum QuickAction: String {
     case sendFeedback = "com.sleepaholic.sendFeedback"
@@ -57,6 +59,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        
+        // init Analytics
+        _ = AnalyticsService.shared
         
         SuperwallService.shared.configure()
         
@@ -151,7 +156,11 @@ struct SleepaholicApp: App {
                     handleQuickAction(action)
                 }
             }
-            .onAppear { consumePendingQuickActionIfAny() }
+            .onAppear {
+                consumePendingQuickActionIfAny()
+                preloadUserProfileIfNeeded()
+                identifyCurrentUserIfNeeded()
+            }
         }
     }
     
@@ -167,6 +176,33 @@ struct SleepaholicApp: App {
         switch action {
         case .sendFeedback:
             openURL(feedbackFormURL)
+        }
+    }
+    
+    @MainActor
+    private func preloadUserProfileIfNeeded() {
+        Task {
+            if Auth.auth().currentUser != nil {
+                await userProfileViewModel.loadProfile()
+                await userSettingsViewModel.loadSettings()
+                print("📄 User profile preloaded at app launch.")
+            } else {
+                print("ℹ️ No signed-in user; skipping profile preload.")
+            }
+        }
+    }
+    
+    @MainActor
+    private func identifyCurrentUserIfNeeded() {
+        if let user = Auth.auth().currentUser {
+            AnalyticsService.shared.identify(
+                name: user.displayName,
+                userId: user.uid,
+                email: user.email ?? ""
+            )
+            print("📊 Re-identified existing user for analytics: \(user.uid)")
+        } else {
+            print("ℹ️ No logged-in user found at launch (anonymous session).")
         }
     }
 }

@@ -112,6 +112,9 @@ struct SymptomsView: View {
 
             Spacer(minLength: 30)
         }
+        .onAppear {
+            AnalyticsService.shared.trackEvent(eventName: "symptoms_viewed")
+        }
         .navigationBarBackButtonHidden(true)
     }
 }

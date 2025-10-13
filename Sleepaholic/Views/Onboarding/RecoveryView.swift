@@ -124,6 +124,10 @@ struct RecoveryView: View {
         }
         .onAppear {
             currentIndex = startIndex
+            AnalyticsService.shared.trackEvent(eventName: "recovery_viewed")
+        }
+        .onChange(of: currentIndex) { oldIndex, newIndex in
+            AnalyticsService.shared.trackEvent(eventName: "recovery_slide_\(newIndex + 1)_viewed")
         }
         .animation(.easeInOut, value: currentIndex)
     }

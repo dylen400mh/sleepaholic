@@ -163,9 +163,7 @@ struct ContentView: View {
             }
         }
         .task {
-            await userProfileViewModel.loadProfile()
             await activityViewModel.loadActivities()
-            await userSettingsViewModel.loadSettings()
             await sleepLogViewModel.loadSleepLogs()
             // 💤 Load clips for the most recent sleep log (if available)
             if let latestLog = sleepLogViewModel.sleepLogs.first {
