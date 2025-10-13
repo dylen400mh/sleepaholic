@@ -137,7 +137,7 @@ struct SleepaholicApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                OnboardingView()
+                SplashScreenView()
             }
             .environmentObject(windDownManager)
             .environmentObject(userSettingsViewModel)

@@ -116,7 +116,6 @@ struct OnboardingView: View {
             }
         }
         .animation(.easeInOut, value: currentStep)
-        .transition(.slide)
     }
 
     private func goToNext() {
