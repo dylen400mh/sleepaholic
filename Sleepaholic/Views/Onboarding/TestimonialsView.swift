@@ -6,8 +6,11 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct TestimonialsView: View {
+    @Environment(\.requestReview) private var requestReview
+    
     let next: () -> Void
     let previous: () -> Void
     
@@ -109,6 +112,9 @@ struct TestimonialsView: View {
             .padding(.bottom, 40)
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            requestReview()
+        }
     }
 }
 
