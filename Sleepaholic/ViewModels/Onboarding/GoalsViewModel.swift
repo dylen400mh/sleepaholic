@@ -37,7 +37,6 @@ final class GoalsViewModel: ObservableObject {
         let selectedGoals = goals
             .filter { selected.contains($0.id) }
             .map { $0.title }
-            .joined(separator: ", ")
         AnalyticsService.shared.updateUserAttributes(attributes: ["goals": selectedGoals])
     }
 
