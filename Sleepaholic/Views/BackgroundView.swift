@@ -9,12 +9,18 @@ import SwiftUI
 
 struct BackgroundView: View {
     var body: some View {
-        GeometryReader { geometry in
+        ZStack {
+            Color.background
+                .ignoresSafeArea()
+            
+            // Stars & clouds image overlay
             Image("background")
                 .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: geometry.size.width, height: geometry.size.height)
+                .scaledToFill()
                 .ignoresSafeArea()
+                .colorMultiply(Color.starsCloudsBackground)
+                .opacity(0.3)
         }
     }
 }
+

@@ -18,7 +18,7 @@ struct Dropdown: View {
         VStack(alignment: .leading, spacing: 4) {
             
             // Floating label (visible only when selected)
-            if let selection = selection {
+            if selection != nil {
                 Text(label)
                     .font(.body3)
                     .foregroundColor(.white70)

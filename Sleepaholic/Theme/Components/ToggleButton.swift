@@ -13,8 +13,6 @@ struct ToggleButton: ToggleStyle {
             configuration.isOn.toggle()
         }) {
             GeometryReader { geometry in
-                let width: CGFloat = 44
-                let height: CGFloat = 24
                 let circleSize: CGFloat = 18
                 let circleOffset: CGFloat = 11
 

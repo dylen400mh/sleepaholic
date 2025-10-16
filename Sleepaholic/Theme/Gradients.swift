@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Gradients {
     static let main = LinearGradient(
-        colors: [Color(hex: "#865afd"), Color(hex: "#5691fb")],
+        colors: [Color.gradientStart, Color.gradientEnd],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )

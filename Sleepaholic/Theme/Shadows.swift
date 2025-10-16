@@ -20,7 +20,7 @@ struct ShadowStyleConfig {
 struct ShadowStyle {
     // Elevation shadow (used for buttons, cards, etc.)
     static let elevation = ShadowStyleConfig(
-        color: Color(hex: "#6380fb").opacity(0.4),
+        color: Color.shadow.opacity(0.4),
         blur: 16,
         x: 0,
         y: 0,
@@ -29,7 +29,7 @@ struct ShadowStyle {
 
     // Checkbox shadow
     static let checkBox = ShadowStyleConfig(
-        color: Color(hex: "#131226").opacity(0.3),
+        color: Color.dark.opacity(0.3),
         blur: 0,
         x: 0,
         y: 0,
@@ -44,7 +44,6 @@ extension View {
             .shadow(color: config.color, radius: config.blur, x: config.x, y: config.y)
             .overlay(
                 GeometryReader { geometry in
-                    let rect = geometry.frame(in: .local)
                     Color.clear
                         .shadow(color: config.color,
                                 radius: max(0, config.spread),

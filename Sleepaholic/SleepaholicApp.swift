@@ -143,6 +143,7 @@ struct SleepaholicApp: App {
         WindowGroup {
             NavigationStack {
                 SplashScreenView()
+                    .appBackground()
             }
             .environmentObject(windDownManager)
             .environmentObject(userSettingsViewModel)
