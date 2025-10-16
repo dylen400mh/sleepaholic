@@ -48,7 +48,7 @@ struct PaywallView: View {
                 .padding(.top, 8)
 
                 // MARK: - Testimonial 1
-                TestimonialCard(testimonial: testimonials[0])
+                PaywallTestimonialCard(testimonial: testimonials[0])
                     .padding(.horizontal)
 
                 // MARK: - Deeper Benefits
@@ -59,7 +59,7 @@ struct PaywallView: View {
                 }
 
                 // MARK: - Testimonial 2
-                TestimonialCard(testimonial: testimonials[1])
+                PaywallTestimonialCard(testimonial: testimonials[1])
                     .padding(.horizontal)
 
                 // MARK: - Outcome Focus
@@ -75,7 +75,7 @@ struct PaywallView: View {
                 }
 
                 // MARK: - Testimonial 3
-                TestimonialCard(testimonial: testimonials[2])
+                PaywallTestimonialCard(testimonial: testimonials[2])
                     .padding(.horizontal)
 
                 // MARK: - CTA
@@ -197,7 +197,7 @@ struct BenefitCard: View {
     }
 }
 
-struct TestimonialCard: View {
+struct PaywallTestimonialCard: View {
     let testimonial: Testimonial
     
     var body: some View {
