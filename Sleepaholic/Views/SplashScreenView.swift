@@ -10,6 +10,10 @@ import SwiftUI
 struct SplashScreenView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @State private var isActive = false
+    @State private var showStars = false
+    @State private var offset: CGFloat = 200
+    @State private var rotation: Double = 30
+    @State private var opacity: Double = 0
 
     var body: some View {
         ZStack {
@@ -17,31 +21,62 @@ struct SplashScreenView: View {
                 RootView()
                     .transition(.opacity.animation(.easeOut(duration: 0.5)))
             } else {
-                ZStack {
-                    Text("Sleepaholic")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .opacity(0.9)
+                VStack(spacing: 24) {
+                    Spacer()
+                    
+                    // Logo
+                    Image("SleepaholicLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 268, height: 48)
+                        .padding(.bottom, 16)
+                    
+                    // Stars animation
+                    if showStars {
+                        Image("stars")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                            .transition(.scale.combined(with: .opacity))
+                            .shadow(color: .white70, radius: 10)
+                    }
+                    
+                    Spacer()
                 }
-                .transition(.opacity)
+                .offset(y: offset)
+                .opacity(opacity)
+                .onAppear {
+                    // Entry animation (move + fade in)
+                    withAnimation(.easeOut(duration: 0.8)) {
+                        offset = 0
+                        opacity = 1
+                    }
+                    
+                    // Rotate slightly then settle flat
+                    withAnimation(.easeOut(duration: 0.8).delay(0.4)) {
+                        rotation = 0
+                    }
+                    
+                    // Show stars image after delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                            showStars = true
+                        }
+                    }
+                    
+                    // Transition to RootView
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                        withAnimation(.easeOut(duration: 0.5)) {
+                            isActive = true
+                        }
+                    }
+                }
+                .rotation3DEffect(
+                    .degrees(rotation),
+                    axis: (x: 1.0, y: 0.0, z: 0.0),
+                    perspective: 0.3
+                )
             }
-        }
-        .task {
-            await startLoading()
-        }
-    }
-
-    private func startLoading() async {
-        let startTime = Date()
-
-        // Ensure splash shows at least 1 second
-        let elapsed = Date().timeIntervalSince(startTime)
-        let remaining = max(1.0 - elapsed, 0)
-        try? await Task.sleep(for: .seconds(remaining))
-
-        // Fade out splash
-        withAnimation(.easeOut(duration: 0.5)) {
-            isActive = true
         }
     }
 }
