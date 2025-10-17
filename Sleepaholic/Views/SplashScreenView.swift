@@ -38,7 +38,7 @@ struct SplashScreenView: View {
                             .scaledToFit()
                             .frame(width: 100, height: 100)
                             .transition(.scale.combined(with: .opacity))
-                            .shadow(color: .white70, radius: 10)
+                            .shadow(color: Color.white70, radius: 10)
                     }
                     
                     Spacer()

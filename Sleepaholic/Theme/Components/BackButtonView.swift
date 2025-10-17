@@ -20,7 +20,7 @@ struct BackButtonView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 24, height: 24)
-                .foregroundColor(.white100)
+                .foregroundColor(Color.white100)
                 .padding(8)
                 .background(
                     RoundedRectangle(cornerRadius: 12)

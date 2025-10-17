@@ -19,11 +19,11 @@ struct WelcomeView: View {
             VStack(spacing: 8) {
                 Text("Welcome!")
                     .font(.h1Black)
-                    .foregroundColor(.white100)
+                    .foregroundColor(Color.white100)
 
                 Text("Let's start by finding out if you have a problem with sleep.")
                     .font(.body2)
-                    .foregroundColor(.white80)
+                    .foregroundColor(Color.white80)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 284)
             }

@@ -31,7 +31,7 @@ struct PrimaryButton: View {
 
                 Text(title)
                     .font(font)
-                    .foregroundColor(.white100)
+                    .foregroundColor(Color.white100)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)

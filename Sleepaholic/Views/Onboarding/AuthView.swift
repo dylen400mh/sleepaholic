@@ -26,7 +26,7 @@ struct AuthView: View {
 
             Text("Become a Sleepaholic")
                 .font(.h1Black)
-                .foregroundColor(.white100)
+                .foregroundColor(Color.white100)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
             
