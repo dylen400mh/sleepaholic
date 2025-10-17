@@ -14,62 +14,52 @@ struct ProfileIntroView: View {
 
     var body: some View {
         VStack(spacing: 30) {
-            BackButtonView(previous: previous)
-            
-            Spacer(minLength: 20)
-
-            // MARK: - Welcome Header
-            VStack(spacing: 8) {
-                Text("Let's go!")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                Text("Welcome to Sleepaholic")
-                    .font(.title3)
-                    .foregroundColor(.secondary)
-            }
-
-            // MARK: - Profile Card
-            VStack(spacing: 16) {
-                Text("Here’s your tracked profile card")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-
+            VStack(spacing: 48) {
+                OnboardingHeader(previous: previous)
+                
+                // MARK: - Welcome Header
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Let's go!")
+                        .font(.h2Semi)
+                        .foregroundColor(Color.white100)
+                    
+                    Text("Welcome to Sleepaholic. Here’s your tracked profile card.")
+                        .font(.body2)
+                        .foregroundColor(Color.white80)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // MARK: - Profile Card
                 ProfileCardView(
                     name: userProfileViewModel.profile?.name ?? "",
                     streakDays: 0,
-                    lastSleep: "—",
-                    sleepDebt: "0h"
+                    lastSleep: "0h 0min",
+                    sleepDebt: "0h 0min"
                 )
-                .padding(.horizontal)
             }
 
             Spacer()
 
             VStack(spacing: 16) {
                 Text("Now, let's build the app around you.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(.body2)
+                    .foregroundColor(Color.white80)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 284)
 
-                Button(action: {
+                PrimaryButton(
+                    title: "Next",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: false
+                ) {
                     HapticsManager.play(.medium)
                     next()
-                }) {
-                    Text("Next")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .padding(.horizontal)
                 }
-                .buttonStyle(.plain)
             }
-            .padding(.bottom, 40)
+            .padding(.bottom, 60)
         }
-        .multilineTextAlignment(.center)
-        .padding(.horizontal)
+        .padding(.horizontal, 24)
         .onAppear {
             Task {
                 await userProfileViewModel.loadProfile()
