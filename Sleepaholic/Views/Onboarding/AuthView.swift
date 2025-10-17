@@ -20,15 +20,17 @@ struct AuthView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            BackButtonView(previous: previous)
+            OnboardingHeader(previous: previous)
 
             Spacer()
 
             Text("Become a Sleepaholic")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                .font(.h1Black)
+                .foregroundColor(.white100)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
+            
+            Spacer()
 
             VStack(spacing: 16) {
                 // MARK: - Apple Sign-In
@@ -48,12 +50,17 @@ struct AuthView: View {
                         }
                     }
                 }
-                .frame(height: 50)
-                .cornerRadius(8)
-                .padding(.horizontal)
+                .frame(width: 342, height: 56)
+                .cornerRadius(100)
+                .buttonStyle(.plain)
 
                 // MARK: - Google Sign-In
-                Button(action: {
+                PrimaryButton(
+                    title: "Continue with Google",
+                    icon: Image("google"),
+                    size: .regular,
+                    isDisabled: false
+                ) {
                     HapticsManager.play(.medium)
                     Task {
                         do {
@@ -66,24 +73,11 @@ struct AuthView: View {
                             errorMessage = error.localizedDescription
                         }
                     }
-                }) {
-                    HStack {
-                        Image(systemName: "globe")
-                            .imageScale(.medium)
-                        Text("Continue with Google")
-                            .fontWeight(.medium)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(8)
-                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
                 }
-                .padding(.horizontal)
             }
-
-            Spacer()
+            .padding(.bottom, 60)
         }
+        .padding(.horizontal, 24)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "auth_viewed")
         }

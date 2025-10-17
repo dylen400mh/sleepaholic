@@ -11,37 +11,37 @@ struct WelcomeView: View {
     let next: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 48) {
+            OnboardingHeader(previous: nil)
+            
             Spacer()
 
-            Text("Welcome!")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.top)
+            VStack(spacing: 8) {
+                Text("Welcome!")
+                    .font(.h1Black)
+                    .foregroundColor(.white100)
 
-            Text("Let's start by finding out if you have a problem with sleep.")
-                .font(.title3)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
+                Text("Let's start by finding out if you have a problem with sleep.")
+                    .font(.body2)
+                    .foregroundColor(.white80)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 284)
+            }
+            
             Spacer()
 
-            Button(action: {
+            PrimaryButton(
+                title: "Start Quiz",
+                icon: nil,
+                size: .regular,
+                isDisabled: false
+            ) {
                 HapticsManager.play(.medium)
                 next()
-            }) {
-                Text("Start Quiz")
-                    .font(.headline)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal, 32)
             }
-
-            Spacer()
+            .padding(.bottom, 60)
         }
+        .padding(.horizontal, 24)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "welcome_viewed")
         }
