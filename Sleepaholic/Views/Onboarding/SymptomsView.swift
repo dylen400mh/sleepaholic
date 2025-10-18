@@ -36,19 +36,20 @@ struct SymptomsView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 48) {
             // MARK: - Header
-            BackButtonView(previous: previous)
+            OnboardingHeader(previous: previous)
 
-            VStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Symptoms")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
                 Text("Poor sleep can have negative effects on your life. Select any symptoms below:")
-                    .font(.subheadline)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal)
+                    .font(.body2)
+                    .foregroundColor(.white80)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             ScrollView {
@@ -56,62 +57,39 @@ struct SymptomsView: View {
                     ForEach(symptoms.keys.sorted(), id: \.self) { category in
                         VStack(alignment: .leading, spacing: 16) {
                             Text(category)
-                                .font(.headline)
-                                .padding(.horizontal)
+                                .font(.h3Semi)
+                                .foregroundColor(.white100)
+                                .frame(maxWidth: .infinity, alignment: .leading)
 
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            VStack(spacing: 16) {
                                 ForEach(symptoms[category]!, id: \.self) { symptom in
-                                    Button {
-                                        viewModel.toggleSymptom(category: category, symptom: symptom)
+                                    MultipleChoiceOption(
+                                        text: symptom,
+                                        isSelected: viewModel.selectedSymptoms[category]?.contains(symptom) == true
+                                    ) {
                                         HapticsManager.play(.light)
-                                    } label: {
-                                        Text(symptom)
-                                            .multilineTextAlignment(.center)
-                                            .font(.subheadline)
-                                            .padding()
-                                            .frame(maxWidth: .infinity)
-                                            .background(
-                                                viewModel.selectedSymptoms[category]?.contains(symptom) == true
-                                                ? Color.accentColor.opacity(0.2)
-                                                : Color(.secondarySystemBackground)
-                                            )
-                                            .cornerRadius(12)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(viewModel.selectedSymptoms[category]?.contains(symptom) == true
-                                                            ? Color.accentColor
-                                                            : Color.clear, lineWidth: 2)
-                                            )
-                                            .animation(.easeInOut(duration: 0.15), value: viewModel.selectedSymptoms)
+                                        viewModel.toggleSymptom(category: category, symptom: symptom)
                                     }
                                 }
                             }
-                            .padding(.horizontal)
                         }
                     }
                 }
-                .padding(.top, 20)
             }
-
-            Spacer()
 
             // MARK: - Continue Button
-            Button(action: {
+            PrimaryButton(
+                title: "Fix my sleep",
+                icon: nil,
+                size: .regular,
+                isDisabled: false
+            ) {
                 HapticsManager.play(.medium)
                 next()
-            }) {
-                Text("Fix My Sleep")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
             }
-
-            Spacer(minLength: 30)
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 60)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "symptoms_viewed")
         }

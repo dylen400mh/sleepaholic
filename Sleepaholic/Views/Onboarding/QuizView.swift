@@ -74,7 +74,7 @@ struct QuizView: View {
                         Group {
                             switch q.type {
                             case .multipleChoice:
-                                ScrollView(.vertical, showsIndicators: false) {
+                                ScrollView(.vertical) {
                                     VStack(spacing: 16) {
                                         ForEach(q.options, id: \.self) { option in
                                             MultipleChoiceOption(
