@@ -13,53 +13,44 @@ struct ReferralView: View {
     let previous: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Back button
-            BackButtonView(previous: previous)
-                .padding(.top)
-
-            // Header
-            VStack(spacing: 8) {
-                Text("Do you have a referral code?")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-
-                Text("Skip this step if you don’t have a referral code.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+        VStack {
+            VStack(spacing: 48) {
+                OnboardingHeader(previous: previous)
+                
+                VStack(spacing: 32) {
+                    VStack(spacing: 12) {
+                        Text("Do you have a referral code?")
+                            .font(.h2Semi)
+                            .foregroundColor(.white100)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Text("Skip this step if you don’t have a referral code.")
+                            .font(.body2)
+                            .foregroundColor(.white80)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    
+                    InputField(
+                        label: "Referral Code",
+                        text: $viewModel.referralCode
+                    )
+                }
             }
-
-            // Input field
-            VStack(spacing: 16) {
-                TextField("Referral Code", text: $viewModel.referralCode)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal, 32)
-                    .disableAutocorrection(true)
-                    .textInputAutocapitalization(.never)
-            }
-            .padding(.top, 20)
-
+            
             Spacer()
-
-            // Next button
-            Button {
+            
+            PrimaryButton(
+                title: viewModel.referralCode.isEmpty ? "Skip" : "Next",
+                icon: nil,
+                size: .regular,
+                isDisabled: false
+            ) {
                 HapticsManager.play(.medium)
                 next()
-            } label: {
-                Text(viewModel.referralCode.isEmpty ? "Skip" : "Next")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
             }
-            .padding(.bottom, 40)
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 60)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "referral_viewed")
