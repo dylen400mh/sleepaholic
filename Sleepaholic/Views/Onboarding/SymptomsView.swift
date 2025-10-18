@@ -65,7 +65,8 @@ struct SymptomsView: View {
                                 ForEach(symptoms[category]!, id: \.self) { symptom in
                                     MultipleChoiceOption(
                                         text: symptom,
-                                        isSelected: viewModel.selectedSymptoms[category]?.contains(symptom) == true
+                                        isSelected: viewModel.selectedSymptoms[category]?.contains(symptom) == true,
+                                        icon: nil
                                     ) {
                                         HapticsManager.play(.light)
                                         viewModel.toggleSymptom(category: category, symptom: symptom)

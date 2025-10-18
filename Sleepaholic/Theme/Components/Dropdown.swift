@@ -61,7 +61,8 @@ struct Dropdown: View {
                     ForEach(options, id: \.self) { option in
                         MultipleChoiceOption(
                             text: option,
-                            isSelected: selection == option
+                            isSelected: selection == option,
+                            icon: nil
                         ) {
                             selection = option
                             withAnimation(.easeInOut(duration: 0.2)) {

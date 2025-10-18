@@ -10,6 +10,7 @@ import SwiftUI
 struct MultipleChoiceOption: View {
     let text: String
     let isSelected: Bool
+    let icon: String?
     let action: () -> Void
     
     var body: some View {
@@ -34,6 +35,14 @@ struct MultipleChoiceOption: View {
                     }
                 }
                 .frame(width: 24, height: 24)
+                
+                if let icon = icon {
+                    Image(icon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(Color.white100)
+                }
 
                 // Option text
                 Text(text)

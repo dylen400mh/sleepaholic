@@ -79,7 +79,8 @@ struct QuizView: View {
                                         ForEach(q.options, id: \.self) { option in
                                             MultipleChoiceOption(
                                                 text: option,
-                                                isSelected: selectedOption == option
+                                                isSelected: selectedOption == option,
+                                                icon: nil
                                             ) {
                                                 HapticsManager.play(.light)
                                                 selectedOption = option

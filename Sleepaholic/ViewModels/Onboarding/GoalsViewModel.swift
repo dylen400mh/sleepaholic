@@ -17,14 +17,14 @@ final class GoalsViewModel: ObservableObject {
     @Published var selected: Set<UUID> = []
 
     let goals: [Goal] = [
-        Goal(title: "Feel refreshed and energized", icon: "bolt.heart.fill"),
-        Goal(title: "Fall asleep faster", icon: "moon.zzz.fill"),
-        Goal(title: "Stay asleep longer", icon: "bed.double.fill"),
-        Goal(title: "Eliminate grogginess and brain fog", icon: "brain.head.profile"),
-        Goal(title: "Build consistent sleep habits", icon: "calendar"),
-        Goal(title: "Improve mood and emotional stability", icon: "smiley.fill"),
-        Goal(title: "Strengthen self-discipline", icon: "figure.run"),
-        Goal(title: "Reduce distractions before bed", icon: "moon.stars")
+        Goal(title: "Feel refreshed and energized", icon: "charge"),
+        Goal(title: "Fall asleep faster", icon: "moon"),
+        Goal(title: "Stay asleep longer", icon: "clock"),
+        Goal(title: "Eliminate grogginess and brain fog", icon: "brain"),
+        Goal(title: "Build consistent sleep habits", icon: "bed"),
+        Goal(title: "Improve mood and emotional stability", icon: "face"),
+        Goal(title: "Strengthen self-discipline", icon: "book"),
+        Goal(title: "Reduce distractions before bed", icon: "device")
     ]
 
     func toggle(_ goal: Goal) {

@@ -34,7 +34,8 @@ struct GoalsView: View {
                         ForEach(viewModel.goals) { goal in
                             MultipleChoiceOption(
                                 text: goal.title,
-                                isSelected: viewModel.isSelected(goal)
+                                isSelected: viewModel.isSelected(goal),
+                                icon: goal.icon
                             ) {
                                 HapticsManager.play(.light)
                                 withAnimation(.easeInOut(duration: 0.15)) {
