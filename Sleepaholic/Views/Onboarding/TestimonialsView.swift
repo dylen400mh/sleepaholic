@@ -18,99 +18,65 @@ struct TestimonialsView: View {
         Testimonial(
             name: "Jenna Morales",
             review: "I didn’t realize how broken my sleep was until I started using Sleepaholic. Two weeks in, I’m falling asleep faster, staying asleep, and actually waking up with energy. It’s like a reset button for my life.",
-            imageName: "person.circle.fill"
+            imageName: "testimonial1"
         ),
         Testimonial(
             name: "Ryan Choi",
             review: "Sleepaholic turned my nights from doomscrolling to peaceful wind-down routines. The streaks, recommendations, and progress tracking keep me motivated without feeling judged. I actually look forward to bedtime now.",
-            imageName: "person.circle.fill"
+            imageName: "testimonial2"
         ),
         Testimonial(
             name: "Emily Robertson",
             review: "Since using Sleepaholic, I finally feel in control of my sleep. The gentle reminders and calming guides help me unplug, and I’ve gone from restless nights to consistent, refreshing sleep. It’s the first time in years I wake up without hitting snooze five times.",
-            imageName: "person.circle.fill"
+            imageName: "testimonial3"
         )
     ]
     
     var body: some View {
-        VStack(spacing: 24) {
-            // MARK: - Back button
-            BackButtonView(previous: previous)
-                .padding(.top)
-
-            // MARK: - Header
-            VStack(spacing: 8) {
-                Text("What people say")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-
-                Text("This app was designed for people like you.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-
-            // MARK: - Testimonials
-            ScrollView {
-                VStack(spacing: 20) {
-                    ForEach(testimonials) { testimonial in
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 10) {
-                                Image(systemName: testimonial.imageName)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40, height: 40)
-                                    .foregroundColor(.accentColor)
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(testimonial.name)
-                                        .font(.headline)
-                                    HStack(spacing: 3) {
-                                        ForEach(0..<5, id: \.self) { _ in
-                                            Image(systemName: "star.fill")
-                                                .foregroundColor(.yellow)
-                                                .font(.caption)
-                                        }
-                                    }
-                                }
-                                Spacer()
-                            }
-                            
-                            Text("“\(testimonial.review)”")
-                                .font(.body)
-                                .foregroundColor(.primary)
-                                .fixedSize(horizontal: false, vertical: true)
+        VStack(spacing: 48) {
+            OnboardingHeader(previous: previous)
+            
+            VStack(spacing: 32) {
+                VStack(spacing: 12) {
+                    Text("What people say")
+                        .font(.h2Semi)
+                        .foregroundColor(.white100)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Text("This app was designed for people like you.")
+                        .font(.body2)
+                        .foregroundColor(.white80)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                
+                ScrollView {
+                    VStack(spacing: 32) {
+                        ForEach(testimonials) { testimonial in
+                            TestimonialCard(
+                                name: testimonial.name,
+                                profileImage: Image(testimonial.imageName),
+                                review: testimonial.review,
+                                showCheckmark: false,
+                                showStars: true
+                            )
                         }
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
-                        .padding(.horizontal)
                     }
                 }
-                .padding(.vertical)
             }
-
-            Spacer(minLength: 20)
 
             // MARK: - Next button
-            Button {
-                HapticsManager.play(.medium)
-                next()
-            } label: {
-                Text("Next")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
+            PrimaryButton(
+               title: "Next",
+               icon: nil,
+               size: .regular,
+               isDisabled: false
+            ) {
+               HapticsManager.play(.medium)
+               next()
             }
-            .padding(.bottom, 40)
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 60)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             requestReview()
