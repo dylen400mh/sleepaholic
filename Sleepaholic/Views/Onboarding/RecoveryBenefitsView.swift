@@ -35,93 +35,60 @@ struct RecoveryBenefitsView: View {
             imageName: "chatterjee"
         ),
         .init(
-            name: "Dylen",
+            name: "Anonymous",
             description: "I was starting to believe that feeling exhausted, unmotivated, and disconnected was just a normal part of life. Fixing my sleep completely shifted how I experience my days. I finally feel present again.",
-            imageName: "dylen"
+            imageName: "profile_logo"
         ),
         .init(
             name: "Anonymous",
             description: "I used to think sleeping 4–5 hours a night was normal. I didn’t realize how much it was affecting my mental clarity and mood until I fixed it. I feel sharper and more in control now.",
-            imageName: "anonymous1"
+            imageName: "profile_logo"
         ),
         .init(
             name: "Anonymous",
             description: "I kept waking up tired no matter how many hours I slept. Sleepaholic made me realize I simply needed better sleep. After closely monitoring my sleep debt I finally feel rested when I wake up.",
-            imageName: "anonymous2"
+            imageName: "profile_logo"
         )
     ]
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 48) {
             // MARK: - Header
-            BackButtonView(previous: previous)
+            OnboardingHeader(previous: previous)
 
-            Text("Recovery Benefits")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.top, 8)
-
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
-                    ForEach(benefits) { benefit in
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack {
-                                HStack(spacing: 12) {
-                                    Image(benefit.imageName)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 45, height: 45)
-                                        .clipShape(Circle())
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(benefit.name)
-                                            .font(.headline)
-                                            .foregroundColor(.primary)
-                                    }
-                                }
-
-                                Spacer()
-
-                                // Checkmark circle
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
-                                    .font(.title3)
-                            }
-
-                            Text(benefit.description)
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 32) {
+                Text("Recovery Benefits")
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                ScrollView {
+                    VStack(spacing: 32) {
+                        ForEach(benefits) { benefit in
+                            TestimonialCard(
+                                name: benefit.name,
+                                profileImage: Image(benefit.imageName),
+                                review: benefit.description,
+                                showCheckmark: true,
+                                showStars: false)
                         }
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
-                        .padding(.horizontal)
                     }
                 }
-                .padding(.top, 10)
-                .padding(.bottom, 80)
             }
-
-            Spacer()
 
             // MARK: - Continue Button
-            Button(action: {
+            PrimaryButton(
+                title: "Continue",
+                icon: nil,
+                size: .regular,
+                isDisabled: false
+            ) {
                 HapticsManager.play(.medium)
                 next()
-            }) {
-                Text("Continue")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
             }
-            .padding(.bottom, 30)
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 60)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "recovery_benefits_viewed")

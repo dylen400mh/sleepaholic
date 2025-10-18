@@ -63,7 +63,6 @@ struct TestimonialCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
-        .frame(width: 342, alignment: .leading)
         .background(Color.main)
         .cornerRadius(12)
         .overlay(
