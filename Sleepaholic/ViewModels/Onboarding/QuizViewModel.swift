@@ -70,7 +70,7 @@ final class QuizViewModel: ObservableObject {
             .init(id: 8, text: "Do you use your phone in bed to distract yourself from stress or emotions?", options: ["Frequently", "Occasionally", "Rarely / Never"], isRequired: false, type: .multipleChoice),
             .init(id: 9, text: "Do you stay awake scrolling even when you feel tired?", options: ["Frequently", "Occasionally", "Rarely / Never"], isRequired: false, type: .multipleChoice),
             .init(id: 10, text: "Have you ever spent money on sleep aids (e.g., melatonin, sleep apps, supplements)?", options: ["Yes", "No"], isRequired: false, type: .multipleChoice),
-            .init(id: 11, text: "A little more about you — name, age", options: [], isRequired: true, type: .textInput),
+            .init(id: 11, text: "A little more about you", options: [], isRequired: true, type: .textInput),
             .init(id: 12, text: "When is your target bedtime?", options: [], isRequired: true, type: .timePicker),
             .init(id: 13, text: "What is your target wake-up time?", options: [], isRequired: true, type: .timePicker),
         ]

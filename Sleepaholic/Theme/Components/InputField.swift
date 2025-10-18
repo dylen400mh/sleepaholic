@@ -16,44 +16,53 @@ struct InputField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            
-            // Floating label
-            Text(label)
-                .font(.body3)
-                .foregroundColor(labelColor)
-                .padding(.leading, 16)
-                .padding(.top, text.isEmpty ? 16 : 4)
-                .animation(.easeInOut(duration: 0.2), value: text)
-                .animation(.easeInOut(duration: 0.2), value: isFocused)
-            
-            // TextField background & border
             ZStack(alignment: .leading) {
+                // MARK: - Background
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.main)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
                             .strokeBorder(borderColor, lineWidth: borderWidth)
                     )
-                    .frame(height: 56)
+                
+                // Label
+                Text(label)
+                    .font(isFloating ? .body3 : .body1)
+                    .foregroundColor(labelColor)
+                    .padding(.horizontal, isFloating ? 8 : 0)
+                    .background(
+                        isFloating ?
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.main)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(borderColor, lineWidth: 1)
+                            )
+                        : nil
+                    )
+                    .offset(x: 16, y: labelOffsetY)
+                    .scaleEffect(isFloating ? 1.0 : 1.0, anchor: .leading)
+                    .animation(.easeInOut(duration: 0.25), value: isFocused)
+                    .animation(.easeInOut(duration: 0.25), value: text)
                 
                 TextField("", text: $text)
                     .font(.body1)
                     .foregroundColor(.white100)
                     .padding(.horizontal, 16)
                     .focused($isFocused)
-                    .frame(height: 56)
+                    .zIndex(1)
             }
+            .frame(height: 56)
+            .onTapGesture { isFocused = true }
             
-            // Error text
             if let error = error {
                 Text(error)
                     .font(.body3)
                     .foregroundColor(.red)
                     .padding(.leading, 4)
-                    .padding(.top, 4)
+                    .padding(.bottom, -20)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: isFocused)
     }
 
     // MARK: - Computed Colors
@@ -70,5 +79,13 @@ struct InputField: View {
     private var labelColor: Color {
         if error != nil { return .red }
         return isFocused ? .white100 : .white70
+    }
+    
+    private var isFloating: Bool {
+            isFocused || !text.isEmpty
+        }
+
+    private var labelOffsetY: CGFloat {
+        isFloating ? -28 : 0
     }
 }

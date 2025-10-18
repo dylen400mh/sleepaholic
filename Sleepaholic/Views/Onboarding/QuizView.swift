@@ -25,135 +25,139 @@ struct QuizView: View {
     @Binding var didSkipQuiz: Bool
 
     var body: some View {
-        VStack(spacing: 32) {
-            // MARK: - Back Button
-            BackButtonView(previous: {
-                if viewModel.currentIndex > 0 {
-                    viewModel.previousQuestion()
-                    restorePreviousAnswer()
-                } else {
-                    previous()
-                }
-            })
-            
-            VStack(spacing: 8) {
-                // MARK: - Progress Bar
-                ProgressView(value: Double(viewModel.currentIndex + 1),
-                             total: Double(viewModel.questions.count))
-                    .accentColor(.accentColor)
-                    .scaleEffect(x: 1, y: 2, anchor: .center)
-                    .padding(.horizontal)
-
-                // MARK: - Question Counter
-                Text("Question \(viewModel.currentIndex + 1) of \(viewModel.questions.count)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.bottom, 8)
-
-
-            // MARK: - Question
-            if let q = viewModel.currentQuestion {
-                Spacer()
-
-                Text(q.text)
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                // MARK: - Answer input
-                Group {
-                    switch q.type {
-                    case .multipleChoice:
-                        VStack(spacing: 12) {
-                            ForEach(q.options, id: \.self) { option in
-                                Button {
-                                    HapticsManager.play(.light)
-                                    selectedOption = option
-                                } label: {
-                                    Text(option)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(selectedOption == option ? Color.accentColor.opacity(0.2) : Color(.secondarySystemBackground))
-                                        .cornerRadius(10)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .stroke(selectedOption == option ? Color.accentColor : .clear, lineWidth: 2)
-                                        )
-                                }
+        if let q = viewModel.currentQuestion {
+            VStack(spacing: 0) {
+                VStack(spacing: 48) {
+                    // MARK: - Header
+                    OnboardingHeader(previous: {
+                        if viewModel.currentIndex > 0 {
+                            viewModel.previousQuestion()
+                            restorePreviousAnswer()
+                        } else {
+                            previous()
+                        }
+                    })
+                    
+                    VStack(spacing: 12) {
+                        // MARK: - Progress Bar
+                        GeometryReader { geo in
+                            let fraction = CGFloat(viewModel.currentIndex + 1) / CGFloat(max(viewModel.questions.count, 1))
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 100)
+                                    .fill(Color.white20)
+                                    .frame(height: 6)
+                                RoundedRectangle(cornerRadius: 100)
+                                    .fill(Gradients.main)
+                                    .frame(width: geo.size.width * fraction, height: 6)
                             }
                         }
-                        .padding(.horizontal)
-
-                    case .textInput:
-                        VStack(spacing: 16) {
-                            TextField("Enter your name", text: $name)
-                                .textFieldStyle(.roundedBorder)
-                            TextField("Enter your age", text: $age)
-                                .keyboardType(.numberPad)
-                                .textFieldStyle(.roundedBorder)
+                        .frame(height: 6)
+                        
+                        // MARK: - Question Counter
+                        Text("Question \(viewModel.currentIndex + 1) of \(viewModel.questions.count)")
+                            .font(.body2)
+                            .foregroundColor(.white80)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    
+                    
+                    // MARK: - Question
+                    VStack(alignment: .leading, spacing: 32) {
+                        Text(q.text)
+                            .font(.h2Semi)
+                            .foregroundColor(.white100)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        // MARK: - Answer input
+                        Group {
+                            switch q.type {
+                            case .multipleChoice:
+                                ScrollView(.vertical, showsIndicators: false) {
+                                    VStack(spacing: 16) {
+                                        ForEach(q.options, id: \.self) { option in
+                                            MultipleChoiceOption(
+                                                text: option,
+                                                isSelected: selectedOption == option
+                                            ) {
+                                                HapticsManager.play(.light)
+                                                selectedOption = option
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                            case .textInput:
+                                VStack(spacing: 24) {
+                                    InputField(label: "Name", text: $name)
+                                    InputField(label: "Age", text: $age)
+                                }
+                                
+                            case .timePicker:
+                                DatePicker("",
+                                           selection: q.id == 12 ? $bedtime : $wakeup,
+                                           displayedComponents: .hourAndMinute)
+                                .datePickerStyle(.wheel)
+                                .labelsHidden()
+                                .frame(maxHeight: 200)
+                            }
                         }
-                        .padding(.horizontal)
-
-                    case .timePicker:
-                        DatePicker("",
-                                   selection: q.id == 12 ? $bedtime : $wakeup,
-                                   displayedComponents: .hourAndMinute)
-                            .datePickerStyle(.wheel)
-                            .labelsHidden()
-                            .frame(maxHeight: 200)
                     }
                 }
-
-                Spacer()
-
+                .frame(maxHeight: .infinity, alignment: .top)
+                
                 // MARK: - Footer buttons
-                VStack(spacing: 12) {
+                VStack(spacing: 16) {
+                    PrimaryButton(
+                        title: viewModel.isLastQuestion ? "Finish" : "Continue",
+                        icon: nil,
+                        size: .regular,
+                        isDisabled: !canContinue(q)
+                    ) {
+                        HapticsManager.play(.medium)
+                        Task { saveCurrentAnswer(for: q) }
+                    }
+                    
                     if !q.isRequired {
-                        Button {
+                        Button(action: {
                             HapticsManager.play(.light)
                             didSkipQuiz = true
                             viewModel.currentIndex = 10 // Jump directly to Q11
                             restorePreviousAnswer()
-                        } label: {
-                            Text("Skip Quiz")
-                                .foregroundColor(.gray)
+                        }) {
+                            HStack(spacing: 4) {
+                                Text("Skip quiz")
+                                    .font(.body1Semi)
+                                    .foregroundColor(.white100)
+                                
+                                Image(systemName: "arrow.right")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(.white100)
+                            }
                         }
                     }
-
-                    Button {
-                        HapticsManager.play(.medium)
-                        Task {
-                            saveCurrentAnswer(for: q)
-                        }
-                    } label: {
-                        Text(viewModel.isLastQuestion ? "Finish" : "Continue")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(canContinue(q) ? Color.accentColor : Color.gray.opacity(0.4))
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                            .padding(.horizontal)
-                    }
-                    .disabled(!canContinue(q))
+                }
+                .padding(.top, 16)
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 60)
+            .task {
+                AnalyticsService.shared.trackEvent(eventName: "quiz_viewed")
+                
+                // Prefill from profile/settings
+                await userSettingsViewModel.loadSettings()
+                prefillUserData()
+                restorePreviousAnswer()
+                
+                if startAt > 0 && startAt < viewModel.questions.count {
+                    viewModel.currentIndex = startAt
                 }
             }
+            .animation(.easeInOut, value: viewModel.currentIndex)
         }
-        .task {
-            AnalyticsService.shared.trackEvent(eventName: "quiz_viewed")
-            
-            // Prefill from profile/settings
-            await userSettingsViewModel.loadSettings()
-            prefillUserData()
-            restorePreviousAnswer()
-            
-            if startAt > 0 && startAt < viewModel.questions.count {
-                viewModel.currentIndex = startAt
-            }
-        }
-        .animation(.easeInOut, value: viewModel.currentIndex)
     }
 
     // MARK: - Logic

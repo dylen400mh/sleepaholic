@@ -18,24 +18,23 @@ struct MultipleChoiceOption: View {
                 // Checkbox
                 ZStack {
                     if isSelected {
-                        Rectangle()
+                        RoundedRectangle(cornerRadius: 6)
                             .fill(Gradients.main)
                             .overlay {
                                 Image(systemName: "checkmark")
                                     .foregroundColor(.white100)
                             }
                     } else {
-                        Rectangle()
+                        RoundedRectangle(cornerRadius: 6)
                             .fill(Color.main)
                             .overlay {
-                                Rectangle()
+                                RoundedRectangle(cornerRadius: 6)
                                     .strokeBorder(Color.white50, lineWidth: 1.5)
                             }
                     }
                 }
                 .frame(width: 24, height: 24)
-                .cornerRadius(6)
-                
+
                 // Option text
                 Text(text)
                     .font(.body1)
@@ -43,11 +42,13 @@ struct MultipleChoiceOption: View {
                 
                 Spacer()
             }
-            .frame(width: 342, height: 56)
+            .padding(16)
             .background(Color.main)
             .overlay {
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(Gradients.main, lineWidth: 1.5)
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(Gradients.main, lineWidth: 1.5)
+                }
             }
             .cornerRadius(12)
         }
