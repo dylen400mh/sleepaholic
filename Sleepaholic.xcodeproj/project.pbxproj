@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0F34E7362EA41ECD008C683C /* DotLottie in Frameworks */ = {isa = PBXBuildFile; productRef = 0F34E7352EA41ECD008C683C /* DotLottie */; };
 		0F37A3AD2E7F0BF20036C7EC /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 0F37A3AC2E7F0BF20036C7EC /* FirebaseAnalytics */; };
 		0F37A3AF2E7F0BF20036C7EC /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0F37A3AE2E7F0BF20036C7EC /* FirebaseAuth */; };
 		0F37A3B12E7F0BF20036C7EC /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0F37A3B02E7F0BF20036C7EC /* FirebaseCore */; };
@@ -47,6 +48,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0F37A3AD2E7F0BF20036C7EC /* FirebaseAnalytics in Frameworks */,
+				0F34E7362EA41ECD008C683C /* DotLottie in Frameworks */,
 				0F37A3B32E7F0BF20036C7EC /* FirebaseFirestore in Frameworks */,
 				0F4A50422E9D83A4008FAA68 /* Mixpanel in Frameworks */,
 				0F37A3B12E7F0BF20036C7EC /* FirebaseCore in Frameworks */,
@@ -102,6 +104,7 @@
 				0F37A3B42E7F0BF20036C7EC /* FirebaseStorage */,
 				0F4429CB2E99C95200B7F4A5 /* SuperwallKit */,
 				0F4A50412E9D83A4008FAA68 /* Mixpanel */,
+				0F34E7352EA41ECD008C683C /* DotLottie */,
 			);
 			productName = Sleepaholic;
 			productReference = 0F6EDBA12E7606E000A7595D /* Sleepaholic.app */;
@@ -135,6 +138,7 @@
 				0F37A3AB2E7F0BF10036C7EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				0F4429CA2E99C95200B7F4A5 /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
 				0F4A50402E9D83A4008FAA68 /* XCRemoteSwiftPackageReference "mixpanel-swift" */,
+				0F34E7342EA41ECD008C683C /* XCRemoteSwiftPackageReference "dotlottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0F6EDBA22E7606E000A7595D /* Products */;
@@ -391,6 +395,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		0F34E7342EA41ECD008C683C /* XCRemoteSwiftPackageReference "dotlottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/LottieFiles/dotlottie-ios";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		0F37A3AB2E7F0BF10036C7EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -418,6 +430,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0F34E7352EA41ECD008C683C /* DotLottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F34E7342EA41ECD008C683C /* XCRemoteSwiftPackageReference "dotlottie-ios" */;
+			productName = DotLottie;
+		};
 		0F37A3AC2E7F0BF20036C7EC /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 0F37A3AB2E7F0BF10036C7EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

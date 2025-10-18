@@ -29,12 +29,12 @@ struct SecondaryButton: View {
                     icon
                         .resizable()
                         .scaledToFit()
+                        .foregroundColor(.white100)
                         .frame(width: 24, height: 24)
                 }
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
-            .frame(width: width, height: height)
             .background(Color.main)
             .cornerRadius(100)
             .overlay(
@@ -46,20 +46,6 @@ struct SecondaryButton: View {
     }
 
     // MARK: - Layout constants
-    private var width: CGFloat {
-        switch size {
-        case .regular: return 342
-        case .small: return 147
-        }
-    }
-
-    private var height: CGFloat {
-        switch size {
-        case .regular: return 56
-        case .small: return 48
-        }
-    }
-
     private var horizontalPadding: CGFloat {
         switch size {
         case .regular: return 24
