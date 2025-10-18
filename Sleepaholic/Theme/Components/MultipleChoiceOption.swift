@@ -39,9 +39,14 @@ struct MultipleChoiceOption: View {
                 Text(text)
                     .font(.body1)
                     .foregroundColor(.white100)
-                
-                Spacer()
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(1)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
             .padding(16)
             .background(Color.main)
             .overlay {
