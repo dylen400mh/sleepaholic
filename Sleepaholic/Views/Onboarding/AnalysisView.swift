@@ -20,161 +20,128 @@ struct AnalysisView: View {
     private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        ZStack {
-            Color(.systemBackground)
-                .ignoresSafeArea()
+        VStack(spacing: 24) {
+            // MARK: - Back Button
+            if showResults {
+                OnboardingHeader(previous: previous)
+            }
 
-            VStack {
-                // MARK: - Back Button
-                if showResults {
-                    BackButtonView(previous: previous)
-                }
+            if !showResults {
+                // MARK: - Loading State
+                VStack(spacing: 24) {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.white10, lineWidth: 15)
+                            .frame(width: 120, height: 120)
 
-                Spacer()
+                        Circle()
+                            .trim(from: 0, to: progress)
+                            .stroke(
+                                Gradients.main,
+                                style: StrokeStyle(lineWidth: 15, lineCap: .round)
+                            )
+                            .rotationEffect(.degrees(-90))
+                            .animation(.linear(duration: 0.05), value: progress)
+                            .frame(width: 120, height: 120)
 
-                if !showResults {
-                    // MARK: - Loading State
-                    VStack(spacing: 30) {
-                        ZStack {
-                            Circle()
-                                .stroke(Color(.systemGray6).opacity(0.6), lineWidth: 15)
-
-                            Circle()
-                                .trim(from: 0, to: progress)
-                                .stroke(
-                                    AngularGradient(gradient: Gradient(colors: [
-                                        Color.accentColor,
-                                        Color.green.opacity(0.8)
-                                    ]), center: .center),
-                                    style: StrokeStyle(lineWidth: 18, lineCap: .round)
-                                )
-                                .rotationEffect(.degrees(-90))
-                                .animation(.linear(duration: 0.05), value: progress)
-
-                            Text("\(Int(progress * 100))%")
-                                .font(.largeTitle)
-                                .fontWeight(.bold)
-                                .contentTransition(.numericText())
-                        }
-                        .frame(width: 200, height: 200)
-
-                        Text("Analyzing your responses...")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-
-                        Text(subtitle(for: progress))
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                        Text("\(Int(progress * 100))%")
+                            .font(.h3Semi)
+                            .foregroundColor(.white100)
+                            .contentTransition(.numericText())
+                    }
+                    
+                    VStack(spacing: 12) {
+                        Text("Calculating")
+                            .font(.h2Semi)
+                            .foregroundColor(.white100)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    .onReceive(timer) { _ in
-                        guard !showResults && !skipAnimation else { return }
-                        if progress < 1.0 {
-                            progress += 0.01
-                            vibrate()
-                        } else {
-                            completeAnalysis()
-                        }
-                    }
-                    .onAppear {
-                        AnalyticsService.shared.trackEvent(eventName: "analysis_viewed")
                         
-                        if skipAnimation {
-                            // Skip calculation and show results directly
-                            showResults = true
-                            progress = 1.0
-                        } else {
-                            prepareHaptics()
-                        }
-                    }
-
-                } else {
-                    // MARK: - Results State
-                    VStack(spacing: 30) {
-                        VStack(spacing: 12) {
-                            HStack(spacing: 6) {
-                                Text("Analysis Complete")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
-                            }
-
-                            Text("Your responses indicate that you may be struggling with poor sleep patterns that could impact your daily life.")
-                                .multilineTextAlignment(.center)
-                                .font(.body)
-                                .foregroundColor(.primary)
-                                .padding(.horizontal)
-                                .padding(.top, 8)
-                        }
-
-                        // MARK: - Sleep Risk Chart
-                        VStack(spacing: 10) {
-                            Text("Sleep Health Score")
-                                .font(.headline)
-                                .padding(.bottom, 4)
-
-                            HStack(alignment: .bottom, spacing: 24) {
-                                VStack {
-                                    Text("You")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-
-                                    Rectangle()
-                                        .fill(Color.accentColor)
-                                        .frame(width: 60, height: 150 * 0.72)
-                                        .cornerRadius(8)
-
-                                    Text("72%")
-                                        .font(.headline)
-                                }
-
-                                VStack {
-                                    Text("Average")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                    Rectangle()
-                                        .fill(Color.gray.opacity(0.4))
-                                        .frame(width: 60, height: 150 * 0.46)
-                                        .cornerRadius(8)
-                                    Text("46%")
-                                        .font(.headline)
-                                }
-                            }
-                            .frame(height: 160, alignment: .bottom)
-                        }
-
-                        Text("*This result is an indication only and not a medical diagnosis.*")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Text(subtitle(for: progress))
+                            .font(.body2)
+                            .foregroundColor(.white80)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-
-                        Spacer()
-
-                        Button(action: {
-                            HapticsManager.play(.medium)
-                            next()
-                        }) {
-                            Text("Check Your Symptoms")
-                                .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.accentColor)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                                .padding(.horizontal)
-                        }
-                        .padding(.bottom, 40)
                     }
-                    .transition(.opacity.combined(with: .scale))
-                    .animation(.easeInOut(duration: 0.6), value: showResults)
+                }
+                .onReceive(timer) { _ in
+                    guard !showResults && !skipAnimation else { return }
+                    if progress < 1.0 {
+                        progress += 0.01
+                        vibrate()
+                    } else {
+                        completeAnalysis()
+                    }
+                }
+                .onAppear {
+                    AnalyticsService.shared.trackEvent(eventName: "analysis_viewed")
+                    
+                    if skipAnimation {
+                        // Skip calculation and show results directly
+                        showResults = true
+                        progress = 1.0
+                    } else {
+                        prepareHaptics()
+                    }
                 }
 
-                Spacer()
+            } else {
+                // MARK: - Results State
+                VStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Analysis Complete")
+                            .font(.h2Semi)
+                            .foregroundColor(.white100)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text("We've got some news to break to you...")
+                            .font(.body2)
+                            .foregroundColor(.white80)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Text("Your responses indicate that you're struggling with poor sleep patterns that may be impacting your daily life*")
+                            .font(.body2)
+                            .foregroundColor(.white80)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    // MARK: - Sleep Risk Chart
+                    VStack(spacing: 24) {
+                        VStack {
+                            Image("AnalysisChart")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity)
+                        }
+                        .padding(24)
+                        .background(Color.main)
+                        .cornerRadius(16)
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("72% higher risk of unhealthy sleep habits")
+                                .font(.body1)
+                                .foregroundColor(.white100)
+                            Text("* This result is an indication only, not a medical diagnosis")
+                                .font(.body2)
+                                .foregroundColor(.white80)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    PrimaryButton(
+                        title: "Check your symptoms",
+                        icon: nil,
+                        size: .regular,
+                        isDisabled: false
+                    ) {
+                        HapticsManager.play(.medium)
+                        next()
+                    }
+                }
+                .transition(.opacity.combined(with: .scale))
+                .animation(.easeInOut(duration: 0.6), value: showResults)
             }
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 60)
     }
 
     // MARK: - Helpers
