@@ -17,8 +17,12 @@ final class FirestoreService {
     // MARK: - Create / Update
     func save<T: Codable & Identifiable>(_ item: T,
                                          to collection: String) async throws {
-        let id = String(describing: item.id) // ensure String id
-        try db.collection(collection).document(id).setData(from: item, merge: true)
+        if let id = (item.id as? String), !id.isEmpty {
+            try db.collection(collection).document(id).setData(from: item, merge: true)
+        } else {
+            // No ID -> create new doc with Firestore-generated ID
+            _ = try db.collection(collection).addDocument(from: item)
+        }
     }
     
     // MARK: - Save with explicit ID
