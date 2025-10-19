@@ -51,7 +51,7 @@ struct TestimonialCard: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 20, height: 20)
-                            .foregroundColor(.yellow)
+                            .foregroundColor(Color.appYellow)
                     }
                 }
             }

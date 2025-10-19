@@ -18,29 +18,36 @@ struct DiscountView: View {
     var body: some View {
         VStack {
             if showComponent {
-                VStack(spacing: 12) {
-                    Text("🎁 Special Discount!")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                    Text("Get 80% off on Sleepaholic Premium!")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
+                VStack(spacing: 16) {
+                    VStack(spacing: 8) {
+                        Text("🎁 Special Discount!")
+                            .font(.body1Semi)
+                            .foregroundColor(Color.white100)
+                        
+                        Text("Get 80% off on Sleepaholic Premium!")
+                            .font(.body2)
+                            .foregroundColor(.white80)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
 
-                    Button("Claim Now") {
+                    PrimaryButton(
+                        title: "Claim Now",
+                        icon: nil,
+                        size: .small,
+                        isDisabled: false
+                    ) {
                         HapticsManager.play(.medium)
                         SuperwallService.shared.presentPaywall(placement: "discount_offer")
                     }
-                    .font(.callout)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
                 }
-                .padding()
-                .background(Color(.systemBackground))
-                .cornerRadius(16)
-                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                .padding(16)
+                .background(Color.main)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(Color.white5, lineWidth: 1)
+                )
                 .transition(.scale)
             }
         }

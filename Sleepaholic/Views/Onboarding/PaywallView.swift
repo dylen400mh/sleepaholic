@@ -14,91 +14,70 @@ struct PaywallView: View {
     @State private var hasMarkedOnboarded = false
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 32) {
-                // MARK: - Header
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 48) {
+                OnboardingHeader(previous: nil)
+                
                 VStack(spacing: 12) {
-                    Image(systemName: "moon.zzz.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.accentColor)
-                    
                     Text("\(userName.isEmpty ? "Y" : userName + ", y")our custom plan is ready.")
-                        .font(.title)
-                        .fontWeight(.bold)
+                        .font(.h2Semi)
+                        .foregroundColor(Color.white100)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal)
                     
                     Text("Transform your nights and wake up energized, clear-minded, and consistent.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.body2)
+                        .foregroundColor(Color.white80)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
                 }
-                .padding(.top, 50)
                 
                 DiscountView()
-                    .padding(.horizontal)
 
-                // MARK: - Benefits (Part 1)
-                VStack(spacing: 16) {
+                VStack(spacing: 32) {
                     ForEach(benefits.prefix(2), id: \.title) { benefit in
                         BenefitCard(benefit: benefit)
                     }
-                }
-                .padding(.top, 8)
-
-                // MARK: - Testimonial 1
-                PaywallTestimonialCard(testimonial: testimonials[0])
-                    .padding(.horizontal)
-
-                // MARK: - Deeper Benefits
-                VStack(spacing: 16) {
+                    
+                    
+                    PaywallTestimonialCard(testimonial: testimonials[0])
+                    
+                    
                     ForEach(benefits.suffix(2), id: \.title) { benefit in
                         BenefitCard(benefit: benefit)
                     }
+                    
+                    PaywallTestimonialCard(testimonial: testimonials[1])
+                    
+                    VStack(spacing: 12) {
+                        Text("Better sleep changes everything.")
+                            .font(.h3Semi)
+                            .foregroundColor(.white100)
+                            .multilineTextAlignment(.center)
+
+                        Text("Sleepaholic helps you rebuild focus, motivation, and energy by fixing the habits that hold your sleep back and replacing them with the ones that work.")
+                            .font(.body2)
+                            .foregroundColor(.white80)
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    PaywallTestimonialCard(testimonial: testimonials[2])
                 }
-
-                // MARK: - Testimonial 2
-                PaywallTestimonialCard(testimonial: testimonials[1])
-                    .padding(.horizontal)
-
-                // MARK: - Outcome Focus
-                VStack(spacing: 8) {
-                    Text("Better sleep changes everything.")
-                        .font(.headline)
-                        .multilineTextAlignment(.center)
-                    Text("Sleepaholic helps you rebuild focus, motivation, and energy by fixing the habits that hold your sleep back and replacing them with the ones that work.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                }
-
-                // MARK: - Testimonial 3
-                PaywallTestimonialCard(testimonial: testimonials[2])
-                    .padding(.horizontal)
-
+                
                 // MARK: - CTA
-                VStack(spacing: 16) {
-                    Button {
-                        HapticsManager.play(.medium)
-                        Task {
-                            await pressedButton()
-                        }
-                    } label: {
-                        Text("Unlock My Sleep Plan")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
-                            .padding(.horizontal)
+                PrimaryButton(
+                    title: "Unlock My Sleep Plan",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: false
+                ) {
+                    HapticsManager.play(.medium)
+                    Task {
+                        await pressedButton()
                     }
                 }
-                .padding(.bottom, 60)
             }
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 60)
         .task {
             if let name = userProfileViewModel.profile?.name {
                 userName = name.components(separatedBy: " ").first ?? ""
@@ -113,10 +92,10 @@ struct PaywallView: View {
     // MARK: - Benefits
     private var benefits: [Benefit] {
         [
-            Benefit(icon: "sparkles", title: "Sleep Deeper, Wake Sharper", subtitle: "Restore natural sleep cycles and wake up clear-headed every morning."),
-            Benefit(icon: "cup.and.saucer.fill", title: "Fix Hidden Sleep Killers", subtitle: "Track caffeine, alcohol, naps, and more to reveal what’s sabotaging your rest."),
-            Benefit(icon: "leaf.fill", title: "Rebuild Healthy Habits", subtitle: "Complete nightly wind-downs that calm your mind and train your body to rest."),
-            Benefit(icon: "brain.head.profile", title: "Get Personalized Insights", subtitle: "See exactly how your habits impact your sleep and get smarter recommendations every week.")
+            Benefit(icon: "charge", title: "Sleep Deeper, Wake Sharper", subtitle: "Restore natural sleep cycles and wake up clear-headed every morning."),
+            Benefit(icon: "coffee", title: "Fix Hidden Sleep Killers", subtitle: "Track caffeine, alcohol, naps, and more to reveal what’s sabotaging your rest."),
+            Benefit(icon: "book", title: "Rebuild Healthy Habits", subtitle: "Complete nightly wind-downs that calm your mind and train your body to rest."),
+            Benefit(icon: "brain", title: "Get Personalized Insights", subtitle: "See exactly how your habits impact your sleep and get smarter recommendations every week.")
         ]
     }
 
@@ -175,25 +154,28 @@ struct BenefitCard: View {
     let benefit: Benefit
     
     var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: benefit.icon)
-                .foregroundColor(.accentColor)
-                .frame(width: 32, height: 32)
-                .background(Circle().fill(Color.accentColor.opacity(0.1)))
+        HStack(spacing: 12) {
+            Image(benefit.icon)
+                .foregroundColor(Color.white100)
+                .frame(width: 24, height: 24)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(benefit.title)
-                    .font(.headline)
+                    .font(.body1Semi)
+                    .foregroundColor(Color.white100)
                 Text(benefit.subtitle)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(.body2)
+                    .foregroundColor(Color.white80)
             }
             Spacer()
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(14)
-        .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 3)
+        .padding(16)
+        .background(Color.main)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(Color.white5, lineWidth: 1)
+        )
     }
 }
 
@@ -201,11 +183,11 @@ struct PaywallTestimonialCard: View {
     let testimonial: Testimonial
     
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             HStack(spacing: 4) {
                 ForEach(0..<5, id: \.self) { _ in
                     Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
+                        .foregroundColor(Color.appYellow)
                         .font(.system(size: 12))
                 }
             }
@@ -213,14 +195,17 @@ struct PaywallTestimonialCard: View {
             .multilineTextAlignment(.center)
 
             Text("“\(testimonial.review)”")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(.body2)
+                .foregroundColor(.white80)
                 .multilineTextAlignment(.center)
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(14)
-        .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 3)
+        .padding(16)
+        .background(Color.main)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(Color.white5, lineWidth: 1)
+        )
     }
 }
 
