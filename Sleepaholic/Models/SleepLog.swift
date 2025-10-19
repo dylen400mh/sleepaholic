@@ -9,12 +9,11 @@ import Foundation
 import FirebaseFirestore
 
 struct SleepLog: Identifiable, Codable, Equatable {
-    @DocumentID var documentId: String?
-    var id: String { documentId ?? UUID().uuidString }
+    @DocumentID var id: String?
     var start: Date
     var end: Date
     
     enum CodingKeys: String, CodingKey {
-        case start, end
+        case id, start, end
     }
 }

@@ -40,8 +40,9 @@ final class ActivityViewModel: ObservableObject {
 
     func deleteActivity(_ activity: Activity) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let id = activity.id else { return }
         do {
-            try await service.delete(from: path(for: uid), id: activity.id)
+            try await service.delete(from: path(for: uid), id: id)
             await loadActivities()
         } catch {
             print("Error deleting activity: \(error)")

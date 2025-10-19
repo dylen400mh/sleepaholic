@@ -94,8 +94,9 @@ final class SleepLogViewModel: ObservableObject {
 
     func deleteSleepLog(_ log: SleepLog) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let id = log.id else { return }
         do {
-            try await service.delete(from: path(for: uid), id: log.id)
+            try await service.delete(from: path(for: uid), id: id)
             await loadSleepLogs()
         } catch {
             print("Error deleting sleep log: \(error)")

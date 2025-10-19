@@ -94,7 +94,9 @@ struct BedtimeView: View {
         }
         .task {
             if windDown.trackSleep, let log = sleepLogViewModel.activeLog {
-                windDown.startMonitoringSleep(logId: log.id)
+                if let id = log.id {
+                    windDown.startMonitoringSleep(logId: id)
+                }
             }
         }
         .onDisappear {

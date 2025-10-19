@@ -9,8 +9,7 @@ import Foundation
 import FirebaseFirestore
 
 struct UserSettings: Identifiable, Codable {
-    @DocumentID var documentId: String?
-    var id: String { documentId ?? UUID().uuidString }
+    @DocumentID var id: String?
     
     // store as minutes since midnight
     var bedtime: Int

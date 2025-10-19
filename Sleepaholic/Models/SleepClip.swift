@@ -9,7 +9,6 @@ import Foundation
 import FirebaseFirestore
 
 struct SleepClip: Identifiable, Codable {
-    @DocumentID var documentId: String?
-    var id: String { documentId ?? UUID().uuidString }
+    @DocumentID var id: String?
     var storagePath: String
 }

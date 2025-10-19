@@ -9,8 +9,7 @@ import Foundation
 import FirebaseFirestore
 
 struct Activity: Identifiable, Codable {
-    @DocumentID var documentId: String?
-    var id: String { documentId ?? UUID().uuidString }
+    @DocumentID var id: String?
     var type: String
     var loggedAt: Date
     var kind: String?
@@ -23,6 +22,6 @@ struct Activity: Identifiable, Codable {
     var end: Date?
     
     enum CodingKeys: String, CodingKey {
-        case type, loggedAt, kind, otherDescription, amountMg, durationMin, drinks, medication, start, end
+        case id, type, loggedAt, kind, otherDescription, amountMg, durationMin, drinks, medication, start, end
     }
 }
