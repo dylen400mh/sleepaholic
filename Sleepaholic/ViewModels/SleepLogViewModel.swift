@@ -9,6 +9,13 @@ import Foundation
 import FirebaseAuth
 import FirebaseFirestore
 
+struct FormattedSleep {
+    let start: String
+    let end: String
+    let duration: String
+    let date: String
+}
+
 @MainActor
 final class SleepLogViewModel: ObservableObject {
     @Published var sleepLogs: [SleepLog] = []
@@ -22,7 +29,7 @@ final class SleepLogViewModel: ObservableObject {
     private let lastInsightKey = "lastInsightGeneratedAt"
     
     @Published private(set) var streakDays: Int
-    @Published private(set) var lastSleep: String
+    @Published private(set) var lastSleep: FormattedSleep?
     @Published private(set) var sleepDebt: String
     @Published private(set) var recommendation: String
     @Published private(set) var sleepQuality: Int
@@ -37,7 +44,7 @@ final class SleepLogViewModel: ObservableObject {
         // load cached values (so UI has something right away)
         let defaults = UserDefaults.standard
         self.streakDays = defaults.integer(forKey: "streakDays")
-        self.lastSleep = defaults.string(forKey: "lastSleep") ?? ""
+        self.lastSleep = nil
         self.sleepDebt = defaults.string(forKey: "sleepDebt") ?? ""
         self.recommendation = defaults.string(forKey: "recommendation") ?? ""
         self.sleepQuality = defaults.integer(forKey: "sleepQuality")
@@ -125,7 +132,7 @@ final class SleepLogViewModel: ObservableObject {
         return streak
     }
     
-    func getLastSleep() -> String {
+    func getLastSleep() -> FormattedSleep? {
         if let latest = sleepLogs.first {
             let timeFormatter = DateFormatter()
             timeFormatter.timeStyle = .short
@@ -142,16 +149,13 @@ final class SleepLogViewModel: ObservableObject {
             let hours = Int(duration / 3600)
             let minutes = Int((duration.truncatingRemainder(dividingBy: 3600)) / 60)
 
-            // Example: "11:00 PM → 7:15 AM (8h 15m) • Oct 2, 2025"
-            if minutes > 0 {
-                lastSleep = "\(startStr) → \(endStr) (\(hours)h \(minutes)m) • \(dateFormatter.string(from: latest.end))"
-            } else {
-                lastSleep = "\(startStr) → \(endStr) (\(hours)h) • \(dateFormatter.string(from: latest.end))"
-            }
+            let durationStr = minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
+            let dateStr = dateFormatter.string(from: latest.end)
+            
+            return FormattedSleep(start: startStr, end: endStr, duration: durationStr, date: dateStr)
         } else {
-            lastSleep = ""
+            return nil
         }
-        return lastSleep
     }
     
     func ageBasedTargetHours(for age: Int?) -> Double {
@@ -283,8 +287,6 @@ final class SleepLogViewModel: ObservableObject {
 
         // 🕒 last sleep
         lastSleep = getLastSleep()
-        defaults.set(lastSleep, forKey: "lastSleep")
-        
 
         // 😴 sleep debt
         let debtMinutes = calculateSleepDebt(for: sleepLogs, age: userAge)
