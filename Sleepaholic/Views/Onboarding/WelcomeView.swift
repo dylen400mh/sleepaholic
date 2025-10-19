@@ -30,18 +30,21 @@ struct WelcomeView: View {
             
             Spacer()
 
-            PrimaryButton(
-                title: "Start Quiz",
-                icon: nil,
-                size: .regular,
-                isDisabled: false
-            ) {
+            Button {
                 HapticsManager.play(.medium)
                 next()
+            } label: {
+                PrimaryButton(
+                    title: "Start Quiz",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: false
+                )
             }
-            .padding(.bottom, 60)
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
+        .padding(.bottom, 60)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "welcome_viewed")
         }

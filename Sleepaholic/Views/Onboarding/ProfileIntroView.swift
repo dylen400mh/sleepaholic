@@ -47,15 +47,18 @@ struct ProfileIntroView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 284)
 
-                PrimaryButton(
-                    title: "Next",
-                    icon: nil,
-                    size: .regular,
-                    isDisabled: false
-                ) {
+                Button {
                     HapticsManager.play(.medium)
                     next()
+                } label: {
+                    PrimaryButton(
+                        title: "Next",
+                        icon: nil,
+                        size: .regular,
+                        isDisabled: false
+                    )
                 }
+                .buttonStyle(.plain)
             }
             .padding(.bottom, 60)
         }

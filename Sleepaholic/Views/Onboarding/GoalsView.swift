@@ -47,15 +47,18 @@ struct GoalsView: View {
                 }
             }
 
-            PrimaryButton(
-                title: "Track These Goals",
-                icon: nil,
-                size: .regular,
-                isDisabled: false
-            ) {
+            Button {
                 HapticsManager.play(.medium)
                 next()
+            } label: {
+                PrimaryButton(
+                    title: "Track These Goals",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: false
+                )
             }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 60)

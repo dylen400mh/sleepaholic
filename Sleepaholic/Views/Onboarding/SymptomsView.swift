@@ -79,15 +79,18 @@ struct SymptomsView: View {
             }
 
             // MARK: - Continue Button
-            PrimaryButton(
-                title: "Fix my sleep",
-                icon: nil,
-                size: .regular,
-                isDisabled: false
-            ) {
+            Button {
                 HapticsManager.play(.medium)
                 next()
+            } label: {
+                PrimaryButton(
+                    title: "Fix my sleep",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: false
+                )
             }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 60)

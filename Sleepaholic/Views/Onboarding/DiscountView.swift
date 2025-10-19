@@ -31,15 +31,18 @@ struct DiscountView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
-                    PrimaryButton(
-                        title: "Claim Now",
-                        icon: nil,
-                        size: .small,
-                        isDisabled: false
-                    ) {
+                    Button {
                         HapticsManager.play(.medium)
                         SuperwallService.shared.presentPaywall(placement: "discount_offer")
+                    } label: {
+                        PrimaryButton(
+                            title: "Claim Now",
+                            icon: nil,
+                            size: .small,
+                            isDisabled: false
+                        )
                     }
+                    .buttonStyle(.plain)
                 }
                 .padding(16)
                 .background(Color.main)

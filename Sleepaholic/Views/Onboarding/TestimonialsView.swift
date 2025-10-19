@@ -65,15 +65,18 @@ struct TestimonialsView: View {
             }
 
             // MARK: - Next button
-            PrimaryButton(
-               title: "Next",
-               icon: nil,
-               size: .regular,
-               isDisabled: false
-            ) {
-               HapticsManager.play(.medium)
-               next()
+            Button {
+                HapticsManager.play(.medium)
+                next()
+            } label: {
+                PrimaryButton(
+                   title: "Next",
+                   icon: nil,
+                   size: .regular,
+                   isDisabled: false
+                )
             }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 60)

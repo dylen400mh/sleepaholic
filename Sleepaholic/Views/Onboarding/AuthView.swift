@@ -55,12 +55,7 @@ struct AuthView: View {
                 .buttonStyle(.plain)
 
                 // MARK: - Google Sign-In
-                PrimaryButton(
-                    title: "Continue with Google",
-                    icon: Image("google"),
-                    size: .regular,
-                    isDisabled: false
-                ) {
+                Button {
                     HapticsManager.play(.medium)
                     Task {
                         do {
@@ -73,7 +68,15 @@ struct AuthView: View {
                             errorMessage = error.localizedDescription
                         }
                     }
+                } label: {
+                    PrimaryButton(
+                        title: "Continue with Google",
+                        icon: Image("google"),
+                        size: .regular,
+                        isDisabled: false
+                    )
                 }
+                .buttonStyle(.plain)
             }
             .padding(.bottom, 60)
         }

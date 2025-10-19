@@ -126,15 +126,18 @@ struct AnalysisView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    PrimaryButton(
-                        title: "Check your symptoms",
-                        icon: nil,
-                        size: .regular,
-                        isDisabled: false
-                    ) {
+                    Button {
                         HapticsManager.play(.medium)
                         next()
+                    } label: {
+                        PrimaryButton(
+                            title: "Check your symptoms",
+                            icon: nil,
+                            size: .regular,
+                            isDisabled: false
+                        )
                     }
+                    .buttonStyle(.plain)
                 }
                 .transition(.opacity.combined(with: .scale))
                 .animation(.easeInOut(duration: 0.6), value: showResults)

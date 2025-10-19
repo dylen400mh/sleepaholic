@@ -175,11 +175,7 @@ private extension RecoveryView {
                     .foregroundColor(.white100)
             }
 
-            SecondaryButton(
-                title: "Next",
-                icon: Image(systemName: "arrow.right"),
-                size: .small
-            ) {
+            Button {
                 HapticsManager.play(.medium)
                 if currentIndex < slides.count - 1 {
                     withAnimation(.easeInOut) { currentIndex += 1 }
@@ -187,7 +183,14 @@ private extension RecoveryView {
                     HapticsManager.play(.success)
                     next()
                 }
+            } label: {
+                SecondaryButton(
+                    title: "Next",
+                    icon: Image(systemName: "arrow.right"),
+                    size: .small
+                )
             }
+            .buttonStyle(.plain)
         }
     }
 }

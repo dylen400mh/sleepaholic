@@ -39,15 +39,18 @@ struct ReferralView: View {
             
             Spacer()
             
-            PrimaryButton(
-                title: viewModel.referralCode.isEmpty ? "Skip" : "Next",
-                icon: nil,
-                size: .regular,
-                isDisabled: false
-            ) {
+            Button {
                 HapticsManager.play(.medium)
                 next()
+            } label: {
+                PrimaryButton(
+                    title: viewModel.referralCode.isEmpty ? "Skip" : "Next",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: false
+                )
             }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 60)

@@ -63,17 +63,20 @@ struct PaywallView: View {
                 }
                 
                 // MARK: - CTA
-                PrimaryButton(
-                    title: "Unlock My Sleep Plan",
-                    icon: nil,
-                    size: .regular,
-                    isDisabled: false
-                ) {
+                Button {
                     HapticsManager.play(.medium)
                     Task {
                         await pressedButton()
                     }
+                } label: {
+                    PrimaryButton(
+                        title: "Unlock My Sleep Plan",
+                        icon: nil,
+                        size: .regular,
+                        isDisabled: false
+                    )
                 }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 24)

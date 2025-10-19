@@ -17,32 +17,27 @@ struct PrimaryButton: View {
     let icon: Image?
     let size: Size
     let isDisabled: Bool
-    let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if let icon = icon {
-                    icon
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
-                }
-
-                Text(title)
-                    .font(font)
-                    .foregroundColor(Color.white100)
+        HStack(spacing: 8) {
+            if let icon = icon {
+                icon
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
             }
-            .padding(.horizontal, horizontalPadding)
-            .padding(.vertical, verticalPadding)
-            .frame(width: width, height: height)
-            .background(Gradients.main)
-            .cornerRadius(100)
-            .applyShadow(ShadowStyle.elevation)
-            .opacity(isDisabled ? 0.5 : 1)
+
+            Text(title)
+                .font(font)
+                .foregroundColor(Color.white100)
         }
-        .buttonStyle(.plain)
-        .disabled(isDisabled)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, verticalPadding)
+        .frame(width: width, height: height)
+        .background(Gradients.main)
+        .cornerRadius(100)
+        .applyShadow(ShadowStyle.elevation)
+        .opacity(isDisabled ? 0.5 : 1)
     }
 
     // MARK: - Layout constants

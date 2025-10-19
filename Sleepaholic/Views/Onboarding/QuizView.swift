@@ -110,15 +110,19 @@ struct QuizView: View {
                 
                 // MARK: - Footer buttons
                 VStack(spacing: 16) {
-                    PrimaryButton(
-                        title: viewModel.isLastQuestion ? "Finish" : "Continue",
-                        icon: nil,
-                        size: .regular,
-                        isDisabled: !canContinue(q)
-                    ) {
+                    Button {
                         HapticsManager.play(.medium)
                         Task { saveCurrentAnswer(for: q) }
+                    } label: {
+                        PrimaryButton(
+                            title: viewModel.isLastQuestion ? "Finish" : "Continue",
+                            icon: nil,
+                            size: .regular,
+                            isDisabled: !canContinue(q)
+                        )
                     }
+                    .buttonStyle(.plain)
+                    .disabled(!canContinue(q))
                     
                     if !q.isRequired {
                         Button(action: {

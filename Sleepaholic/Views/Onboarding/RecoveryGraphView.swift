@@ -48,14 +48,18 @@ struct RecoveryGraphView: View {
             Spacer()
             
             // Continue Button
-            PrimaryButton(
-                title: "Continue",
-                icon: nil,
-                size: .regular,
-                isDisabled: false) {
+            Button {
                 HapticsManager.play(.medium)
                 next()
+            } label: {
+                PrimaryButton(
+                    title: "Continue",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: false
+                )
             }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 60)

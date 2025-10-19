@@ -16,33 +16,29 @@ struct SecondaryButton: View {
     let title: String
     let icon: Image?
     let size: Size
-    let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Text(title)
-                    .font(font)
-                    .foregroundColor(.white100)
+        HStack(spacing: 8) {
+            Text(title)
+                .font(font)
+                .foregroundColor(.white100)
 
-                if let icon = icon {
-                    icon
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundColor(.white100)
-                        .frame(width: 24, height: 24)
-                }
+            if let icon = icon {
+                icon
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundColor(.white100)
+                    .frame(width: 24, height: 24)
             }
-            .padding(.horizontal, horizontalPadding)
-            .padding(.vertical, verticalPadding)
-            .background(Color.main)
-            .cornerRadius(100)
-            .overlay(
-                RoundedRectangle(cornerRadius: 100)
-                    .strokeBorder(Gradients.main, lineWidth: 1)
-            )
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, verticalPadding)
+        .background(Color.main)
+        .cornerRadius(100)
+        .overlay(
+            RoundedRectangle(cornerRadius: 100)
+                .strokeBorder(Gradients.main, lineWidth: 1)
+        )
     }
 
     // MARK: - Layout constants
