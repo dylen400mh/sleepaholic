@@ -17,6 +17,7 @@ struct FinalCalculateView: View {
     @State private var engine: CHHapticEngine?
     @State private var userName: String = ""
     @State private var isAnimating = false
+    @State private var showProfileCard = false
     
     let next: () -> Void
 
@@ -31,33 +32,35 @@ struct FinalCalculateView: View {
     }
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
+        VStack(spacing: 48) {
+            OnboardingHeader(previous: nil)
+            
+            VStack(spacing: 32) {
                 // Typing text
                 Text(currentText)
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(.h2Semi)
                     .multilineTextAlignment(.center)
-                    .foregroundColor(.primary)
-                    .padding(.horizontal, 30)
-                    .frame(height: 250)
+                    .foregroundColor(Color.white100)
                     .frame(maxWidth: .infinity)
+                    .frame(height: 140, alignment: .center)
 
                 // Profile card after message 2
-                if messageIndex >= 2 {
+                if showProfileCard {
                     ProfileCardView(
                         name: userProfileViewModel.profile?.name ?? "",
                         streakDays: 0,
-                        lastSleep: "—",
-                        sleepDebt: "0h"
+                        lastSleep: "0h 0min",
+                        sleepDebt: "0h 0min"
                     )
-                    .padding(.horizontal)
-                    .transition(.opacity)
+                    .transition(.move(edge: .bottom))
+                    .animation(.easeOut(duration: 0.5), value: showProfileCard)
                 }
-
-                Spacer()
             }
+            
+            Spacer()
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 60)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "final_calculate_viewed")
@@ -94,6 +97,13 @@ struct FinalCalculateView: View {
                 timer.invalidate()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     messageIndex += 1
+                    
+                    if messageIndex == 2 {
+                        withAnimation(.easeOut(duration: 0.6)) {
+                            showProfileCard = true
+                        }
+                    }
+                    
                     if messageIndex < messages.count {
                         startAnimation()
                     } else {
