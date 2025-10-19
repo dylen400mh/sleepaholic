@@ -13,17 +13,29 @@ struct HeaderView: View {
     
     var body: some View {
         HStack {
-            Text(title)
-                .font(.title)
-                .fontWeight(.bold)
+            Image("SleepaholicLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 28)
+
             
             Spacer()
             
             Button(action: settingsAction) {
-                Image(systemName: "gearshape.fill")
-                    .font(.title2)
+                Image("settings")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+                    .foregroundColor(.white100)
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(Color.white40, lineWidth: 0.5)
+                            .background(Color.clear)
+                    )
+
             }
         }
-        .padding()
+        .padding(.top, 60)
     }
 }
