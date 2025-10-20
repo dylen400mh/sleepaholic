@@ -31,7 +31,7 @@ final class SleepLogViewModel: ObservableObject {
     @Published private(set) var streakDays: Int
     @Published private(set) var lastSleep: FormattedSleep?
     @Published private(set) var sleepDebt: String
-    @Published private(set) var recommendation: String
+    @Published private(set) var recommendations: [String]
     @Published private(set) var sleepQuality: Int
     
     init() {
@@ -46,7 +46,7 @@ final class SleepLogViewModel: ObservableObject {
         self.streakDays = defaults.integer(forKey: "streakDays")
         self.lastSleep = nil
         self.sleepDebt = defaults.string(forKey: "sleepDebt") ?? ""
-        self.recommendation = defaults.string(forKey: "recommendation") ?? ""
+        self.recommendations = defaults.stringArray(forKey: "recommendations") ?? []
         self.sleepQuality = defaults.integer(forKey: "sleepQuality")
     }
     
@@ -265,12 +265,12 @@ final class SleepLogViewModel: ObservableObject {
             let output = try await OpenAIService.shared.generateSleepInsights(from: input)
             await MainActor.run {
                 self.sleepQuality = output.quality
-                self.recommendation = "• " + output.recommendations.joined(separator: "\n• ")
+                self.recommendations = output.recommendations
             }
 
             // Persist
             UserDefaults.standard.set(self.sleepQuality, forKey: "sleepQuality")
-            UserDefaults.standard.set(self.recommendation, forKey: "recommendation")
+            UserDefaults.standard.set(self.recommendations, forKey: "recommendations")
             
             UserDefaults.standard.set(Date(), forKey: lastInsightKey)
         } catch {

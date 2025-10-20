@@ -33,141 +33,129 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
+            VStack(spacing: 24) {
                 // Sticky header
                 HeaderView { }
-                    .padding(.top)
-
+                
                 // Scrollable content
-                ScrollView {
-                    VStack {
-                        // 🔥 streak + quality
-                        HStack(spacing: 40) {
-                            VStack {
-                                Text("🔥 \(sleepLogViewModel.streakDays) day streak")
-                                    .font(.headline)
-                                Text("Last sleep: \(sleepLogViewModel.lastSleep)")
-                                    .foregroundColor(.gray)
-                                    .font(.subheadline)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        VStack(spacing: 16) {
+                            // sleep quality & streak
+                            HStack(spacing: 12) {
+                                SummaryCard(
+                                    icon: "moon.fill",
+                                    title: "\(sleepLogViewModel.sleepQuality)%",
+                                    subtitle: "Sleep Quality"
+                                )
+                                SummaryCard(
+                                    icon: "flame.fill",
+                                    title: "\(sleepLogViewModel.streakDays) nights",
+                                    subtitle: "Streak"
+                                )
                             }
-
-                            ZStack {
-                                Circle()
-                                    .stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                                    .frame(width: 80, height: 80)
-
-                                Circle()
-                                    .trim(from: 0.0, to: CGFloat(sleepLogViewModel.sleepQuality) / 100)
-                                    .stroke(Color.green, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                                    .frame(width: 80, height: 80)
-                                    .rotationEffect(.degrees(-90))
-
-                                VStack {
-                                    Text("\(sleepLogViewModel.sleepQuality)%")
-                                        .font(.headline)
-                                        .fontWeight(.bold)
-                                    Text("Quality")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
+                            
+                            // last sleep
+                            if let sleep = sleepLogViewModel.getLastSleep() {
+                                VStack(spacing: 8) {
+                                    Text("Last Sleep: \(sleep.duration)")
+                                        .font(.h2Semi)
+                                        .foregroundColor(.white100)
+                                    
+                                    Text("\(sleep.start) to \(sleep.end) - \(sleep.date)")
+                                        .font(.body3)
+                                        .foregroundColor(.white80)
                                 }
+                                .padding(16)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.main80)
+                                .cornerRadius(12)
                             }
                         }
-                        .padding(.top, 16)
-
-                        // 😴 sleep debt circle
-                        ZStack {
-                            Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 20)
-                                .frame(width: 200, height: 200)
-
-                            Circle()
-                                .trim(from: 0.0, to: debtProgress)
-                                .stroke(Color.blue, style: StrokeStyle(lineWidth: 20, lineCap: .round))
-                                .frame(width: 200, height: 200)
-                                .rotationEffect(.degrees(-90))
-
-                            VStack {
-                                Text("Your sleep debt is:")
-                                    .foregroundColor(.gray)
-                                Text(sleepLogViewModel.sleepDebt)
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                            }
-                        }
-                        .padding(.top, 20)
-
+                        
+                        
+                        // MARK: - Sleep Debt Progress
+                        SleepDebtProgressView(
+                            progress: debtProgress,
+                            sleepDebt: sleepLogViewModel.sleepDebt
+                        )
+                        
                         // 📋 activities
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 16) {
                             HStack {
                                 Text("Today's Activities")
-                                    .font(.headline)
-                                Spacer()
-                                NavigationLink {
-                                    LogActivityView()
-                                } label: {
-                                    Text("Log Activity")
-                                        .font(.subheadline)
-                                        .padding(6)
-                                        .background(Color.blue.opacity(0.1))
-                                        .cornerRadius(8)
+                                    .font(.h3Semi)
+                                    .foregroundColor(.white100)
+                                
+                                NavigationLink(destination: LogActivityView()) {
+                                    SecondaryButton(
+                                        title: "Log Activity",
+                                        icon: Image("plus"),
+                                        size: .small
+                                    )
                                 }
-
+                                .buttonStyle(.plain)
                             }
-
-                            ForEach(activityViewModel.activities) { activity in
-                                ActivityRow(activity: activity)
+                            
+                            VStack(spacing: 4) {
+                                ForEach(activityViewModel.activities) { activity in
+                                    ActivityRow(activity: activity, onDelete: {
+                                        Task {
+                                            await activityViewModel.deleteActivity(activity)
+                                        }
+                                    })
+                                }
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 20)
-
+                        
                         // 💡 recommendations
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 16) {
                             Text("Sleep Recommendations")
-                                .font(.headline)
-                            Text(sleepLogViewModel.recommendation != "" ? sleepLogViewModel.recommendation : "No recommendations yet. Start wind down and sleep to see recommendations!")
-                                .multilineTextAlignment(.center)
-                                .padding(.top, 4)
-                                .padding(.horizontal)
+                                .font(.h3Semi)
+                            
+                            if sleepLogViewModel.recommendations.isEmpty {
+                                Text("No recommendations yet. Start wind down and sleep to see recommendations!")
+                                    .multilineTextAlignment(.center)
+                                    .font(.body2)
+                                    .foregroundColor(.white80)
+                            } else {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ForEach(sleepLogViewModel.recommendations, id: \.self) { rec in
+                                        Text("• \(rec)")
+                                            .font(.body2)
+                                            .foregroundColor(.white80)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                            }
                         }
-                        .padding(.top, 20)
-
-                        Spacer(minLength: 120) // leave room for bottom button
                     }
                 }
-            }
-
-            // Anchored bottom button
-            VStack {
-                Spacer()
-                VStack(spacing: 0) {
-                    Divider()
-                    NavigationLink {
-                        WindDownView()
-                    } label: {
-                        Text(windDown.isActive ? "Continue Wind Down" : "Start Wind Down")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                            .padding(.horizontal)
-                    }
-                    .simultaneousGesture(TapGesture().onEnded {
-                        windDown.isActive = true
-                    })
-                    .padding(.vertical, 10)
+                
+                NavigationLink(destination: WindDownView()) {
+                    PrimaryButton(
+                        title: windDown.isActive ? "Continue Wind Down" : "Start Wind Down",
+                        icon: nil,
+                        size: .regular,
+                        isDisabled: false
+                    )
                 }
-                .background(Color(.systemBackground)) // solid footer background
+                .buttonStyle(.plain)
+                .simultaneousGesture(TapGesture().onEnded {
+                    windDown.isActive = true
+                })
             }
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 60)
         .task {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
             // 💤 Load clips for the most recent sleep log (if available)
             if let latestLog = sleepLogViewModel.sleepLogs.first {
-                await sleepClipViewModel.loadClips(for: latestLog.id)
+                if let id = latestLog.id  {
+                    await sleepClipViewModel.loadClips(for: id)
+                }
             }
             
             sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
