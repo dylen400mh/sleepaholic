@@ -101,6 +101,7 @@ struct QuizView: View {
                                            displayedComponents: .hourAndMinute)
                                 .datePickerStyle(.wheel)
                                 .labelsHidden()
+                                .foregroundColor(Color.white100)
                                 .frame(maxHeight: 200)
                             }
                         }
