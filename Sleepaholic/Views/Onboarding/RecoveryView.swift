@@ -187,7 +187,8 @@ private extension RecoveryView {
                 SecondaryButton(
                     title: "Next",
                     icon: Image(systemName: "arrow.right"),
-                    size: .small
+                    size: .small,
+                    isDisabled: false
                 )
             }
             .buttonStyle(.plain)

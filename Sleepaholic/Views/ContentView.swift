@@ -91,7 +91,8 @@ struct ContentView: View {
                                     SecondaryButton(
                                         title: "Log Activity",
                                         icon: Image("plus"),
-                                        size: .small
+                                        size: .small,
+                                        isDisabled: false
                                     )
                                 }
                                 .buttonStyle(.plain)
@@ -185,6 +186,7 @@ struct ContentView: View {
                 windDown.restrictApps   = s.restrictApps
             }
         }
+        .appBackground()
     }
 }
 
