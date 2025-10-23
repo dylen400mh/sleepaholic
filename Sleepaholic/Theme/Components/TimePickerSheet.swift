@@ -8,11 +8,30 @@
 import SwiftUI
 
 struct TimePickerSheet: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
+    let title: String
+    @Binding var date: Date
 
-#Preview {
-    TimePickerSheet()
+    var body: some View {
+        VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color.white20)
+                .frame(width: 40, height: 4)
+                .padding(.top, 8)
+
+            Text(title)
+                .font(.h3Semi)
+                .foregroundColor(.white100)
+
+            DatePicker("", selection: $date, displayedComponents: .hourAndMinute)
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 4)
+
+            Spacer(minLength: 8)
+        }
+        .padding(.bottom, 12)
+        .background(Color.main)
+    }
 }

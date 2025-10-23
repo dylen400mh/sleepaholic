@@ -8,11 +8,15 @@
 import SwiftUI
 
 struct SoundRow: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
+    @EnvironmentObject var windDown: WindDownManager
+    let items: [String]
 
-#Preview {
-    SoundRow()
+    var body: some View {
+        HStack(alignment: .top, spacing: 0) {
+            ForEach(items, id: \.self) { sound in
+                SoundItem(sound: sound)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
 }

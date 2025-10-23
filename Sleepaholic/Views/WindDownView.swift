@@ -18,182 +18,234 @@ struct WindDownView: View {
     @State private var showPicker = false
     @State private var requestingAuth = false
     @State private var authError: String?
-
+    
+    @State private var showBedtimePicker = false
+    @State private var showWakeupPicker = false
     
     let sounds = ["White Noise", "Fan", "Ocean Waves", "Rain", "Crickets", "Campfire", "Birds", "Theta Waves"]
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .padding(8)
-                }
-                Spacer()
-                Text("Wind Down")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                Spacer()
-                Spacer().frame(width: 32)
-            }
-            .padding()
-            
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    
-                    // Time pickers
-                    Section {
-                        DatePicker("Target Bedtime", selection: $windDown.targetBedtime, displayedComponents: .hourAndMinute)
-                        DatePicker("Target Wake-Up Time", selection: $windDown.targetWakeup, displayedComponents: .hourAndMinute)
-                        let targetHours = sleepLogViewModel.ageBasedTargetHours(for: userProfileViewModel.profile?.age)
-                        Text("Based on your age, we recommend at least \(Int(targetHours)) hours of sleep per night.")
-                            .font(.footnote)
-                            .foregroundColor(.gray)
+        VStack(spacing: 24) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 48) {
+                    HStack {
+                        BackButtonView(previous: { dismiss() })
+                        Spacer()
+                        Text("Wind Down")
+                            .font(.h2Semi)
+                            .foregroundColor(Color.white100)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                        // preserve layout balance
+                        Color.clear.frame(width: 40, height: 40)
                     }
                     
-                    // Sounds
-                    Section {
-                        Text("Sounds")
-                            .font(.headline)
-                        ForEach(sounds, id: \.self) { sound in
-                            Button(action: {
-                                windDown.toggleSound(sound)
-                            }) {
-                                HStack {
-                                    Text(sound)
-                                    Spacer()
-                                    if windDown.selectedSounds.contains(sound) {
-                                        Image(systemName: "checkmark")
-                                            .foregroundColor(.blue)
-                                    }
-                                }
-                            }
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 16) {
+                            TimeInputField(
+                                label: "Target Bedtime",
+                                date: $windDown.targetBedtime,
+                                onTap: { showBedtimePicker = true }
+                            )
+                            TimeInputField(
+                                label: "Target Wake-Up",
+                                date: $windDown.targetWakeup,
+                                onTap: { showWakeupPicker = true }
+                            )
+                        }
+                        
+                        let targetHours = sleepLogViewModel.ageBasedTargetHours(for: userProfileViewModel.profile?.age)
+                        HStack(spacing: 8) {
+                            Image("clock")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 16, height: 16)
+                                .foregroundColor(Color.white80)
+                            Text("Based on your age, we recommend at least \(Int(targetHours)) hours of sleep per night. Sleep debt will be calculated accordingly.")
+                                .font(.body3)
+                                .foregroundColor(Color.white80)
+                                .multilineTextAlignment(.leading)
                         }
                     }
                     
-                    // Meditation
-                    Section {
+                    VStack(alignment: .leading, spacing: 24) {
+                        HeaderWithSeparator(title: "Sounds")
+                        
+                        let topRow = Array(sounds.prefix(4))
+                        let bottomRow = Array(sounds.suffix(4))
+
+                        SoundRow(items: topRow)
+                        SoundRow(items: bottomRow)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 24) {
                         Text("Meditation")
-                            .font(.headline)
+                            .font(.h3Semi)
+                            .foregroundColor(Color.white100)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
                         NavigationLink {
                             MeditationView()
                         } label: {
-                            Text("Start Meditation")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(12)
+                            SecondaryButton(
+                                title: "Start Meditation",
+                                icon: nil,
+                                size: .regular,
+                                isDisabled: false
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(spacing: 16) {
+                            Image("microphone")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(Color.white100)
+
+                            Text("Track sleep with microphone")
+                                .font(.body1Semi)
+                                .foregroundColor(Color.white100)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            Toggle("", isOn: $windDown.trackSleep)
+                                .toggleStyle(ToggleButton())
                         }
                     }
                     
-                    // Sleep Tracking
-                    Section {
-                        Text("Sleep Tracking")
-                            .font(.headline)
-                        Toggle("Track Sleep with Microphone", isOn: $windDown.trackSleep)
-                    }
-                    
-                    // MARK: - Restrictions (Screen Time)
-                    Section {
-                        Text("Restrictions").font(.headline)
+                    VStack(alignment: .leading, spacing: 24) {
+                        HeaderWithSeparator(title: "Restrictions")
 
-                        Toggle("Restrict Apps", isOn: Binding(
-                            get: { windDown.restrictApps },
-                            set: { newValue in
-                                if newValue {
-                                    // Request auth (if needed) then show picker
-                                    Task { await handleRestrictAppsOn() }
-                                } else {
-                                    showPicker = false
-                                    windDown.restrictApps = false
-                                }
+                        VStack(alignment: .leading, spacing: 14) {
+                            HStack(spacing: 16) {
+                                Image("apps") // your icon; otherwise "lock.iphone" SF Symbol
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(.white100)
+
+                                Text("Restrict Apps")
+                                    .font(.body1Semi)
+                                    .foregroundColor(.white100)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                Toggle("", isOn:
+                                        Binding(
+                                            get: { windDown.restrictApps },
+                                            set: { newValue in
+                                                if newValue {
+                                                    Task { await handleRestrictAppsOn() }
+                                                } else {
+                                                    showPicker = false
+                                                    windDown.restrictApps = false
+                                                }
+                                            }
+                                        )
+                                )
+                                .toggleStyle(ToggleButton())
                             }
-                        ))
 
-                        if windDown.restrictApps {
-                            Button("Modify Restricted Apps") { showPicker = true }
-                                .foregroundColor(.blue)
-
-                            // Simple summary for MVP
                             Text(summaryText)
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                        }
+                                .font(.body2)
+                                .foregroundColor(.white70)
 
-                        if let authError {
-                            Text(authError)
-                                .font(.footnote)
-                                .foregroundColor(.red)
+                            Button {
+                                showPicker = true
+                            } label: {
+                                SecondaryButton(
+                                    title: "Modify Restricted Apps",
+                                    icon: nil,
+                                    size: .small,
+                                    isDisabled: !windDown.restrictApps
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(!windDown.restrictApps)
+
+                            if let authError {
+                                Text(authError)
+                                    .font(.body3)
+                                    .foregroundColor(Color.appRed)
+                            }
                         }
                     }
                 }
-                .padding(.horizontal)
-                .padding(.top)
-                .padding(.bottom, 120) // leave space for bottom bar
             }
             
             // Bottom anchored bar
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 if !windDown.selectedSounds.isEmpty {
-                    HStack {
-                        Text("Now Playing: \(windDown.selectedSounds.joined(separator: ", "))")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                        Spacer()
-                        
-                        Button(action: {
+                    MixCard(
+                        sounds: windDown.selectedSounds,
+                        isPlaying: windDown.isPlaying,
+                        onPlayPause: {
                             if windDown.isPlaying {
                                 windDown.pauseAllSounds()
                             } else {
                                 windDown.resumeAllSounds()
                             }
-                        }) {
-                            Image(systemName: windDown.isPlaying ? "pause.fill" : "play.fill")
-                        }
-                        .padding(.trailing, 8)
-                        
-                        Button(action: {
+                        },
+                        onStop: {
                             windDown.stopAllSounds()
                             windDown.selectedSounds.removeAll()
-                        }) {
-                            Image(systemName: "xmark")
                         }
-                    }
-                    .padding(.horizontal)
+                    )
                 }
                 
                 NavigationLink {
                     BedtimeView()
                 } label: {
-                    Text("Start Bedtime")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .padding(.horizontal)
+                    PrimaryButton(
+                        title: "Start Bedtime",
+                        icon: nil,
+                        size: .regular,
+                        isDisabled: false
+                    )
                 }
+                .buttonStyle(.plain)
                 .simultaneousGesture(TapGesture().onEnded {
                     Task {
                         await sleepLogViewModel.startBedtime()
                     }
                 })
                 
-                Button("Cancel Wind Down") {
+                Button {
                     windDown.reset()
                     dismiss()
+                } label: {
+                    SecondaryButton(
+                        title: "Cancel Wind Down",
+                        icon: nil,
+                        size: .regular,
+                        isDisabled: false
+                    )
                 }
-                .foregroundColor(.red)
-                .font(.footnote)
-                .padding(.bottom, 10)
+                .buttonStyle(.plain)
             }
-            .background(Color(.systemBackground))
         }
+        .padding(.vertical, 60)
+        .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
         .familyActivityPicker(isPresented: $showPicker, selection: $windDown.restrictedApps)
+        .sheet(isPresented: $showBedtimePicker) {
+            TimePickerSheet(
+                title: "Select Target Bedtime",
+                date: $windDown.targetBedtime
+            )
+            .presentationDetents([.height(300), .medium])
+            .presentationCornerRadius(24)
+        }
+        .sheet(isPresented: $showWakeupPicker) {
+            TimePickerSheet(
+                title: "Select Target Wake-Up Time",
+                date: $windDown.targetWakeup
+            )
+            .presentationDetents([.height(300), .medium])
+            .presentationCornerRadius(24)
+        }
+        .appBackground()
     }
     
     private var summaryText: String {

@@ -7,12 +7,17 @@
 
 import SwiftUI
 
+// Section header with thin separator grouped (gap 4)
 struct HeaderWithSeparator: View {
+    let title: String
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.h3Semi)
+                .foregroundColor(.white100)
+            Rectangle()
+                .fill(Color.white20)
+                .frame(height: 1)
+        }
     }
-}
-
-#Preview {
-    HeaderWithSeparator()
 }
