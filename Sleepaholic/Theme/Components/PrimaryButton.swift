@@ -33,7 +33,7 @@ struct PrimaryButton: View {
         }
         .padding(.horizontal, horizontalPadding)
         .padding(.vertical, verticalPadding)
-        .frame(width: width, height: height)
+        .frame(maxWidth: width)
         .background(Gradients.main)
         .cornerRadius(100)
         .applyShadow(ShadowStyle.elevation)
@@ -41,17 +41,10 @@ struct PrimaryButton: View {
     }
 
     // MARK: - Layout constants
-    private var width: CGFloat {
+    private var width: CGFloat? {
         switch size {
-        case .regular: return 342
-        case .small: return 147
-        }
-    }
-
-    private var height: CGFloat {
-        switch size {
-        case .regular: return 56
-        case .small: return 48
+        case .regular: return .infinity
+        case .small: return nil
         }
     }
 

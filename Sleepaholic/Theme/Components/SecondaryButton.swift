@@ -16,6 +16,7 @@ struct SecondaryButton: View {
     let title: String
     let icon: Image?
     let size: Size
+    let isDisabled: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -33,15 +34,24 @@ struct SecondaryButton: View {
         }
         .padding(.horizontal, horizontalPadding)
         .padding(.vertical, verticalPadding)
+        .frame(maxWidth: width)
         .background(Color.main)
         .cornerRadius(100)
         .overlay(
             RoundedRectangle(cornerRadius: 100)
                 .strokeBorder(Gradients.main, lineWidth: 1)
         )
+        .opacity(isDisabled ? 0.5 : 1)
     }
 
     // MARK: - Layout constants
+    private var width: CGFloat? {
+        switch size {
+        case .regular: return .infinity
+        case .small: return nil
+        }
+    }
+    
     private var horizontalPadding: CGFloat {
         switch size {
         case .regular: return 24
