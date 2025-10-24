@@ -10,6 +10,8 @@ import SwiftUI
 struct ActivityRow: View {
     let activity: Activity
     let onDelete: () -> Void
+    
+    @State private var showDeleteAlert = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -69,7 +71,7 @@ struct ActivityRow: View {
             
             Spacer()
             
-            Button(action: onDelete) {
+            Button(action: { showDeleteAlert = true }) {
                 Image("x")
                     .resizable()
                     .scaledToFit()
@@ -77,6 +79,14 @@ struct ActivityRow: View {
                     .foregroundColor(.white100)
             }
             .buttonStyle(.plain)
+            .alert("Delete Activity?", isPresented: $showDeleteAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    onDelete()
+                }
+            } message: {
+                Text("Are you sure you want to delete this activity? This action cannot be undone.")
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

@@ -23,6 +23,8 @@ struct QuizView: View {
     let previous: () -> Void
     let startAt: Int
     @Binding var didSkipQuiz: Bool
+    
+    @State private var showSkipAlert = false
 
     var body: some View {
         if let q = viewModel.currentQuestion {
@@ -128,9 +130,7 @@ struct QuizView: View {
                     if !q.isRequired {
                         Button(action: {
                             HapticsManager.play(.light)
-                            didSkipQuiz = true
-                            viewModel.currentIndex = 10 // Jump directly to Q11
-                            restorePreviousAnswer()
+                            showSkipAlert = true
                         }) {
                             HStack(spacing: 4) {
                                 Text("Skip quiz")
@@ -143,6 +143,19 @@ struct QuizView: View {
                                     .frame(width: 24, height: 24)
                                     .foregroundColor(.white100)
                             }
+                        }
+                        .alert("Skip Quiz?", isPresented: $showSkipAlert) {
+                            Button("Cancel", role: .cancel) { }
+                            Button("Skip Anyway", role: .destructive) {
+                                didSkipQuiz = true
+                                viewModel.currentIndex = 10
+                                restorePreviousAnswer()
+                            }
+                        } message: {
+                            Text("""
+                            Completing this quiz helps personalize your experience, including bedtime recommendations, sleep goals, and insights tailored to you.  
+                            Skipping may result in less accurate suggestions.
+                            """)
                         }
                     }
                 }
