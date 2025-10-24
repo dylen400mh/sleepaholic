@@ -27,68 +27,85 @@ struct MeditationView: View {
     // Completion banner
     @State private var isMeditationComplete = false
 
-    private let squareSize: CGFloat = 220
-    private let dotSize: CGFloat = 16
+    private let boxSize: CGFloat = 160
+    private let circleSize: CGFloat = 32
 
     var body: some View {
-        VStack(spacing: 20) {
-            // Title
-            Text("Meditation")
-                .font(.title2)
-                .fontWeight(.bold)
-                .padding(.top)
-
-            // Breaths left (or completion)
-            if isMeditationComplete {
-                Text("Meditation complete — you’re ready for bed 🌙")
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            } else {
-                Text("\(breathsLeft) breaths left")
-                    .font(.headline)
-            }
-
-            // Instruction text aligned to phase
-            Text(instructionText(for: phase))
-                .font(.title3)
-                .fontWeight(.semibold)
-                .padding(.top, 4)
-
-            // Square + moving circle + label
-            ZStack {
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.secondary.opacity(0.5), lineWidth: 2)
-                    .frame(width: squareSize, height: squareSize)
-
-                Text("Sleepaholic")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-
-                Circle()
-                    .frame(width: dotSize, height: dotSize)
-                    .offset(circleOffset(for: circleProgress, square: squareSize))
-                    // Animate each segment in 4 seconds
-                    .animation(.linear(duration: 4), value: circleProgress)
-            }
-            .padding(.vertical, 12)
-
-            Spacer(minLength: 12)
-
-            // End button (hide while auto-finishing)
-            if !isMeditationComplete {
-                Button(action: endMeditationNow) {
-                    Text("End Meditation")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.red.opacity(0.1))
-                        .foregroundColor(.red)
-                        .cornerRadius(12)
-                        .padding(.horizontal)
+        VStack {
+            HStack {
+                if !isMeditationComplete {
+                    BackButtonView(previous: { dismiss() })
                 }
+                Spacer()
+                Text("Meditation")
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+                Spacer()
+                Color.clear.frame(width: 40, height: 40)
+            }
+            
+            Spacer()
+            
+            VStack(spacing: 28) {
+                VStack(spacing: 12) {
+                    if isMeditationComplete {
+                        Text("Meditation complete — time for bed!")
+                            .font(.h2Semi)
+                            .foregroundColor(.white100)
+                            .multilineTextAlignment(.center)
+                    } else {
+                        Text("\(breathsLeft) breaths left")
+                            .font(.h2Semi)
+                            .foregroundColor(.white100)
+                    }
+
+                    Text(instructionText(for: phase))
+                        .font(.body3)
+                        .foregroundColor(.white80)
+                }
+
+                ZStack {
+                    // Breathing circle (moves around box)
+                    Circle()
+                        .fill(Gradients.main)
+                        .frame(width: circleSize, height: circleSize)
+                        .offset(circleOffset(for: circleProgress, box: boxSize))
+                        .animation(.linear(duration: 4), value: circleProgress)
+
+                    // Centered box + logo
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.white5)
+                        .frame(width: boxSize, height: boxSize)
+                        .overlay(
+                            Image("SleepaholicLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 18)
+                        )
+                }
+                .frame(width: boxSize, height: boxSize)
+            }
+            
+            Spacer()
+            
+            // MARK: - Footer
+            if !isMeditationComplete {
+                Button {
+                    HapticsManager.play(.medium)
+                    endMeditationNow()
+                } label: {
+                    PrimaryButton(
+                        title: "End Meditation",
+                        icon: nil,
+                        size: .regular,
+                        isDisabled: false
+                    )
+                }
+                .buttonStyle(.plain)
             }
         }
+        .padding(.vertical, 60)
+        .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             // Start at bottom-left, begin first INHALE segment animating to 0.25
@@ -98,6 +115,7 @@ struct MeditationView: View {
             guard isRunning else { return }
             advancePhase()
         }
+        .appBackground()
     }
 
     // MARK: - Phase machine
@@ -164,21 +182,21 @@ struct MeditationView: View {
         circleProgress = target
     }
 
-    private func circleOffset(for progress: CGFloat, square: CGFloat) -> CGSize {
-        // progress 0.00...1.00 around the square (clockwise), starting at bottom-left
+    private func circleOffset(for progress: CGFloat, box: CGFloat) -> CGSize {
+        // progress 0.00...1.00 around the box (clockwise), starting at bottom-left
         let step = progress * 4.0
-        let half = square / 2.0
+        let half = box / 2.0
 
         let point: CGPoint
         switch step {
         case 0..<1:   // bottom-left -> top-left (INHALE, up)
-            point = CGPoint(x: -half, y:  half - CGFloat(step) * square)
+            point = CGPoint(x: -half, y:  half - CGFloat(step) * box)
         case 1..<2:   // top-left -> top-right (HOLD, right)
-            point = CGPoint(x: -half + CGFloat(step - 1) * square, y: -half)
+            point = CGPoint(x: -half + CGFloat(step - 1) * box, y: -half)
         case 2..<3:   // top-right -> bottom-right (EXHALE, down)
-            point = CGPoint(x:  half, y: -half + CGFloat(step - 2) * square)
+            point = CGPoint(x:  half, y: -half + CGFloat(step - 2) * box)
         case 3..<4:   // bottom-right -> bottom-left (HOLD, left)
-            point = CGPoint(x:  half - CGFloat(step - 3) * square, y:  half)
+            point = CGPoint(x:  half - CGFloat(step - 3) * box, y:  half)
         default:
             point = CGPoint(x: -half, y: half) // exact start
         }

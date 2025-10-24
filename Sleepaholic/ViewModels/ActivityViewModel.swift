@@ -17,12 +17,14 @@ final class ActivityViewModel: ObservableObject {
             return "users/\(userId)/activities"
         }
 
-    func loadActivities() async {
+    func loadActivities(for date: Date = Date()) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
             var fetched = try await service.fetchAll(from: path(for: uid)) as [Activity]
             fetched.sort { $0.loggedAt > $1.loggedAt }
-            activities = fetched
+            
+            let calendar = Calendar.current
+            activities = fetched.filter { calendar.isDate($0.loggedAt, inSameDayAs: date) }
         } catch {
             print("Error loading activities: \(error)")
         }
