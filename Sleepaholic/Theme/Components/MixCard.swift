@@ -11,7 +11,7 @@ struct MixCard: View {
     let sounds: Set<String>
     let isPlaying: Bool
     let onPlayPause: () -> Void
-    let onStop: () -> Void
+    let onStop: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 8) {
@@ -56,13 +56,15 @@ struct MixCard: View {
             }
             .buttonStyle(.plain)
 
-            Button(action: onStop) {
-                Image("x")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
+            if let onStop {
+                Button(action: onStop) {
+                    Image("x")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
