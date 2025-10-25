@@ -16,7 +16,6 @@ struct WakeupView: View {
     @State private var goHome = false
     @State private var showAlert = false
     @State private var alertType: AlertType? = nil
-    @State private var showTimePicker = false
     
     enum AlertType {
         case currentTime
@@ -82,12 +81,7 @@ struct WakeupView: View {
                 
                 // Manual section
                 VStack(spacing: 24) {
-                    TimeInputField(
-                        label: "Log Time Manually",
-                        date: $manualWakeTime,
-                        onTap: { showTimePicker = true }
-                    )
-                    .frame(height: 56)
+                    StyledDatePicker(label: "Log Time Manually", date: $manualWakeTime)
                     
                     Button {
                         alertType = .manualTime
@@ -112,14 +106,6 @@ struct WakeupView: View {
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
-        }
-        .sheet(isPresented: $showTimePicker) {
-            TimePickerSheet(
-                title: "Select Wake-Up Time",
-                date: $manualWakeTime
-            )
-            .presentationDetents([.height(300), .medium])
-            .presentationCornerRadius(24)
         }
         .alert(isPresented: $showAlert) {
             switch alertType {

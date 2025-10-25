@@ -10,66 +10,69 @@ import SwiftUI
 struct LogActivityView: View {
     @Environment(\.dismiss) private var dismiss
     
+    struct ActivityOption: Identifiable {
+        let id = UUID()
+        let icon: String
+        let title: String
+        let destination: AnyView
+    }
+    
+    private let options: [ActivityOption] = [
+        .init(icon: "coffee", title: "Caffeine", destination: AnyView(LogCaffeineView())),
+        .init(icon: "workout", title: "Workout", destination: AnyView(LogWorkoutView())),
+        .init(icon: "alcohol", title: "Alcohol", destination: AnyView(LogAlcoholView())),
+        .init(icon: "medication", title: "Medication", destination: AnyView(LogMedicationView())),
+        .init(icon: "bed", title: "Nap", destination: AnyView(LogNapView()))
+    ]
+    
     var body: some View {
-        VStack {
-            // Header
+        VStack(spacing: 48) {
             HStack {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.headline)
-                        .padding(8)
-                }
+                // MARK: - Header
+                BackButtonView(previous: { dismiss() })
                 Spacer()
                 Text("Log Activity")
-                    .font(.headline)
-                    .fontWeight(.bold)
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
                 Spacer()
-                // placeholder to balance spacing
-                Spacer()
-                    .frame(width: 32)
+                Color.clear.frame(width: 40, height: 40)
             }
-            .padding()
             
-            Spacer()
-            
-            VStack(spacing: 16) {
-                Text("Select the activity you wish to log:")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .padding(.bottom, 8)
-                
-                NavigationLink(destination: LogCaffeineView()) {
-                    Text("☕️ Caffeine").activityButtonStyle()
-                }
-                NavigationLink(destination: LogWorkoutView()) {
-                    Text("🏋️‍♂️ Workout").activityButtonStyle()
-                }
-                NavigationLink(destination: LogAlcoholView()) {
-                    Text("🍷 Alcohol").activityButtonStyle()
-                }
-                NavigationLink(destination: LogMedicationView()) {
-                    Text("💊 Medication").activityButtonStyle()
-                }
-                NavigationLink(destination: LogNapView()) {
-                    Text("😴 Nap").activityButtonStyle()
+            // MARK: - Content
+            VStack(alignment: .leading, spacing: 32) {
+                Text("Select the activity you wish to log.")
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+
+                VStack(spacing: 16) {
+                    ForEach(options) { option in
+                        NavigationLink(destination: option.destination) {
+                            HStack(spacing: 12) {
+                                Image(option.icon)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(.white100)
+                                Text(option.title)
+                                    .font(.body1)
+                                    .foregroundColor(.white100)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(16)
+                            .background(Color.main)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
-            .padding(.horizontal, 20)
             
             Spacer()
         }
+        .padding(.vertical, 60)
+        .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
-    }
-}
-
-// MARK: - Reusable style
-extension Text {
-    func activityButtonStyle() -> some View {
-        self.font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue.opacity(0.1))
-            .cornerRadius(12)
+        .appBackground()
     }
 }
 

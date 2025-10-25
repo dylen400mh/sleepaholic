@@ -124,6 +124,11 @@ extension Notification.Name {
     static let didTriggerQuickAction = Notification.Name("didTriggerQuickAction")
 }
 
+extension UIApplication {
+    func endEditing() {
+        sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
 
 @main
 struct SleepaholicApp: App {

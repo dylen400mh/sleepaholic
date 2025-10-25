@@ -19,9 +19,6 @@ struct WindDownView: View {
     @State private var requestingAuth = false
     @State private var authError: String?
     
-    @State private var showBedtimePicker = false
-    @State private var showWakeupPicker = false
-    
     let sounds = ["White Noise", "Fan", "Ocean Waves", "Rain", "Crickets", "Campfire", "Birds", "Theta Waves"]
     
     var body: some View {
@@ -42,16 +39,8 @@ struct WindDownView: View {
                     
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 16) {
-                            TimeInputField(
-                                label: "Target Bedtime",
-                                date: $windDown.targetBedtime,
-                                onTap: { showBedtimePicker = true }
-                            )
-                            TimeInputField(
-                                label: "Target Wake-Up",
-                                date: $windDown.targetWakeup,
-                                onTap: { showWakeupPicker = true }
-                            )
+                            StyledDatePicker(label: "Target Bedtime", date: $windDown.targetBedtime)
+                            StyledDatePicker(label: "Target Wake-Up", date: $windDown.targetWakeup)
                         }
                         
                         let targetHours = sleepLogViewModel.ageBasedTargetHours(for: userProfileViewModel.profile?.age)
@@ -229,22 +218,6 @@ struct WindDownView: View {
         .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
         .familyActivityPicker(isPresented: $showPicker, selection: $windDown.restrictedApps)
-        .sheet(isPresented: $showBedtimePicker) {
-            TimePickerSheet(
-                title: "Select Target Bedtime",
-                date: $windDown.targetBedtime
-            )
-            .presentationDetents([.height(300), .medium])
-            .presentationCornerRadius(24)
-        }
-        .sheet(isPresented: $showWakeupPicker) {
-            TimePickerSheet(
-                title: "Select Target Wake-Up Time",
-                date: $windDown.targetWakeup
-            )
-            .presentationDetents([.height(300), .medium])
-            .presentationCornerRadius(24)
-        }
         .appBackground()
     }
     
