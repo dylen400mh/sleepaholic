@@ -8,77 +8,91 @@
 import SwiftUI
 
 struct LogMedicationView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var activityViewModel: ActivityViewModel
+    
     @State private var name = ""
     @State private var dosage = ""
     @State private var time = Date()
-    
-    @State private var showError = false
     @State private var goHome = false
-    @EnvironmentObject var activityViewModel: ActivityViewModel
+
     
     var body: some View {
-        VStack {
-            FormHeader(title: "Log Medication")
-            
-            Form {
-                TextField("What did you have?", text: $name)
-                
-                HStack {
-                    Text("Dosage (mg)")
-                    Spacer()
-                    TextField("0", text: $dosage)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 100)
-                }
-                
-                DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+        VStack(spacing: 48) {
+            // MARK: - Header
+            HStack {
+                BackButtonView(previous: { dismiss() })
+                Spacer()
+                Text("Log Medication")
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+                Spacer()
+                Color.clear.frame(width: 40, height: 40)
             }
             
+            // MARK: - Inputs
+            VStack(spacing: 24) {
+                StyledDatePicker(label: "Time", date: $time)
+
+                InputField(
+                    label: "What did you have?",
+                    text: $name
+                )
+
+                InputField(
+                    label: "Amount (mg)",
+                    text: $dosage,
+                    keyboardType: .numberPad
+                )
+            }
+
             Spacer()
             
-            Button(action: {
+            // MARK: - Save Button
+            Button {
                 Task {
-                    guard !name.trimmingCharacters(in: .whitespaces).isEmpty else {
-                        showError = true
-                        return
-                    }
-                    guard let finalDosage = Int(dosage), finalDosage > 0 else {
-                        showError = true
-                        return
-                    }
-                    
-                    let newActivity = Activity(
-                        type: "medication",
-                        loggedAt: time,
-                        amountMg: finalDosage,
-                        medication: name
-                    )
-                    
-                    await activityViewModel.addActivity(newActivity)
-                    goHome = true
+                    await saveMedicationLog()
                 }
-            }) {
-                Text("Save")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
-                    .contentShape(Rectangle())
+            } label: {
+                PrimaryButton(
+                    title: "Save",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: !isFormValid
+                )
             }
-            .alert("Please fill in all fields.", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
-            }
+            .buttonStyle(.plain)
+            .disabled(!isFormValid)
         }
+        .padding(.vertical, 60)
+        .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
         }
+        .appBackground()
+    }
+    
+    // MARK: - Validation
+    private var isFormValid: Bool {
+        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        guard Int(dosage) ?? 0 > 0 else { return false }
+        return true
+    }
+
+    // MARK: - Save Logic
+    private func saveMedicationLog() async {
+        let finalDosage = Int(dosage) ?? 0
+        let newActivity = Activity(
+            type: "medication",
+            loggedAt: time,
+            amountMg: finalDosage,
+            medication: name
+        )
+
+        await activityViewModel.addActivity(newActivity)
+        goHome = true
     }
 }
 

@@ -8,69 +8,86 @@
 import SwiftUI
 
 struct LogNapView: View {
-    @State private var startTime = Date()
-    @State private var endTime = Date().addingTimeInterval(1800)
-    
-    @State private var showError = false
-    @State private var goHome = false
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var activityViewModel: ActivityViewModel
     
+    @State private var startTime = Date()
+    @State private var endTime = Date().addingTimeInterval(1800)
+    @State private var goHome = false
+    
     var body: some View {
-        VStack {
-            FormHeader(title: "Log Nap")
+        VStack(spacing: 48) {
+            // MARK: - Header
+            HStack {
+                BackButtonView(previous: { dismiss() })
+                Spacer()
+                Text("Log Nap")
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+                Spacer()
+                Color.clear.frame(width: 40, height: 40)
+            }
             
-            Form {
-                DatePicker("Start Time", selection: $startTime, displayedComponents: [.hourAndMinute])
-                DatePicker("End Time", selection: $endTime, displayedComponents: [.hourAndMinute])
+            // MARK: - Inputs
+            VStack(spacing: 24) {
+                StyledDatePicker(label: "Start Time", date: $startTime)
+                StyledDatePicker(label: "End Time", date: $endTime)
             }
             
             Spacer()
             
-            Button(action: {
+            // MARK: - Save Button
+            Button {
                 Task {
-                    var finalEndTime = endTime
-                    if finalEndTime <= startTime {
-                        // assume nap ended next day
-                        finalEndTime = Calendar.current.date(byAdding: .day, value: 1, to: finalEndTime) ?? finalEndTime
-                    }
-                    
-                    guard finalEndTime > startTime else {
-                        showError = true
-                        return
-                    }
-                    
-                    let newActivity = Activity(
-                        type: "nap",
-                        loggedAt: finalEndTime,
-                        start: startTime,
-                        end: finalEndTime
-                    )
-                    
-                    await activityViewModel.addActivity(newActivity)
-                    goHome = true
+                    await saveNapLog()
                 }
-            }) {
-                Text("Save")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
-                    .contentShape(Rectangle())
+            } label: {
+                PrimaryButton(
+                    title: "Save",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: !isFormValid
+                )
             }
-            .alert("End time must be after start time.", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
-            }
+            .buttonStyle(.plain)
+            .disabled(!isFormValid)
         }
+        .padding(.vertical, 60)
+        .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
         }
+        .appBackground()
     }
+    
+    // MARK: - Validation
+   private var isFormValid: Bool {
+       true
+   }
+
+   // MARK: - Save Logic
+   private func saveNapLog() async {
+       var finalStartTime = startTime
+       let finalEndTime = endTime
+       
+       // If start time appears after end time (crossing midnight),
+       // assume the nap started on the previous day.
+       if finalStartTime > finalEndTime {
+           finalStartTime = Calendar.current.date(byAdding: .day, value: -1, to: finalStartTime) ?? finalStartTime
+       }
+
+       let newActivity = Activity(
+           type: "nap",
+           loggedAt: finalEndTime,
+           start: finalStartTime,
+           end: finalEndTime
+       )
+
+       await activityViewModel.addActivity(newActivity)
+       goHome = true
+   }
 }
 
 
