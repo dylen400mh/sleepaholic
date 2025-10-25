@@ -12,6 +12,9 @@ struct BackgroundView: View {
         ZStack {
             Color.background
                 .ignoresSafeArea()
+                .onTapGesture {
+                    UIApplication.shared.endEditing()
+                }
             
             // Stars & clouds image overlay
             Image("background")

@@ -11,6 +11,7 @@ struct InputField: View {
     let label: String
     @Binding var text: String
     var error: String? = nil
+    var keyboardType: UIKeyboardType = .default
     
     @FocusState private var isFocused: Bool
 
@@ -46,6 +47,7 @@ struct InputField: View {
                     .animation(.easeInOut(duration: 0.25), value: text)
                 
                 TextField("", text: $text)
+                    .keyboardType(keyboardType)
                     .font(.body1)
                     .foregroundColor(.white100)
                     .padding(.horizontal, 16)
@@ -54,14 +56,6 @@ struct InputField: View {
             }
             .frame(height: 56)
             .onTapGesture { isFocused = true }
-            
-            if let error = error {
-                Text(error)
-                    .font(.body3)
-                    .foregroundColor(.red)
-                    .padding(.leading, 4)
-                    .padding(.bottom, -20)
-            }
         }
     }
 

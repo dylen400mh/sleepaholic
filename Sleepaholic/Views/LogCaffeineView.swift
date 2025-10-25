@@ -6,14 +6,20 @@
 //
 
 import SwiftUI
+import OrderedCollections
 
 struct LogCaffeineView: View {
-    @State private var selectedKind = "Coffee"
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var activityViewModel: ActivityViewModel
+    
+    @State private var selectedKind = ""
     @State private var customKind = ""
     @State private var amount: String = ""
     @State private var time = Date()
+    @State private var showError = false
+    @State private var goHome = false
     
-    let caffeineOptions: [String: Int] = [
+    let caffeineOptions: OrderedDictionary<String, Int> = [
         "Coffee": 95,
         "Espresso": 63,
         "Energy Drink": 80,
@@ -22,23 +28,36 @@ struct LogCaffeineView: View {
         "Other": 0
     ]
     
-    @State private var showError = false
-    @State private var goHome = false
-    @EnvironmentObject var activityViewModel: ActivityViewModel
-    
     var body: some View {
-        VStack {
-            FormHeader(title: "Log Caffeine")
-            
-            Form {
-                // Picker
-                Picker("What did you have?", selection: $selectedKind) {
-                    ForEach(Array(caffeineOptions.keys), id: \.self) { option in
-                        Text(option).tag(option)
-                    }
-                }
-                .pickerStyle(.menu)
+        VStack(spacing: 48) {
+            // MARK: - Header
+            HStack {
+                BackButtonView(previous: { dismiss() })
+                Spacer()
+                Text("Log Caffeine")
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+                Spacer()
+                Color.clear.frame(width: 40, height: 40)
+            }
+
+            // MARK: - Inputs
+            VStack(spacing: 24) {
+                // Time Input
+                StyledDatePicker(label: "Time", date: $time)
+
+                // Caffeine Type Dropdown
+                StyledDropdown(
+                    label: "What did you have?",
+                    options: Array(caffeineOptions.keys),
+                    selected: $selectedKind
+                )
                 .onChange(of: selectedKind) { oldValue, newValue in
+                    guard !newValue.isEmpty else {
+                        amount = ""
+                        return
+                    }
+                    
                     if let defaultAmount = caffeineOptions[newValue], defaultAmount > 0 {
                         amount = "\(defaultAmount)"
                     } else {
@@ -47,74 +66,72 @@ struct LogCaffeineView: View {
                 }
                 
                 if selectedKind == "Other" {
-                    TextField("Enter description", text: $customKind)
+                    InputField(label: "Description", text: $customKind)
                 }
-                
-                // Amount (numbers only)
-                HStack {
-                    Text("Amount (mg)")
-                    Spacer()
-                    TextField("0", text: $amount)
-                        .keyboardType(.numberPad) // numbers only
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 100)
-                }
-                
-                DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+
+                // Amount Field
+                InputField(label: "Amount (mg)", text: $amount, keyboardType: .numberPad)
             }
-            
+
             Spacer()
-            
-            Button(action: {
+
+            // MARK: - Save Button
+            Button {
                 Task {
-                    if selectedKind == "Other" && customKind.trimmingCharacters(in: .whitespaces).isEmpty {
-                        showError = true
-                        return
-                    }
-                    guard let finalAmount = Int(amount), finalAmount > 0 else {
-                        showError = true
-                        return
-                    }
-                    
-                    // Save activity
-                    let newActivity = Activity(
-                        type: "caffeine",
-                        loggedAt: time,
-                        kind: selectedKind,
-                        otherDescription: selectedKind == "Other" ? customKind : nil,
-                        amountMg: finalAmount
-                    )
-                    
-                    await activityViewModel.addActivity(newActivity)
-                    goHome = true
+                    await saveCaffeineLog()
                 }
-            }) {
-                Text("Save")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
-                    .contentShape(Rectangle())
+            } label: {
+                PrimaryButton(
+                    title: "Save",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: !isFormValid
+                )
             }
-            .alert("Please fill in all fields.", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
-            }
+            .buttonStyle(.plain)
         }
+        .padding(.vertical, 60)
+        .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
         }
-        .onAppear {
-            // Pre-populate when view first loads
-            if let defaultAmount = caffeineOptions[selectedKind] {
-                amount = "\(defaultAmount)"
-            }
+        .alert("Please fill in all fields.", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
         }
+        .appBackground()
+        
+    }
+    
+    private var isFormValid: Bool {
+        guard !selectedKind.isEmpty else { return false }
+        if selectedKind == "Other" && customKind.trimmingCharacters(in: .whitespaces).isEmpty {
+            return false
+        }
+        guard Int(amount) ?? 0 > 0 else { return false }
+        return true
+    }
+    
+    private func saveCaffeineLog() async {
+        guard isFormValid else {
+            showError = true
+            return
+        }
+
+        let kind = selectedKind
+        let finalAmount = Int(amount) ?? 0
+
+        let newActivity = Activity(
+            type: "caffeine",
+            loggedAt: time,
+            kind: kind,
+            otherDescription: kind == "Other" ? customKind : nil,
+            amountMg: finalAmount
+        )
+
+        await activityViewModel.addActivity(newActivity)
+        goHome = true
     }
 }
 

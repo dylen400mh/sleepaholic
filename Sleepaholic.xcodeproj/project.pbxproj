@@ -15,6 +15,7 @@
 		0F37A3B52E7F0BF20036C7EC /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 0F37A3B42E7F0BF20036C7EC /* FirebaseStorage */; };
 		0F4429CC2E99C95200B7F4A5 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4429CB2E99C95200B7F4A5 /* SuperwallKit */; };
 		0F4A50422E9D83A4008FAA68 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4A50412E9D83A4008FAA68 /* Mixpanel */; };
+		0F7A522C2EAC74A900F0982D /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 0F7A522B2EAC74A900F0982D /* Collections */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +54,7 @@
 				0F4A50422E9D83A4008FAA68 /* Mixpanel in Frameworks */,
 				0F37A3B12E7F0BF20036C7EC /* FirebaseCore in Frameworks */,
 				0F37A3B52E7F0BF20036C7EC /* FirebaseStorage in Frameworks */,
+				0F7A522C2EAC74A900F0982D /* Collections in Frameworks */,
 				0F37A3AF2E7F0BF20036C7EC /* FirebaseAuth in Frameworks */,
 				0F4429CC2E99C95200B7F4A5 /* SuperwallKit in Frameworks */,
 			);
@@ -105,6 +107,7 @@
 				0F4429CB2E99C95200B7F4A5 /* SuperwallKit */,
 				0F4A50412E9D83A4008FAA68 /* Mixpanel */,
 				0F34E7352EA41ECD008C683C /* DotLottie */,
+				0F7A522B2EAC74A900F0982D /* Collections */,
 			);
 			productName = Sleepaholic;
 			productReference = 0F6EDBA12E7606E000A7595D /* Sleepaholic.app */;
@@ -139,6 +142,7 @@
 				0F4429CA2E99C95200B7F4A5 /* XCRemoteSwiftPackageReference "Superwall-iOS" */,
 				0F4A50402E9D83A4008FAA68 /* XCRemoteSwiftPackageReference "mixpanel-swift" */,
 				0F34E7342EA41ECD008C683C /* XCRemoteSwiftPackageReference "dotlottie-ios" */,
+				0F7A522A2EAC74A900F0982D /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0F6EDBA22E7606E000A7595D /* Products */;
@@ -427,6 +431,14 @@
 				kind = branch;
 			};
 		};
+		0F7A522A2EAC74A900F0982D /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -469,6 +481,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0F4A50402E9D83A4008FAA68 /* XCRemoteSwiftPackageReference "mixpanel-swift" */;
 			productName = Mixpanel;
+		};
+		0F7A522B2EAC74A900F0982D /* Collections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F7A522A2EAC74A900F0982D /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
