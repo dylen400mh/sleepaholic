@@ -8,51 +8,86 @@
 import SwiftUI
 
 struct LogAlcoholView: View {
-    @State private var drinks = 1
-    @State private var time = Date()
-    
-    @State private var goHome = false
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var activityViewModel: ActivityViewModel
     
+    @State private var drinks = ""
+    @State private var time = Date()
+    @State private var goHome = false
+    
+    
     var body: some View {
-        VStack {
-            FormHeader(title: "Log Alcohol")
+        VStack(spacing: 48) {
+            // MARK: - Header
+            HStack {
+                BackButtonView(previous: { dismiss() })
+                Spacer()
+                Text("Log Alcohol")
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+                Spacer()
+                Color.clear.frame(width: 40, height: 40)
+            }
             
-            Form {
-                Stepper("Number of drinks: \(drinks)", value: $drinks, in: 1...20)
-                DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+            VStack(spacing: 24) {
+                StyledDatePicker(label: "Time", date: $time)
+                
+                InputField(
+                    label: "Number of Drinks",
+                    text: $drinks,
+                    keyboardType: .numberPad
+                )
             }
             
             Spacer()
             
-            Button(action: {
+            // MARK: - Save Button
+            Button {
                 Task {
-                    let newActivity = Activity(
-                        type: "alcohol",
-                        loggedAt: time,
-                        drinks: drinks
-                    )
-                    await activityViewModel.addActivity(newActivity)
-                    goHome = true
+                    await saveAlcoholLog()
                 }
-            }) {
-                Text("Save")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
-                    .contentShape(Rectangle())
+            } label: {
+                PrimaryButton(
+                    title: "Save",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: !isFormValid
+                )
             }
+            .buttonStyle(.plain)
+            .disabled(!isFormValid)
         }
+        .padding(.vertical, 60)
+        .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
         }
+        .appBackground()
+    }
+    
+    // MARK: - Validation
+    private var isFormValid: Bool {
+        guard Int(drinks) ?? 0 > 0 else { return false }
+        return true
+    }
+
+    // MARK: - Save Logic
+    private func saveAlcoholLog() async {
+        guard isFormValid else {
+            return
+        }
+
+        let drinkCount = Int(drinks) ?? 0
+        let newActivity = Activity(
+            type: "alcohol",
+            loggedAt: time,
+            drinks: drinkCount
+        )
+
+        await activityViewModel.addActivity(newActivity)
+        goHome = true
     }
 }
 

@@ -16,7 +16,6 @@ struct LogCaffeineView: View {
     @State private var customKind = ""
     @State private var amount: String = ""
     @State private var time = Date()
-    @State private var showError = false
     @State private var goHome = false
     
     let caffeineOptions: OrderedDictionary<String, Int> = [
@@ -89,6 +88,7 @@ struct LogCaffeineView: View {
                 )
             }
             .buttonStyle(.plain)
+            .disabled(!isFormValid)
         }
         .padding(.vertical, 60)
         .padding(.horizontal, 24)
@@ -96,9 +96,6 @@ struct LogCaffeineView: View {
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
-        }
-        .alert("Please fill in all fields.", isPresented: $showError) {
-            Button("OK", role: .cancel) { }
         }
         .appBackground()
         
@@ -115,7 +112,6 @@ struct LogCaffeineView: View {
     
     private func saveCaffeineLog() async {
         guard isFormValid else {
-            showError = true
             return
         }
 

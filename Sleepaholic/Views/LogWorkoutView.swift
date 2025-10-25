@@ -16,7 +16,6 @@ struct LogWorkoutView: View {
     @State private var duration = ""
     @State private var time = Date()
     @State private var goHome = false
-    @State private var showError = false
     
     let workoutOptions = ["Strength", "Cardio", "Other"]
     
@@ -74,6 +73,7 @@ struct LogWorkoutView: View {
                 )
             }
             .buttonStyle(.plain)
+            .disabled(!isFormValid)
         }
         .padding(.vertical, 60)
         .padding(.horizontal, 24)
@@ -81,9 +81,6 @@ struct LogWorkoutView: View {
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
-        }
-        .alert("Please fill in all fields.", isPresented: $showError) {
-            Button("OK", role: .cancel) { }
         }
         .appBackground()
     }
@@ -101,7 +98,6 @@ struct LogWorkoutView: View {
     // MARK: - Save Logic
     private func saveWorkoutLog() async {
         guard isFormValid else {
-            showError = true
             return
         }
 
