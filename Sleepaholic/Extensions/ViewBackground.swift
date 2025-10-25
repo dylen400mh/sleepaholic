@@ -20,4 +20,9 @@ extension View {
     func appBackground() -> some View {
         self.modifier(GlobalBackground())
     }
+    
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                        to: nil, from: nil, for: nil)
+    }
 }

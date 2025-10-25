@@ -12,7 +12,6 @@ struct SettingsRow: View {
     let title: String
     var hasArrow: Bool = true
     var toggleBinding: Binding<Bool>? = nil
-    var action: (() -> Void)? = nil
     
     var body: some View {
         HStack(spacing: 16) {
@@ -40,8 +39,5 @@ struct SettingsRow: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture {
-            action?()
-        }
     }
 }

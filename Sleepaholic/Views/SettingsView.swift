@@ -30,7 +30,10 @@ struct SettingsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
                     Group {
-                        SettingsRow(iconName: "profile", title: "Profile")
+                        NavigationLink(destination: ProfileView()) {
+                            SettingsRow(iconName: "profile", title: "Profile")
+                        }
+                        .buttonStyle(.plain)
                         SettingsSeparator()
                         
                         SettingsRow(iconName: "bell", title: "Notifications")
