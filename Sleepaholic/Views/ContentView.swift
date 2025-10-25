@@ -35,7 +35,7 @@ struct ContentView: View {
         ZStack {
             VStack(spacing: 24) {
                 // Sticky header
-                HeaderView { }
+                HeaderView()
                 
                 // Scrollable content
                 ScrollView(showsIndicators: false) {
