@@ -150,6 +150,7 @@ struct SleepaholicApp: App {
                 SplashScreenView()
                     .appBackground()
             }
+            .id(AuthService.shared.currentUser?.uid ?? "signed-out")
             .environmentObject(windDownManager)
             .environmentObject(userSettingsViewModel)
             .environmentObject(activityViewModel)

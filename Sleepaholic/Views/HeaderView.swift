@@ -8,9 +8,6 @@
 import SwiftUI
 
 struct HeaderView: View {
-    var title: String = "Sleepaholic"
-    var settingsAction: () -> Void
-    
     var body: some View {
         HStack {
             Image("SleepaholicLogo")
@@ -21,7 +18,7 @@ struct HeaderView: View {
             
             Spacer()
             
-            Button(action: settingsAction) {
+            NavigationLink(destination: SettingsView()) {
                 Image("settings")
                     .resizable()
                     .scaledToFit()
@@ -33,8 +30,10 @@ struct HeaderView: View {
                             .strokeBorder(Color.white40, lineWidth: 0.5)
                             .background(Color.clear)
                     )
-
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            
         }
         .padding(.top, 60)
     }

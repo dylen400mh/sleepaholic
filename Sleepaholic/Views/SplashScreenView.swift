@@ -14,10 +14,12 @@ struct SplashScreenView: View {
     @State private var offset: CGFloat = 200
     @State private var rotation: Double = 30
     @State private var opacity: Double = 0
+    
+    private static var hasShownSplash = false
 
     var body: some View {
         ZStack {
-            if isActive {
+            if isActive || SplashScreenView.hasShownSplash {
                 RootView()
                     .transition(.opacity.animation(.easeOut(duration: 0.5)))
             } else {
@@ -46,6 +48,10 @@ struct SplashScreenView: View {
                 .offset(y: offset)
                 .opacity(opacity)
                 .onAppear {
+                    guard !SplashScreenView.hasShownSplash else {
+                        isActive = true
+                        return
+                    }
                     // Entry animation (move + fade in)
                     withAnimation(.easeOut(duration: 0.8)) {
                         offset = 0
@@ -68,6 +74,7 @@ struct SplashScreenView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
                         withAnimation(.easeOut(duration: 0.5)) {
                             isActive = true
+                            SplashScreenView.hasShownSplash = true
                         }
                     }
                 }
