@@ -8,87 +8,114 @@
 import SwiftUI
 
 struct LogWorkoutView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var activityViewModel: ActivityViewModel
+    
     @State private var selectedType = "Strength"
     @State private var otherDescription = ""
-    @State private var duration = 30
+    @State private var duration = ""
     @State private var time = Date()
-    
     @State private var goHome = false
     @State private var showError = false
-    @EnvironmentObject var activityViewModel: ActivityViewModel
     
     let workoutOptions = ["Strength", "Cardio", "Other"]
     
     var body: some View {
-        VStack {
-            FormHeader(title: "Log Workout")
-            
-            Form {
-                // Picker for workout type
-                Picker("Type", selection: $selectedType) {
-                    ForEach(workoutOptions, id: \.self) { option in
-                        Text(option).tag(option)
-                    }
-                }
-                .pickerStyle(.menu)
-                
-                // If "Other", show custom text field
-                if selectedType == "Other" {
-                    TextField("What was your workout?", text: $otherDescription)
-                }
-                
-                Stepper("Duration: \(duration) min", value: $duration, in: 5...180, step: 5)
-                DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
+        VStack(spacing: 48) {
+            // MARK: - Header
+            HStack {
+                BackButtonView(previous: { dismiss() })
+                Spacer()
+                Text("Log Workout")
+                    .font(.h2Semi)
+                    .foregroundColor(.white100)
+                Spacer()
+                Color.clear.frame(width: 40, height: 40)
             }
             
+            // MARK: - Inputs
+            VStack(spacing: 24) {
+                // Time Picker
+                StyledDatePicker(label: "Time", date: $time)
+
+                // Workout Type Dropdown
+                StyledDropdown(
+                    label: "Type",
+                    options: workoutOptions,
+                    selected: $selectedType
+                )
+
+                // Custom description if “Other”
+                if selectedType == "Other" {
+                    InputField(label: "What was your workout?", text: $otherDescription)
+                }
+
+                // Duration input
+                InputField(
+                    label: "Duration (min)",
+                    text: $duration,
+                    keyboardType: .numberPad
+                )
+            }
+
             Spacer()
             
-            Button(action: {
+            // MARK: - Save Button
+            Button {
                 Task {
-                    if selectedType == "Other" {
-                        guard !otherDescription.trimmingCharacters(in: .whitespaces).isEmpty else {
-                            showError = true
-                            return
-                        }
-                    }
-                    
-                    guard duration > 0 else {
-                        showError = true
-                        return
-                    }
-                    
-                    let newActivity = Activity(
-                        type: "workout",
-                        loggedAt: time,
-                        kind: selectedType,
-                        otherDescription: selectedType == "Other" ? otherDescription : nil,
-                        durationMin: duration
-                    )
-                    
-                    await activityViewModel.addActivity(newActivity)
-                    goHome = true
+                    await saveWorkoutLog()
                 }
-            }) {
-                Text("Save")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
-                    .contentShape(Rectangle())
+            } label: {
+                PrimaryButton(
+                    title: "Save",
+                    icon: nil,
+                    size: .regular,
+                    isDisabled: !isFormValid
+                )
             }
-            .alert("Please fill in all fields.", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
-            }
+            .buttonStyle(.plain)
         }
+        .padding(.vertical, 60)
+        .padding(.horizontal, 24)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $goHome) {
             ContentView()
                 .navigationBarBackButtonHidden(true)
         }
+        .alert("Please fill in all fields.", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        }
+        .appBackground()
+    }
+    
+    // MARK: - Validation
+    private var isFormValid: Bool {
+        guard !selectedType.isEmpty else { return false }
+        if selectedType == "Other" && otherDescription.trimmingCharacters(in: .whitespaces).isEmpty {
+            return false
+        }
+        guard Int(duration) ?? 0 > 0 else { return false }
+        return true
+    }
+
+    // MARK: - Save Logic
+    private func saveWorkoutLog() async {
+        guard isFormValid else {
+            showError = true
+            return
+        }
+
+        let finalDuration = Int(duration) ?? 0
+        let newActivity = Activity(
+            type: "workout",
+            loggedAt: time,
+            kind: selectedType,
+            otherDescription: selectedType == "Other" ? otherDescription : nil,
+            durationMin: finalDuration
+        )
+
+        await activityViewModel.addActivity(newActivity)
+        goHome = true
     }
 }
 
