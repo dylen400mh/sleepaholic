@@ -60,10 +60,18 @@ struct ActivityRow: View {
                     Text("Nap")
                         .font(.body1Semi)
                         .foregroundColor(.white100)
-                    Text("\(activity.start?.formatted(date: .omitted, time: .shortened) ?? "") → \(activity.end?.formatted(date: .omitted, time: .shortened) ?? "")")
-                        .font(.body3)
-                        .foregroundColor(.white80)
                     
+                    if let start = activity.start, let end = activity.end {
+                        let durationText = formatDuration(from: start, to: end)
+
+                        Text("\(start.formatted(date: .omitted, time: .shortened)) → \(end.formatted(date: .omitted, time: .shortened)) • \(durationText)")
+                            .font(.body3)
+                            .foregroundColor(.white80)
+                    } else {
+                        Text("\(activity.start?.formatted(date: .omitted, time: .shortened) ?? "") → \(activity.end?.formatted(date: .omitted, time: .shortened) ?? "")")
+                            .font(.body3)
+                            .foregroundColor(.white80)
+                    }
                 default:
                     EmptyView()
                 }
@@ -103,6 +111,18 @@ struct ActivityRow: View {
         case "medication": return "medication"
         case "nap": return "bed"
         default: return "circle.fill"
+        }
+    }
+    
+    private func formatDuration(from start: Date, to end: Date) -> String {
+        let durationMinutes = Int(end.timeIntervalSince(start) / 60)
+        let hours = durationMinutes / 60
+        let minutes = durationMinutes % 60
+        
+        if hours > 0 {
+            return minutes > 0 ? "\(hours) hr \(minutes) min" : "\(hours) hr"
+        } else {
+            return "\(minutes) min"
         }
     }
 }
