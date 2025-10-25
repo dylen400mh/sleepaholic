@@ -34,6 +34,8 @@ struct StyledDatePicker: View {
                     .font(.body1)
                     .foregroundColor(.white100)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 
                 Spacer()
             }
