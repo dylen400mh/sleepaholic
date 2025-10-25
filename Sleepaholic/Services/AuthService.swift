@@ -134,6 +134,17 @@ class AuthService: NSObject, ObservableObject {
             }
         }
     }
+    
+    // MARK: - Sign Out
+    func signOut() {
+        do {
+            try Auth.auth().signOut()
+            self.currentUser = nil
+            print("👋 User signed out successfully")
+        } catch {
+            print("❌ Error signing out: \(error.localizedDescription)")
+        }
+    }
 
 
     // MARK: - Nonce Utilities

@@ -13,7 +13,6 @@
 //
 
 import SwiftUI
-import FirebaseAuth
 
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
@@ -22,7 +21,6 @@ struct ProfileView: View {
     @State private var name: String = ""
     @State private var age: String = ""
     @State private var gender: String = ""
-    @State private var goHome = false
     
     private var email: String {
         AuthService.shared.currentUser?.email ?? ""
@@ -116,8 +114,7 @@ struct ProfileView: View {
                             .foregroundColor(.white100)
                         Spacer()
                         Button("Log Out") {
-                            try? Auth.auth().signOut()
-                            goHome = true
+                            AuthService.shared.signOut()
                         }
                         .font(.body1Semi)
                         .foregroundStyle(Gradients.main)
@@ -136,10 +133,6 @@ struct ProfileView: View {
                 age = "\(profile.age)"
                 gender = profile.gender
             }
-        }
-        .navigationDestination(isPresented: $goHome) {
-            ContentView()
-                .navigationBarBackButtonHidden(true)
         }
         .gesture(
             TapGesture().onEnded {
