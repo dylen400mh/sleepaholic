@@ -104,11 +104,43 @@ final class UserProfileViewModel: ObservableObject {
 
         } catch let error as NSError {
             if error.code == AuthErrorCode.requiresRecentLogin.rawValue {
-                print("⚠️ Requires recent login. Prompt user to reauthenticate.")
+                await MainActor.run {
+                    showReauthAlert()
+                }
             } else {
-                print("❌ Error deleting account: \(error.localizedDescription)")
+                await MainActor.run {
+                    showGenericDeleteError(message: error.localizedDescription)
+                }
             }
         }
     }
+    
+    // MARK: - Alerts
+    private func showReauthAlert() {
+        let alert = UIAlertController(
+            title: "Reauthentication Required",
+            message: "For security reasons, please sign out and log in again before deleting your account.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(alert, animated: true)
+        }
+    }
+
+    private func showGenericDeleteError(message: String) {
+        let alert = UIAlertController(
+            title: "Error Deleting Account",
+            message: message,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(alert, animated: true)
+        }
+    }
+
 }
 
