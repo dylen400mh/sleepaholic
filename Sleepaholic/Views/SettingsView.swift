@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -64,7 +65,12 @@ struct SettingsView: View {
                         }
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "subscription", title: "Manage Subscription")
+                        Button {
+                           openSubscriptionSettings()
+                       } label: {
+                           SettingsRow(iconName: "subscription", title: "Manage Subscription")
+                       }
+                       .buttonStyle(.plain)
                         SettingsSeparator()
                         
                         SettingsRow(iconName: "more", title: "More")
@@ -91,6 +97,14 @@ struct SettingsView: View {
         }
         updated.trackSleep = newValue
         await userSettingsViewModel.saveSettings(updated)
+    }
+    
+    // MARK: - Manage Subscription
+    private func openSubscriptionSettings() {
+        guard let url = URL(string: "https://apps.apple.com/account/subscriptions") else { return }
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
     }
 }
 
