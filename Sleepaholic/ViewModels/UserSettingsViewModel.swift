@@ -5,6 +5,7 @@
 //  Created by Dylen Belanger on 2025-09-21.
 //
 
+import SwiftUI
 import Foundation
 import FirebaseAuth
 
@@ -18,23 +19,68 @@ final class UserSettingsViewModel: ObservableObject {
     }
     
     private let docId = "settings"
+    
+    // MARK: - Local Cache (for unsigned users)
+    @AppStorage("cachedBedtime") private var cachedBedtime = 0
+    @AppStorage("cachedWakeUpTime") private var cachedWakeUpTime = 0
+    @AppStorage("hasCachedSettings") private var hasCachedSettings = false
 
     func loadSettings() async {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        do {
-            settings = try await service.fetch(from: path(for: uid), id: docId)
-        } catch {
-            print("Error loading settings: \(error)")
+        if let uid = Auth.auth().currentUser?.uid {
+            do {
+                let fetched = try await service.fetch(from: path(for: uid), id: docId) as UserSettings?
+                
+                if let existing = fetched {
+                    settings = existing
+                } else if hasCachedSettings {
+                    let newSettings = UserSettings(
+                        bedtime: cachedBedtime,
+                        wakeUpTime: cachedWakeUpTime,
+                        trackSleep: false,
+                        restrictApps: false
+                    )
+                    
+                    await saveSettings(newSettings)
+                    settings = newSettings
+                    
+                    cachedBedtime = 0
+                    cachedWakeUpTime = 0
+                    hasCachedSettings = false
+                }
+            } catch {
+                print("Error loading settings: \(error)")
+            }
+            return
+        }
+        
+        if hasCachedSettings {
+            settings = UserSettings(
+                bedtime: cachedBedtime,
+                wakeUpTime: cachedWakeUpTime,
+                trackSleep: false,
+                restrictApps: false
+            )
         }
     }
 
     func saveSettings(_ settings: UserSettings) async {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        do {
-            try await service.save(settings, to: path(for: uid), id: docId)
+        if let uid = Auth.auth().currentUser?.uid {
+            do {
+                try await service.save(settings, to: path(for: uid), id: docId)
+                self.settings = settings
+            } catch {
+                print("Error saving settings: \(error)")
+            }
+        } else {
+            // MARK: - No signed-in user → cache locally
+            if settings.bedtime != cachedBedtime {
+                cachedBedtime = settings.bedtime
+            }
+            if settings.wakeUpTime != cachedWakeUpTime {
+                cachedWakeUpTime = settings.wakeUpTime
+            }
+            hasCachedSettings = true
             self.settings = settings
-        } catch {
-            print("Error saving settings: \(error)")
         }
     }
 }

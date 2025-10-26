@@ -140,6 +140,12 @@ class AuthService: NSObject, ObservableObject {
         do {
             try Auth.auth().signOut()
             self.currentUser = nil
+            
+            // reset onboarding state for debugging
+            if ProcessInfo.processInfo.environment["DEMO_MODE"] == "1" {
+                UserDefaults.standard.set(false, forKey: "hasOnboarded")
+            }
+            
             print("👋 User signed out successfully")
         } catch {
             print("❌ Error signing out: \(error.localizedDescription)")

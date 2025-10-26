@@ -13,7 +13,9 @@ struct AuthView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
 
     let next: () -> Void
-    let previous: () -> Void
+    let previous: (() -> Void)?
+    var showSkipButton: Bool = false
+    
     @StateObject private var authService = AuthService.shared
     @State private var showError = false
     @State private var errorMessage = ""
@@ -77,6 +79,21 @@ struct AuthView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                
+                if showSkipButton {
+                    Button {
+                        HapticsManager.play(.light)
+                        next()
+                    } label: {
+                        SecondaryButton(
+                            title: "Skip for Now",
+                            icon: nil,
+                            size: .regular,
+                            isDisabled: false
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
             }
             .padding(.bottom, 60)
         }

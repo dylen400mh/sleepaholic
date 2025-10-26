@@ -40,8 +40,28 @@ final class FirestoreService {
 
     // MARK: - Read One
     func fetch<T: Codable>(from collection: String, id: String) async throws -> T? {
-        let snapshot = try await db.collection(collection).document(id).getDocument()
-        return try snapshot.data(as: T.self)
+        let docRef = db.collection(collection).document(id)
+        let snapshot = try await docRef.getDocument()
+        
+        // Handle missing document
+        guard snapshot.exists else {
+            print("⚠️ Firestore doc \(collection)/\(id) does not exist.")
+            return nil
+        }
+        
+        // Handle empty or null data
+        guard let data = snapshot.data(), !data.isEmpty else {
+            print("⚠️ Firestore doc \(collection)/\(id) exists but is empty.")
+            return nil
+        }
+        
+        // Safe decoding
+        do {
+            return try snapshot.data(as: T.self)
+        } catch {
+            print("❌ Failed to decode Firestore doc \(collection)/\(id): \(error.localizedDescription)")
+            return nil
+        }
     }
 
     // MARK: - Delete

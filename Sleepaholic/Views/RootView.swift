@@ -18,18 +18,46 @@ import SuperwallKit
 struct RootView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @StateObject private var authService = AuthService.shared
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
     
     private let isDemoMode = ProcessInfo.processInfo.environment["DEMO_MODE"] == "1"
 
     var body: some View {
         Group {
-            if authService.currentUser != nil && (isDemoMode || Superwall.shared.subscriptionStatus.isActive) {
-                ContentView()
-            } else if userProfileViewModel.profile?.onboarded == true {
-                PaywallView()
+            if isDemoMode {
+                if !hasOnboarded {
+                    OnboardingView()
+                } else if authService.currentUser != nil {
+                    // Onboarded + logged in
+                    ContentView()
+                } else {
+                    // Onboarded but not signed in → ask to sign in
+                    AuthView(
+                        next: { Task { await userProfileViewModel.loadProfile() } },
+                        previous: nil,
+                        showSkipButton: false
+                    )
+                }
             } else {
-                OnboardingView()
-                    
+                if Superwall.shared.subscriptionStatus.isActive {
+                    if authService.currentUser != nil {
+                        // Logged in
+                        ContentView()
+                    } else {
+                        // Subscribed but not signed in — now must sign in
+                        AuthView(
+                            next: {
+                                Task { await userProfileViewModel.loadProfile() }
+                            },
+                            previous: nil,
+                            showSkipButton: false // no skip allowed post-paywall
+                        )
+                    }
+                } else if hasOnboarded {
+                    PaywallView()
+                } else {
+                    OnboardingView()
+                }
             }
         }
         .onReceive(authService.$currentUser) { user in
