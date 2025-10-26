@@ -36,10 +36,9 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "bell", title: "Notifications")
-                        SettingsSeparator()
-                        
-                        SettingsRow(iconName: "bed", title: "Sleep Schedule")
+                        NavigationLink(destination: SleepScheduleView()) {
+                            SettingsRow(iconName: "bed", title: "Sleep Schedule")
+                        }
                         SettingsSeparator()
                         
                         SettingsRow(iconName: "block", title: "Restrictions")
