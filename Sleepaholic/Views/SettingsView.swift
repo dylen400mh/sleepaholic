@@ -41,7 +41,9 @@ struct SettingsView: View {
                         }
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "block", title: "Restrictions")
+                        NavigationLink(destination: RestrictionsView()) {
+                            SettingsRow(iconName: "block", title: "Restrictions")
+                        }
                         SettingsSeparator()
                         
                         SettingsRow(
