@@ -8,18 +8,20 @@
 import SwiftUI
 
 struct SettingsRow: View {
-    let iconName: String
+    let iconName: String?
     let title: String
     var hasArrow: Bool = true
     var toggleBinding: Binding<Bool>? = nil
     
     var body: some View {
         HStack(spacing: 16) {
-            Image(iconName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 24, height: 24)
-                .foregroundColor(.white100)
+            if let iconName = iconName {
+                Image(iconName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+                    .foregroundColor(.white100)
+            }
             
             Text(title)
                 .font(.body1Semi)

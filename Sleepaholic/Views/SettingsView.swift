@@ -59,7 +59,9 @@ struct SettingsView: View {
                         }
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "support", title: "Support")
+                        NavigationLink(destination: SupportView()) {
+                            SettingsRow(iconName: "support", title: "Support")
+                        }
                         SettingsSeparator()
                         
                         SettingsRow(iconName: "subscription", title: "Manage Subscription")
