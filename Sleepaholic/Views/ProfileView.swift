@@ -13,6 +13,7 @@
 //
 
 import SwiftUI
+import FirebaseFirestore
 
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
@@ -21,6 +22,8 @@ struct ProfileView: View {
     @State private var name: String = ""
     @State private var age: String = ""
     @State private var gender: String = ""
+    @State private var showDeleteConfirmation = false
+    @State private var isDeleting = false
     
     private var email: String {
         AuthService.shared.currentUser?.email ?? ""
@@ -100,10 +103,20 @@ struct ProfileView: View {
                             .foregroundColor(.white100)
                         Spacer()
                         Button("Delete") {
-                            // TODO: Add delete logic later
+                            showDeleteConfirmation = true
                         }
                         .font(.body1Semi)
                         .foregroundColor(.appRed)
+                    }
+                    .confirmationDialog(
+                        "Are you sure you want to delete your account and all your data? This action cannot be undone.\n\nThis does NOT cancel your subscription. You must cancel any active subscriptions through your App Store settings.",
+                        isPresented: $showDeleteConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Delete Account", role: .destructive) {
+                            Task { await userProfileViewModel.deleteProfile() }
+                        }
+                        Button("Cancel", role: .cancel) { }
                     }
                     SettingsSeparator()
                     

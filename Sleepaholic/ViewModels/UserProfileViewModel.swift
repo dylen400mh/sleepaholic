@@ -32,5 +32,31 @@ final class UserProfileViewModel: ObservableObject {
             print("Error saving profile: \(error)")
         }
     }
+    
+    // MARK: - Delete Account
+    func deleteProfile() async {
+        guard let user = Auth.auth().currentUser else { return }
+        let uid = user.uid
+
+        do {
+            // 1️⃣ Delete Firestore user doc (triggers Cloud Function)
+            try await service.delete(from: collection, id: uid)
+            print("🗑️ Firestore user document deleted — Cloud Function triggered")
+
+            // 2️⃣ Delete Firebase Auth account
+            try await user.delete()
+            print("✅ Firebase Auth user deleted")
+
+            // 3️⃣ Sign out locally
+            AuthService.shared.signOut()
+
+        } catch let error as NSError {
+            if error.code == AuthErrorCode.requiresRecentLogin.rawValue {
+                print("⚠️ Requires recent login. Prompt user to reauthenticate.")
+            } else {
+                print("❌ Error deleting account: \(error.localizedDescription)")
+            }
+        }
+    }
 }
 
