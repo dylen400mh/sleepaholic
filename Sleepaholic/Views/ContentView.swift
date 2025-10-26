@@ -161,24 +161,6 @@ struct ContentView: View {
             
             sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
             
-            // Only generate new insights if new sleep log since last generation
-            let lastGenerated = UserDefaults.standard.object(forKey: "lastInsightGeneratedAt") as? Date
-            let latestSleepEnd = sleepLogViewModel.sleepLogs.first?.end
-
-            let shouldGenerateInsights: Bool = {
-                guard let latestEnd = latestSleepEnd else { return false }
-                guard let lastGen = lastGenerated else { return true } // never generated before
-                return latestEnd > lastGen // new log since last insight
-            }()
-
-            if shouldGenerateInsights {
-                await sleepLogViewModel.generateSleepInsights(
-                    profile: userProfileViewModel.profile,
-                    activities: activityViewModel.activities,
-                    audioClipsCount: sleepClipViewModel.clips.count
-                )
-            }
-            
             if let s = userSettingsViewModel.settings, !windDown.isActive {
                 windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
                 windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
