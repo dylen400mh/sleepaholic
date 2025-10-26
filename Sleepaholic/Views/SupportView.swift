@@ -98,7 +98,7 @@ struct SupportView: View {
 
     // MARK: - Open FAQ
     private func openFAQ() {
-        if let url = URL(string: "https://sleepaholicapp.com") {
+        if let url = URL(string: "https://sleepaholicapp.com/faq") {
             UIApplication.shared.open(url)
         }
     }
