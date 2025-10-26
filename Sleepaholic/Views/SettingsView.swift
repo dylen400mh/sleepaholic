@@ -73,7 +73,9 @@ struct SettingsView: View {
                        .buttonStyle(.plain)
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "more", title: "More")
+                        NavigationLink(destination: MoreView()) {
+                            SettingsRow(iconName: "more", title: "More")
+                        }
                     }
                 }
             }
