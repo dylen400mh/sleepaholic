@@ -17,8 +17,12 @@ import SuperwallKit
 
 struct RootView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
+    @EnvironmentObject var windDown: WindDownManager
+    @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
+
     @StateObject private var authService = AuthService.shared
     @AppStorage("hasOnboarded") private var hasOnboarded = false
+    @AppStorage("bedtimeActive") private var bedtimeActive = false
     
     private let isDemoMode = ProcessInfo.processInfo.environment["DEMO_MODE"] == "1"
 
@@ -29,7 +33,11 @@ struct RootView: View {
                     OnboardingView()
                 } else if authService.currentUser != nil {
                     // Onboarded + logged in
-                    ContentView()
+                    if bedtimeActive {
+                        BedtimeView()
+                    } else {
+                        ContentView()
+                    }
                 } else {
                     // Onboarded but not signed in → ask to sign in
                     AuthView(
@@ -42,7 +50,11 @@ struct RootView: View {
                 if Superwall.shared.subscriptionStatus.isActive {
                     if authService.currentUser != nil {
                         // Logged in
-                        ContentView()
+                        if bedtimeActive {
+                            BedtimeView()
+                        } else {
+                            ContentView()
+                        }
                     } else {
                         // Subscribed but not signed in — now must sign in
                         AuthView(

@@ -17,6 +17,6 @@ struct SleepLog: Identifiable, Codable, Equatable {
     var recommendations: [String]?
     
     enum CodingKeys: String, CodingKey {
-        case id, start, end, sleepQuality, recommendations
+        case start, end, sleepQuality, recommendations
     }
 }

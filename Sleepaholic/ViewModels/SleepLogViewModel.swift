@@ -5,6 +5,7 @@
 //  Created by Dylen Belanger on 2025-09-21.
 //
 
+import SwiftUI
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
@@ -32,11 +33,19 @@ final class SleepLogViewModel: ObservableObject {
     @Published private(set) var recommendations: [String]
     @Published private(set) var sleepQuality: Int
     
+    @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
+    
     init() {
         // restore active session if app was restarted
-        if let data = UserDefaults.standard.data(forKey: activeKey),
-           let decoded = try? JSONDecoder().decode(SleepLog.self, from: data) {
-            activeLog = decoded
+        if let data = UserDefaults.standard.data(forKey: activeKey) {
+            if let decoded = try? JSONDecoder().decode(SleepLog.self, from: data) {
+                self.activeLog = decoded
+                print("✅ Restored active sleep log with start time \(decoded.start)")
+            } else {
+                print("⚠️ Failed to decode active log")
+            }
+        } else {
+            print("ℹ️ No active sleep log found")
         }
         
         streakDays = 0
@@ -65,8 +74,13 @@ final class SleepLogViewModel: ObservableObject {
         guard activeLog == nil else { return }
         let log = SleepLog(start: Date(), end: Date()) // dummy end for now
         activeLog = log
-        if let data = try? JSONEncoder().encode(log) {
+        bedtimeActive = true
+        do {
+            let data = try JSONEncoder().encode(log)
             UserDefaults.standard.set(data, forKey: activeKey)
+            UserDefaults.standard.synchronize()
+        } catch {
+            print("❌ Failed to encode active log: \(error)")
         }
     }
 
@@ -103,7 +117,6 @@ final class SleepLogViewModel: ObservableObject {
             // clear local state
             activeLog = nil
             UserDefaults.standard.removeObject(forKey: activeKey)
-            
         } catch {
             print("Error logging wakeup: \(error)")
         }
