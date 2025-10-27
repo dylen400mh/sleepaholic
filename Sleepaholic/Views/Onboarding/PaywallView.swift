@@ -12,6 +12,8 @@ struct PaywallView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @State private var userName: String = ""
     @State private var hasMarkedOnboarded = false
+    
+    @AppStorage("hasOnboarded") private var hasOnboarded = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -128,11 +130,8 @@ struct PaywallView: View {
         guard !hasMarkedOnboarded else { return }
         hasMarkedOnboarded = true
         
-        if var profile = userProfileViewModel.profile, profile.onboarded == false {
-            profile.onboarded = true
-            await userProfileViewModel.saveProfile(profile)
-            print("✅ User marked as onboarded (PaywallView)")
-        }
+        hasOnboarded = true
+        print("✅ User marked as onboarded locally (UserDefaults)")
     }
     
     private func pressedButton() async {

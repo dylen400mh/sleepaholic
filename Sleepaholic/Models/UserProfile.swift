@@ -14,5 +14,4 @@ struct UserProfile: Identifiable, Codable {
     var age: Int
     var gender: String
     var createdAt: Date
-    var onboarded: Bool = false
 }

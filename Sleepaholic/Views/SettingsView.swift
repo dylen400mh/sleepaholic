@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -36,13 +37,14 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "bell", title: "Notifications")
+                        NavigationLink(destination: SleepScheduleView()) {
+                            SettingsRow(iconName: "bed", title: "Sleep Schedule")
+                        }
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "bed", title: "Sleep Schedule")
-                        SettingsSeparator()
-                        
-                        SettingsRow(iconName: "block", title: "Restrictions")
+                        NavigationLink(destination: RestrictionsView()) {
+                            SettingsRow(iconName: "block", title: "Restrictions")
+                        }
                         SettingsSeparator()
                         
                         SettingsRow(
@@ -58,13 +60,22 @@ struct SettingsView: View {
                         }
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "support", title: "Support")
+                        NavigationLink(destination: SupportView()) {
+                            SettingsRow(iconName: "support", title: "Support")
+                        }
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "subscription", title: "Manage Subscription")
+                        Button {
+                           openSubscriptionSettings()
+                       } label: {
+                           SettingsRow(iconName: "subscription", title: "Manage Subscription")
+                       }
+                       .buttonStyle(.plain)
                         SettingsSeparator()
                         
-                        SettingsRow(iconName: "more", title: "More")
+                        NavigationLink(destination: MoreView()) {
+                            SettingsRow(iconName: "more", title: "More")
+                        }
                     }
                 }
             }
@@ -88,6 +99,14 @@ struct SettingsView: View {
         }
         updated.trackSleep = newValue
         await userSettingsViewModel.saveSettings(updated)
+    }
+    
+    // MARK: - Manage Subscription
+    private func openSubscriptionSettings() {
+        guard let url = URL(string: "https://apps.apple.com/account/subscriptions") else { return }
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
     }
 }
 

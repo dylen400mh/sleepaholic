@@ -5,6 +5,7 @@
 //  Created by Dylen Belanger on 2025-09-21.
 //
 
+import SwiftUI
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
@@ -26,28 +27,32 @@ final class SleepLogViewModel: ObservableObject {
     @Published private(set) var activeLog: SleepLog?
     private let activeKey = "activeLog"
     
-    private let lastInsightKey = "lastInsightGeneratedAt"
-    
     @Published private(set) var streakDays: Int
     @Published private(set) var lastSleep: FormattedSleep?
     @Published private(set) var sleepDebt: String
     @Published private(set) var recommendations: [String]
     @Published private(set) var sleepQuality: Int
     
+    @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
+    
     init() {
         // restore active session if app was restarted
-        if let data = UserDefaults.standard.data(forKey: activeKey),
-           let decoded = try? JSONDecoder().decode(SleepLog.self, from: data) {
-            activeLog = decoded
+        if let data = UserDefaults.standard.data(forKey: activeKey) {
+            if let decoded = try? JSONDecoder().decode(SleepLog.self, from: data) {
+                self.activeLog = decoded
+                print("✅ Restored active sleep log with start time \(decoded.start)")
+            } else {
+                print("⚠️ Failed to decode active log")
+            }
+        } else {
+            print("ℹ️ No active sleep log found")
         }
         
-        // load cached values (so UI has something right away)
-        let defaults = UserDefaults.standard
-        self.streakDays = defaults.integer(forKey: "streakDays")
-        self.lastSleep = nil
-        self.sleepDebt = defaults.string(forKey: "sleepDebt") ?? ""
-        self.recommendations = defaults.stringArray(forKey: "recommendations") ?? []
-        self.sleepQuality = defaults.integer(forKey: "sleepQuality")
+        streakDays = 0
+        lastSleep = nil
+        sleepDebt = ""
+        recommendations = []
+        sleepQuality = 0
     }
     
     private func path(for userId: String) -> String {
@@ -69,27 +74,52 @@ final class SleepLogViewModel: ObservableObject {
         guard activeLog == nil else { return }
         let log = SleepLog(start: Date(), end: Date()) // dummy end for now
         activeLog = log
-        if let data = try? JSONEncoder().encode(log) {
+        bedtimeActive = true
+        do {
+            let data = try JSONEncoder().encode(log)
             UserDefaults.standard.set(data, forKey: activeKey)
+            UserDefaults.standard.synchronize()
+        } catch {
+            print("❌ Failed to encode active log: \(error)")
         }
     }
 
-    func logWakeup(at wakeTime: Date) async {
+    func logWakeup(at wakeTime: Date,
+                   profile: UserProfile?,
+                   activities: [Activity],
+                   audioClipsCount: Int) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         guard var log = activeLog else { return }
         
         log.end = wakeTime
+        
+        if let input = buildInsightInput(
+            profile: profile,
+            activities: activities,
+            audioClipsCount: audioClipsCount,
+            pendingLog: log
+        ) {
+            do {
+                let output = try await OpenAIService.shared.generateSleepInsights(from: input)
+                log.sleepQuality = output.quality
+                log.recommendations = output.recommendations
+            } catch {
+                print("⚠️ Could not generate insights before save: \(error.localizedDescription)")
+            }
+        }
+        
         do {
             try await service.save(log, to: path(for: uid))
+
+            await loadSleepLogs()
+            recalcStats(userAge: profile?.age)
+            
+            // clear local state
+            activeLog = nil
+            UserDefaults.standard.removeObject(forKey: activeKey)
         } catch {
             print("Error logging wakeup: \(error)")
         }
-
-        // clear local state
-        activeLog = nil
-        UserDefaults.standard.removeObject(forKey: activeKey)
-
-        await loadSleepLogs()
     }
 
     func deleteSleepLog(_ log: SleepLog) async {
@@ -213,11 +243,16 @@ final class SleepLogViewModel: ObservableObject {
     func buildInsightInput(
         profile: UserProfile?,                // from UserProfileViewModel
         activities: [Activity],               // from ActivityViewModel
-        audioClipsCount: Int                  // from SleepClipViewModel
+        audioClipsCount: Int,                 // from SleepClipViewModel
+        pendingLog: SleepLog? = nil
     ) -> SleepInsightInput? {
-
+        var logs = sleepLogs
+        if let pending = pendingLog {
+            logs.insert(pending, at: 0)
+        }
+        
         // get most recent sleep log
-        guard let latest = sleepLogs.first else { return nil }
+        guard let latest = logs.first else { return nil }
 
         // derive target sleep hours from age
         let targetHours = ageBasedTargetHours(for: profile?.age)
@@ -231,7 +266,29 @@ final class SleepLogViewModel: ObservableObject {
                              ((debtComponents.count > 1 ? debtComponents[1] / 60 : 0))
 
         // Get previous 7 sleeps, excluding the latest one
-        let recentSleeps = Array(sleepLogs.dropFirst().prefix(7))
+        let recentSleeps = Array(logs.dropFirst().prefix(7)).map {
+            SanitizedSleepLog(
+                start: $0.start,
+                end: $0.end,
+                sleepQuality: $0.sleepQuality,
+                recommendations: $0.recommendations
+            )
+        }
+        
+        let sanitizedActivities: [SanitizedActivity] = activities.map {
+            SanitizedActivity(
+                type: $0.type,
+                loggedAt: $0.loggedAt,
+                kind: $0.kind,
+                otherDescription: $0.otherDescription,
+                amountMg: $0.amountMg,
+                durationMin: $0.durationMin,
+                drinks: $0.drinks,
+                medication: $0.medication,
+                start: $0.start,
+                end: $0.end
+            )
+        }
         
         // build the struct
         return SleepInsightInput(
@@ -241,50 +298,15 @@ final class SleepLogViewModel: ObservableObject {
             bedtime: latest.start,
             wakeup: latest.end,
             sleepDebtHours: totalDebtHours,
-            activities: activities,
+            activities: sanitizedActivities,
             audioClipsCount: audioClipsCount, // later on we will actually analyze the audio content
             recentSleeps: recentSleeps
         )
     }
     
-    func generateSleepInsights(
-        profile: UserProfile?,
-        activities: [Activity],
-        audioClipsCount: Int
-    ) async {
-        guard let input = buildInsightInput(
-            profile: profile,
-            activities: activities,
-            audioClipsCount: audioClipsCount
-        ) else {
-            print("⚠️ Missing sleep data for AI insights")
-            return
-        }
-
-        do {
-            let output = try await OpenAIService.shared.generateSleepInsights(from: input)
-            await MainActor.run {
-                self.sleepQuality = output.quality
-                self.recommendations = output.recommendations
-            }
-
-            // Persist
-            UserDefaults.standard.set(self.sleepQuality, forKey: "sleepQuality")
-            UserDefaults.standard.set(self.recommendations, forKey: "recommendations")
-            
-            UserDefaults.standard.set(Date(), forKey: lastInsightKey)
-        } catch {
-            print("❌ Failed to generate insights: \(error.localizedDescription)")
-        }
-    }
-
-    
     func recalcStats(userAge: Int?) {
-        let defaults = UserDefaults.standard
-
         // 🔥 streak
         streakDays = calculateStreak()
-        defaults.set(streakDays, forKey: "streakDays")
 
         // 🕒 last sleep
         lastSleep = getLastSleep()
@@ -292,6 +314,11 @@ final class SleepLogViewModel: ObservableObject {
         // 😴 sleep debt
         let debtMinutes = calculateSleepDebt(for: sleepLogs, age: userAge)
         sleepDebt = formatMinutes(debtMinutes)
-        defaults.set(sleepDebt, forKey: "sleepDebt")
+        
+        // Sleep Quality + Recommendations
+        if let latest = sleepLogs.first {
+            sleepQuality = latest.sleepQuality ?? 0
+            recommendations = latest.recommendations ?? []
+        }
     }
 }

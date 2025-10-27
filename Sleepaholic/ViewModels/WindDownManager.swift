@@ -28,6 +28,8 @@ class WindDownManager: ObservableObject, Codable {
     private var silenceStart: Date?
     
     private let store = ManagedSettingsStore()
+    
+    @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case isActive, targetBedtime, targetWakeup, trackSleep,
@@ -146,6 +148,8 @@ class WindDownManager: ObservableObject, Codable {
         isPlaying = true
         trackSleep = false
         restrictApps = false
+        
+        bedtimeActive = false
     }
     
     // MARK: - Screen Time (Shielding)

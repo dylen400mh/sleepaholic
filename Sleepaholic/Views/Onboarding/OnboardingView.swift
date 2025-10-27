@@ -43,7 +43,11 @@ struct OnboardingView: View {
             case .welcome:
                 WelcomeView(next: goToNext)
             case .auth:
-                AuthView(next: goToNext, previous: goToPrevious)
+                AuthView(
+                    next: goToNext,
+                    previous: goToPrevious,
+                    showSkipButton: true
+                )
             case .profileIntro:
                 ProfileIntroView(
                     next: {

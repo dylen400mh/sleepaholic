@@ -7,6 +7,26 @@
 
 import Foundation
 
+struct SanitizedActivity: Codable {
+    var type: String
+    var loggedAt: Date
+    var kind: String?
+    var otherDescription: String?
+    var amountMg: Int?
+    var durationMin: Int?
+    var drinks: Int?
+    var medication: String?
+    var start: Date?
+    var end: Date?
+}
+
+struct SanitizedSleepLog: Codable {
+    var start: Date
+    var end: Date
+    var sleepQuality: Int?
+    var recommendations: [String]?
+}
+
 struct SleepInsightInput: Codable {
     // User context
     var age: Int?
@@ -19,11 +39,11 @@ struct SleepInsightInput: Codable {
     var sleepDebtHours: Double
 
     // Behavior
-    var activities: [Activity]
+    var activities: [SanitizedActivity]
     var audioClipsCount: Int
     
     // Recent sleeps
-    var recentSleeps: [SleepLog]?
+    var recentSleeps: [SanitizedSleepLog]?
 }
 
 struct SleepInsightOutput: Codable {
