@@ -327,9 +327,32 @@ class WindDownManager: ObservableObject, Codable {
     }
     
     func restoreSounds() {
-        if isPlaying {
-            for sound in selectedSounds {
-                playSound(named: sound)
+        setupSharedAudioSession()
+        
+        for sound in selectedSounds {
+            guard audioPlayers[sound] == nil else { continue }
+
+            let possibleExtensions = ["m4a", "wav"]
+            var foundURL: URL? = nil
+            for ext in possibleExtensions {
+                if let url = Bundle.main.url(forResource: sound, withExtension: ext) {
+                    foundURL = url
+                    break
+                }
+            }
+            guard let url = foundURL else { continue }
+
+            do {
+                let player = try AVAudioPlayer(contentsOf: url)
+                player.numberOfLoops = -1
+                player.prepareToPlay()
+                audioPlayers[sound] = player
+
+                if isPlaying {
+                    player.play() // only autoplay if previously playing
+                }
+            } catch {
+                print("❌ Could not restore sound \(sound): \(error)")
             }
         }
     }
