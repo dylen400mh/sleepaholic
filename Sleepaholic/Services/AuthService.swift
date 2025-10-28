@@ -83,6 +83,10 @@ class AuthService: NSObject, ObservableObject {
     func signInWithGoogle() async throws {
         let provider = OAuthProvider(providerID: "google.com")
         
+        provider.customParameters = [
+            "prompt": "select_account"
+        ]
+        
         return try await withCheckedThrowingContinuation { continuation in
             provider.getCredentialWith(nil) { credential, error in
                 if let error = error {
