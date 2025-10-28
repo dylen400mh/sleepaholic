@@ -22,6 +22,7 @@ final class SleepLogViewModel: ObservableObject {
     @Published var sleepLogs: [SleepLog] = []
     private let service = FirestoreService.shared
     private let collection = "sleepLogs"
+    private var listener: ListenerRegistration?
     
     // Keep track of current bedtime session
     @Published private(set) var activeLog: SleepLog?
@@ -53,6 +54,10 @@ final class SleepLogViewModel: ObservableObject {
         sleepDebt = ""
         recommendations = []
         sleepQuality = 0
+    }
+    
+    deinit {
+        listener?.remove()
     }
     
     private func path(for userId: String) -> String {
@@ -93,30 +98,13 @@ final class SleepLogViewModel: ObservableObject {
         
         log.end = wakeTime
         
-        if let input = buildInsightInput(
-            profile: profile,
-            activities: activities,
-            audioClipsCount: audioClipsCount,
-            pendingLog: log
-        ) {
-            do {
-                let output = try await OpenAIService.shared.generateSleepInsights(from: input)
-                log.sleepQuality = output.quality
-                log.recommendations = output.recommendations
-            } catch {
-                print("⚠️ Could not generate insights before save: \(error.localizedDescription)")
-            }
-        }
-        
         do {
             try await service.save(log, to: path(for: uid))
 
             await loadSleepLogs()
             recalcStats(userAge: profile?.age)
             
-            // clear local state
-            activeLog = nil
-            UserDefaults.standard.removeObject(forKey: activeKey)
+            stopBedtime()
         } catch {
             print("Error logging wakeup: \(error)")
         }
@@ -240,70 +228,6 @@ final class SleepLogViewModel: ObservableObject {
         }
     }
     
-    func buildInsightInput(
-        profile: UserProfile?,                // from UserProfileViewModel
-        activities: [Activity],               // from ActivityViewModel
-        audioClipsCount: Int,                 // from SleepClipViewModel
-        pendingLog: SleepLog? = nil
-    ) -> SleepInsightInput? {
-        var logs = sleepLogs
-        if let pending = pendingLog {
-            logs.insert(pending, at: 0)
-        }
-        
-        // get most recent sleep log
-        guard let latest = logs.first else { return nil }
-
-        // derive target sleep hours from age
-        let targetHours = ageBasedTargetHours(for: profile?.age)
-
-        // compute total sleep debt hours as Double (strip “h m” formatting)
-        let debtComponents = sleepDebt
-            .split(separator: " ")
-            .compactMap { Double($0.replacingOccurrences(of: "h", with: "")
-                                    .replacingOccurrences(of: "m", with: "")) }
-        let totalDebtHours = (debtComponents.first ?? 0) +
-                             ((debtComponents.count > 1 ? debtComponents[1] / 60 : 0))
-
-        // Get previous 7 sleeps, excluding the latest one
-        let recentSleeps = Array(logs.dropFirst().prefix(7)).map {
-            SanitizedSleepLog(
-                start: $0.start,
-                end: $0.end,
-                sleepQuality: $0.sleepQuality,
-                recommendations: $0.recommendations
-            )
-        }
-        
-        let sanitizedActivities: [SanitizedActivity] = activities.map {
-            SanitizedActivity(
-                type: $0.type,
-                loggedAt: $0.loggedAt,
-                kind: $0.kind,
-                otherDescription: $0.otherDescription,
-                amountMg: $0.amountMg,
-                durationMin: $0.durationMin,
-                drinks: $0.drinks,
-                medication: $0.medication,
-                start: $0.start,
-                end: $0.end
-            )
-        }
-        
-        // build the struct
-        return SleepInsightInput(
-            age: profile?.age,
-            targetHours: targetHours,
-            streakDays: streakDays,
-            bedtime: latest.start,
-            wakeup: latest.end,
-            sleepDebtHours: totalDebtHours,
-            activities: sanitizedActivities,
-            audioClipsCount: audioClipsCount, // later on we will actually analyze the audio content
-            recentSleeps: recentSleeps
-        )
-    }
-    
     func recalcStats(userAge: Int?) {
         // 🔥 streak
         streakDays = calculateStreak()
@@ -321,4 +245,48 @@ final class SleepLogViewModel: ObservableObject {
             recommendations = latest.recommendations ?? []
         }
     }
+    
+    func stopBedtime() {
+        // clear local state
+        activeLog = nil
+        UserDefaults.standard.removeObject(forKey: activeKey)
+    }
+    
+    func startListeningForSleepLogs(userAge: Int?) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        listener?.remove() // stop previous listener if any
+
+        listener = Firestore.firestore()
+            .collection("users")
+            .document(uid)
+            .collection("sleepLogs")
+            .order(by: "start", descending: true)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("❌ Error listening for sleep logs: \(error)")
+                    return
+                }
+
+                guard let documents = snapshot?.documents else {
+                    print("⚠️ No sleep logs found")
+                    return
+                }
+
+                do {
+                    let fetched = try documents.compactMap { doc -> SleepLog? in
+                        var log = try doc.data(as: SleepLog.self)
+                        log.id = doc.documentID
+                        return log
+                    }
+
+                    Task { @MainActor in
+                        self.sleepLogs = fetched
+                        self.recalcStats(userAge: userAge)
+                    }
+                } catch {
+                    print("❌ Decoding error: \(error)")
+                }
+            }
+    }
+
 }

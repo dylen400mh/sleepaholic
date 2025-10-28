@@ -43,11 +43,13 @@ struct ContentView: View {
                         VStack(spacing: 16) {
                             // sleep quality & streak
                             HStack(spacing: 12) {
-                                SummaryCard(
-                                    icon: "moon.fill",
-                                    title: "\(sleepLogViewModel.sleepQuality)%",
-                                    subtitle: "Sleep Quality"
-                                )
+                                if sleepLogViewModel.sleepQuality != 0 {
+                                    SummaryCard(
+                                        icon: "moon.fill",
+                                        title: "\(sleepLogViewModel.sleepQuality)%",
+                                        subtitle: "Sleep Quality"
+                                    )
+                                }
                                 SummaryCard(
                                     icon: "flame.fill",
                                     title: "\(sleepLogViewModel.streakDays) nights",
@@ -166,6 +168,12 @@ struct ContentView: View {
                 windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
                 windDown.trackSleep     = s.trackSleep
                 windDown.restrictApps   = s.restrictApps
+            }
+            
+            if let age = userProfileViewModel.profile?.age {
+                sleepLogViewModel.startListeningForSleepLogs(userAge: age)
+            } else {
+                sleepLogViewModel.startListeningForSleepLogs(userAge: nil)
             }
         }
         .appBackground()
