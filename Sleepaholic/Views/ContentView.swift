@@ -45,7 +45,7 @@ struct ContentView: View {
                             HStack(spacing: 12) {
                                 SummaryCard(
                                     icon: "moon.fill",
-                                    title: "\(sleepLogViewModel.sleepQuality)%",
+                                    title: sleepLogViewModel.sleepQuality != 0 ? "\(sleepLogViewModel.sleepQuality)%" : "Updating...",
                                     subtitle: "Sleep Quality"
                                 )
                                 SummaryCard(
@@ -166,6 +166,12 @@ struct ContentView: View {
                 windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
                 windDown.trackSleep     = s.trackSleep
                 windDown.restrictApps   = s.restrictApps
+            }
+            
+            if let age = userProfileViewModel.profile?.age {
+                sleepLogViewModel.startListeningForSleepLogs(userAge: age)
+            } else {
+                sleepLogViewModel.startListeningForSleepLogs(userAge: nil)
             }
         }
         .appBackground()

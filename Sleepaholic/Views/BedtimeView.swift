@@ -152,6 +152,7 @@ struct BedtimeView: View {
                     Button("Cancel", role: .cancel) { }
                     Button("Quit", role: .destructive) {
                         windDown.reset()
+                        sleepLogViewModel.stopBedtime()
                         goHome = true
                     }
                 } message: {
