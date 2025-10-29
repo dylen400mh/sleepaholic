@@ -112,4 +112,25 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
             print("📅 Scheduled discount 5 minutes after paywall opened: \(fireTime)")
         }
     }
+    
+    func refreshReviewerStatus() {
+        guard let user = Auth.auth().currentUser else { return }
+
+        user.getIDTokenResult(forcingRefresh: true) { result, error in
+            if let error = error {
+                print("❌ Error getting ID token:", error.localizedDescription)
+                return
+            }
+
+            guard let claims = result?.claims else { return }
+
+            if let isReviewer = claims["reviewer"] as? Bool, isReviewer {
+                print("✅ Reviewer detected — enabling pro entitlement")
+                Superwall.shared.subscriptionStatus = .active(Set([Entitlement(id: "pro")]))
+            } else {
+                // Don’t override Superwall’s normal subscription handling
+                print("ℹ️ Normal user — subscription handled by Superwall")
+            }
+        }
+    }
 }

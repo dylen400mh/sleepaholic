@@ -167,18 +167,6 @@ struct BedtimeView: View {
             ContentView()
                 .navigationBarBackButtonHidden(true)
         }
-        .task {
-            if windDown.trackSleep, let log = sleepLogViewModel.activeLog {
-                if let id = log.id {
-                    windDown.startMonitoringSleep(logId: id)
-                }
-            }
-        }
-        .onDisappear {
-            if let logId = sleepLogViewModel.activeLog?.id {
-                windDown.stopMonitoringSleep(logId: logId)
-            }
-        }
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { now = $0 }
         .appBackground()
     }

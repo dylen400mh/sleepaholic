@@ -15,6 +15,8 @@ import FamilyControls
 import ManagedSettings
 
 class WindDownManager: ObservableObject, Codable {
+    static let shared = WindDownManager()
+    
     // sound player
     private var audioPlayers: [String: AVAudioPlayer] = [:]
     private var audioSessionConfigured = false
@@ -357,14 +359,14 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
     
-    func startMonitoringSleep(logId: String) {
+    func startMonitoringSleep(logPath: String) {
         AVAudioApplication.requestRecordPermission { granted in
             DispatchQueue.main.async {
                 if granted {
                     self.setupSharedAudioSession()
                     self.setupMeterRecorder()
                     self.meterTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-                        self?.checkAudioLevel(logId: logId)
+                        self?.checkAudioLevel(logPath: logPath)
                     }
                     print("🎧 Sleep monitoring started")
                 } else {
@@ -374,10 +376,10 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
 
-    func stopMonitoringSleep(logId: String) {
+    func stopMonitoringSleep(logPath: String) {
         meterTimer?.invalidate()
         meterTimer = nil
-        stopRecordingClip(logId: logId)
+        stopRecordingClip(logPath: logPath)
         meterRecorder?.stop()
         meterRecorder = nil
         deactivateRecordingSession()
@@ -392,7 +394,7 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
 
-    private func startRecordingClip(logId: String) {
+    private func startRecordingClip(logPath: String) {
         let filename = "\(UUID().uuidString).m4a"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         let settings: [String: Any] = [
@@ -412,7 +414,7 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
 
-    private func stopRecordingClip(logId: String) {
+    private func stopRecordingClip(logPath: String) {
         guard let recorder = audioRecorder else { return }
         recorder.stop()
         let url = recorder.url
@@ -422,7 +424,7 @@ class WindDownManager: ObservableObject, Codable {
         // Build storage path
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let timestamp = Int(Date().timeIntervalSince1970)
-        let storagePath = "users/\(uid)/sleepLogs/\(logId)/clips/\(timestamp).m4a"
+        let storagePath = "\(logPath)/clips/\(timestamp).m4a"
         
         let storageRef = Storage.storage().reference().child(storagePath)
         
@@ -454,7 +456,7 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
 
-    private func checkAudioLevel(logId: String) {
+    private func checkAudioLevel(logPath: String) {
         if let recorder = audioRecorder {
             // already recording → check for silence
             recorder.updateMeters()
@@ -464,7 +466,7 @@ class WindDownManager: ObservableObject, Codable {
                 if silenceStart == nil { silenceStart = Date() }
                 if let start = silenceStart,
                    Date().timeIntervalSince(start) > silenceDuration {
-                    stopRecordingClip(logId: logId)
+                    stopRecordingClip(logPath: logPath)
                     silenceStart = nil
                 }
             } else {
@@ -475,7 +477,7 @@ class WindDownManager: ObservableObject, Codable {
             meter.updateMeters()
             let avg = meter.averagePower(forChannel: 0)
             if avg >= silenceThreshold {
-                startRecordingClip(logId: logId)
+                startRecordingClip(logPath: logPath)
             }
         }
     }

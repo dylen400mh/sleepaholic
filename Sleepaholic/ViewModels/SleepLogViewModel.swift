@@ -77,13 +77,22 @@ final class SleepLogViewModel: ObservableObject {
 
     func startBedtime() async {
         guard activeLog == nil else { return }
-        let log = SleepLog(start: Date(), end: Date()) // dummy end for now
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let log = SleepLog(start: Date(), end: Date())
         activeLog = log
         bedtimeActive = true
+        
         do {
+            let ref = try await service.save(log, to: path(for: uid))
+            UserDefaults.standard.set(ref.path, forKey: "activeSleepPath")
+            
             let data = try JSONEncoder().encode(log)
             UserDefaults.standard.set(data, forKey: activeKey)
             UserDefaults.standard.synchronize()
+            
+            WindDownManager.shared.startMonitoringSleep(logPath: ref.path)
+            print("✅ Bedtime started — Firestore path: \(ref.path)")
         } catch {
             print("❌ Failed to encode active log: \(error)")
         }
@@ -99,11 +108,17 @@ final class SleepLogViewModel: ObservableObject {
         log.end = wakeTime
         
         do {
-            try await service.save(log, to: path(for: uid))
+            if let path = UserDefaults.standard.string(forKey: "activeSleepPath") {
+                let ref = Firestore.firestore().document(path)
+                try await ref.updateData(["end": wakeTime])
+                WindDownManager.shared.stopMonitoringSleep(logPath: path)
+                UserDefaults.standard.removeObject(forKey: "activeSleepPath")
+            } else {
+                _ = try await service.save(log, to: path(for: uid))
+            }
 
             await loadSleepLogs()
             recalcStats(userAge: profile?.age)
-            
             stopBedtime()
         } catch {
             print("Error logging wakeup: \(error)")

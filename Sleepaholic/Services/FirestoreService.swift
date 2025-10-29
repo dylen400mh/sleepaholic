@@ -16,12 +16,15 @@ final class FirestoreService {
 
     // MARK: - Create / Update
     func save<T: Codable & Identifiable>(_ item: T,
-                                         to collection: String) async throws {
+                                         to collection: String) async throws -> DocumentReference {
         if let id = (item.id as? String), !id.isEmpty {
-            try db.collection(collection).document(id).setData(from: item, merge: true)
+            let ref = db.collection(collection).document(id)
+            try ref.setData(from: item, merge: true)
+            return ref
         } else {
             // No ID -> create new doc with Firestore-generated ID
-            _ = try db.collection(collection).addDocument(from: item)
+            let ref = try db.collection(collection).addDocument(from: item)
+            return ref
         }
     }
     
