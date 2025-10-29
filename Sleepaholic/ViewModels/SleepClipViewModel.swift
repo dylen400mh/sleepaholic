@@ -32,7 +32,7 @@ final class SleepClipViewModel: ObservableObject {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let clip = SleepClip(storagePath: storagePath)
         do {
-            try await service.save(clip, to: path(for: uid, logId: logId))
+            _ = try await service.save(clip, to: path(for: uid, logId: logId))
             await loadClips(for: logId)
         } catch {
             print("Error adding clip: \(error)")
