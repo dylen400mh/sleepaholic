@@ -43,11 +43,13 @@ struct ContentView: View {
                         VStack(spacing: 16) {
                             // sleep quality & streak
                             HStack(spacing: 12) {
-                                SummaryCard(
-                                    icon: "moon.fill",
-                                    title: sleepLogViewModel.sleepQuality != 0 ? "\(sleepLogViewModel.sleepQuality)%" : "Updating...",
-                                    subtitle: "Sleep Quality"
-                                )
+                                if sleepLogViewModel.sleepQuality != 0 {
+                                    SummaryCard(
+                                        icon: "moon.fill",
+                                        title: "\(sleepLogViewModel.sleepQuality)%",
+                                        subtitle: "Sleep Quality"
+                                    )
+                                }
                                 SummaryCard(
                                     icon: "flame.fill",
                                     title: "\(sleepLogViewModel.streakDays) nights",

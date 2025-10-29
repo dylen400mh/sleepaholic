@@ -20,7 +20,45 @@ class AuthService: NSObject, ObservableObject {
     override private init() {
         super.init()
         authListenerHandle = Auth.auth().addStateDidChangeListener { _, user in
-            self.currentUser = user
+            Task {
+                if let user = user {
+                    print("👤 Auth state changed: \(user.uid)")
+
+                    // Identify for analytics
+                    AnalyticsService.shared.identify(
+                        name: user.displayName,
+                        userId: user.uid,
+                        email: user.email ?? ""
+                    )
+
+                    // Ensure Firestore profile exists before exposing user to UI
+                    let service = FirestoreService.shared
+                    let collection = "users"
+                    let existingProfile: UserProfile? = try? await service.fetch(from: collection, id: user.uid)
+                    
+                    if existingProfile == nil {
+                        let profile = UserProfile(
+                            name: user.displayName ?? "",
+                            age: 0,
+                            gender: "",
+                            createdAt: Date()
+                        )
+                        try? await service.save(profile, to: collection, id: user.uid)
+                        print("🆕 Created Firestore profile for \(user.uid)")
+                    } else {
+                        print("ℹ️ Existing profile found for \(user.uid)")
+                    }
+
+                    // Now update published state after everything is ready
+                    await MainActor.run {
+                        self.currentUser = user
+                    }
+                } else {
+                    await MainActor.run {
+                        self.currentUser = nil
+                    }
+                }
+            }
         }
     }
     
@@ -45,35 +83,7 @@ class AuthService: NSObject, ObservableObject {
             let credential = OAuthProvider.appleCredential(withIDToken: idTokenString,
                                                            rawNonce: nonce,
                                                            fullName: appleIDCredential.fullName)
-            let authResult = try await Auth.auth().signIn(with: credential)
-            let user = authResult.user
-            print("✅ Signed in with Apple: \(user.uid)")
-            
-            // Identify user for analytics
-            AnalyticsService.shared.identify(
-                name: user.displayName,
-                userId: user.uid,
-                email: user.email ?? ""
-            )
-
-            // Create Firestore profile only if it doesn’t exist
-            let service = FirestoreService.shared
-            let collection = "users"
-            
-            if try await service.fetch(from: collection, id: user.uid) as UserProfile? == nil {
-                let displayName = user.displayName ?? ""
-                let profile = UserProfile(
-                    name: displayName,
-                    age: 0,
-                    gender: "",
-                    createdAt: Date()
-                )
-                try await service.save(profile, to: collection, id: user.uid)
-                print("🆕 Created initial Firestore profile for Apple user: \(displayName)")
-            } else {
-                print("ℹ️ Existing profile found — no overwrite.")
-            }
-
+            try await Auth.auth().signIn(with: credential)
         case .failure(let error):
             throw error
         }
@@ -83,66 +93,36 @@ class AuthService: NSObject, ObservableObject {
     func signInWithGoogle() async throws {
         let provider = OAuthProvider(providerID: "google.com")
         
-        return try await withCheckedThrowingContinuation { continuation in
+        provider.customParameters = [
+            "prompt": "select_account"
+        ]
+        
+        let credential = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<AuthCredential, Error>) in
             provider.getCredentialWith(nil) { credential, error in
                 if let error = error {
                     continuation.resume(throwing: error)
-                    return
-                }
-                guard let credential = credential else {
+                } else if let credential = credential {
+                    continuation.resume(returning: credential)
+                } else {
                     continuation.resume(throwing: URLError(.badServerResponse))
-                    return
-                }
-                
-                Task {
-                    do {
-                        // Make Firebase sign-in synchronous
-                        let authResult = try await Auth.auth().signIn(with: credential)
-                        let user = authResult.user
-                        print("✅ Signed in with Google: \(user.uid)")
-
-                        AnalyticsService.shared.identify(
-                            name: user.displayName,
-                            userId: user.uid,
-                            email: user.email ?? ""
-                        )
-
-                        // Wait for Firestore profile creation before returning
-                        let service = FirestoreService.shared
-                        let collection = "users"
-                        if try await service.fetch(from: collection, id: user.uid) as UserProfile? == nil {
-                            let profile = UserProfile(
-                                name: user.displayName ?? "",
-                                age: 0,
-                                gender: "",
-                                createdAt: Date()
-                            )
-                            try await service.save(profile, to: collection, id: user.uid)
-                            print("🆕 Created initial Firestore profile for Google user: \(user.displayName ?? "")")
-                        } else {
-                            print("ℹ️ Existing profile found — no overwrite.")
-                        }
-
-                        continuation.resume()
-
-                    } catch {
-                        continuation.resume(throwing: error)
-                    }
                 }
             }
         }
+        
+        try await Auth.auth().signIn(with: credential)
     }
     
     // MARK: - Sign Out
     func signOut() {
         do {
             try Auth.auth().signOut()
-            self.currentUser = nil
-            
+
             // reset onboarding state for debugging
             if ProcessInfo.processInfo.environment["DEMO_MODE"] == "1" {
                 UserDefaults.standard.set(false, forKey: "hasOnboarded")
             }
+            
+            UserDefaults.standard.set(OnboardingStep.welcome.rawValue, forKey: "onboardingStep")
             
             print("👋 User signed out successfully")
         } catch {
