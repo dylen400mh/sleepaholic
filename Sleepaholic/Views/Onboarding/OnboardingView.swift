@@ -26,7 +26,15 @@ enum OnboardingStep: Int, CaseIterable {
 
 
 struct OnboardingView: View {
-    @State private var currentStep: OnboardingStep = .welcome
+    @AppStorage("onboardingStep") private var currentStepRaw: Int = OnboardingStep.welcome.rawValue
+
+    private var currentStep: OnboardingStep {
+        OnboardingStep(rawValue: currentStepRaw) ?? .welcome
+    }
+    private func setStep(_ step: OnboardingStep) {
+        currentStepRaw = step.rawValue
+    }
+    
     @State private var quizStartIndex = 0
     @State private var didSkipQuiz = false
     @State private var skipAnalysisAnimation = false
@@ -125,13 +133,13 @@ struct OnboardingView: View {
     private func goToNext() {
         switch currentStep {
         case .quiz where didSkipQuiz:
-            currentStep = .symptoms
+            setStep(.symptoms)
             break
         case .paywall:
             break
         default:
             if let nextStep = OnboardingStep(rawValue: currentStep.rawValue + 1) {
-                currentStep = nextStep
+                setStep(nextStep)
             }
             break
         }
@@ -140,13 +148,13 @@ struct OnboardingView: View {
     private func goToPrevious() {
         switch currentStep {
         case .symptoms where didSkipQuiz:
-            currentStep = .quiz
+            setStep(.quiz)
             break
         case .welcome:
             break
         default:
             if let previousStep = OnboardingStep(rawValue: currentStep.rawValue - 1) {
-                currentStep = previousStep
+                setStep(previousStep)
             }
             break
         }
