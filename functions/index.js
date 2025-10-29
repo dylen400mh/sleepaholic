@@ -199,48 +199,65 @@ export const generateSleepInsights = onDocumentCreated(
     // ======================================================
     const inputJSON = JSON.stringify(input, null, 2);
     const prompt = `
-You are a certified sleep health expert analyzing a user's recent sleep and lifestyle data.
+You are a certified sleep health expert analyzing a user's recent sleep and lifestyle data. 
 
-### PRIMARY OBJECTIVE
-Generate a JSON object assessing the user's most recent sleep log and offering three personalized recommendations.
+### PRIMARY OBJECTIVE Generate a JSON object assessing the user's most recent sleep log and offering three personalized recommendations. 
 
-### OUTPUT FORMAT
-Respond with **only valid JSON**:
-{
-  "quality": <integer between 0 and 100>,
-  "recommendations": ["tip1", "tip2", "tip3"]
-}
+### OUTPUT FORMAT Respond with **only valid JSON**: 
+{ 
+  "quality": <integer between 0 and 100>, 
+  "recommendations": ["tip1", "tip2", "tip3"] 
+} 
 
-### STEP-BY-STEP SCORING LOGIC (MANDATORY)
-1. Start from 100 points.
-2. Subtract **10 points per full hour** the user's latest sleep (latestDuration) is below targetHours.
-3. Subtract **10 points** if sleepDebtHours > 2.
-4. Subtract **5 points** if bedtime or wakeup varies by more than 90 minutes compared to recent average.
-5. Subtract **10 points** if audioClipsCount > 3 (disturbances).
-6. Clamp the result between 0 and 100.
-7. Round to the nearest integer and assign this to "quality".
+### STRICT SCORING LOGIC (MANDATORY) 
+You must calculate "quality" using these exact numerical steps — do NOT summarize or reinterpret. 
+1. Let base = 100. 
+2. Compute sleepDeficit = max(0, targetHours - latestDuration). 
+3. base = base - (10 * sleepDeficit). 
+4. If sleepDebtHours > 2, base -= 10. 
+5. If bedtime or wakeup vary by > 90 min from recent average, base -= 5. 
+6. If audioClipsCount > 3, base -= 10. 
+7. If latestDuration < 3 hours, set base = max(base, 25). 
+8. Clamp base between 15 and 100 and round to nearest integer. The score should NEVER be 0 
+9. Assign "quality" = base. 
 
-### SCORING INTERPRETATION
-- 90–100 → Excellent: target met or exceeded; consistent, low debt.
-- 75–89 → Good: small misses or minor irregularity.
-- 60–74 → Fair: 1–2 hours below target or moderate inconsistency.
-- 40–59 → Poor: 2–3 hours short or irregular.
-- 0–39 → Very poor: severe lack of sleep or chaotic schedule.
+If your math or reasoning would normally rate the sleep higher, ignore that. 
+You must follow the formula above **exactly as written**. 
+Do not apply subjective judgment, reinterpretation, or averaging. 
 
-### RECOMMENDATION RULES
-- Provide **exactly 3 actionable tips**, ≤15 words each.
-- Each tip must be grounded in the provided data (duration, debt, bedtime/wakeup patterns, activities, etc).
-- If sleep was good, provide **positive reinforcement** instead of generic tips.
-- Avoid assumptions about lifestyle (e.g. screen use, stress) unless directly shown in data.
-- Avoid repeating identical advice or phrasing from prior nights.
-- Use the "diff" object to highlight meaningful changes (e.g., “Slept 2h longer”, “Went to bed earlier”).
+### SCORING INTERPRETATION 
+- 90–100 → Excellent 
+- 75–89 → Good 
+- 60–74 → Fair 
+- 40–59 → Poor 
+- 0–39 → Very poor 
 
-### CONTEXT GUIDELINES
-- Treat bedtime as “late” only if it causes < target sleep hours or adds to sleep debt.
-- Treat bedtime as “early” only if it shortens sleep duration.
-- Do not assume habits that aren’t logged (e.g., caffeine use).
-- Consider the user's age, streakDays, recentSleeps, activities, and audio clips when reasoning.
-- Encourage consistency and progress when behavior stabilizes or improves.
+### RECOMMENDATION LOGIC (MANDATORY) 
+Determine which mode to use based on "quality": 
+
+- **Excellent Mode (quality ≥ 90)** → All 3 recommendations must be **positive reinforcement**. 
+Examples: “Great consistency!”, “You met your sleep goal again!”, “Keep your routine steady.” 
+
+- **Good Mode (75 ≤ quality < 90)** → 1 positive reinforcement + 2 improvement tips. 
+Example mix: “Great sleep duration!” + “Try to keep bedtime within 30 minutes.” + “Maintain your streak.” 
+
+- **Fair Mode (60 ≤ quality < 75)** → 2 actionable improvement tips + 1 motivational tip. 
+Examples: “Sleep 1 more hour to reach target.”, “Limit noise at bedtime.”, “You’re on the right track!” 
+
+- **Poor Mode (40 ≤ quality < 60)** → 3 concise, direct improvement tips. 
+Examples: “Sleep 2 hours longer.”, “Go to bed earlier.”, “Avoid late caffeine.” 
+
+- **Very Poor Mode (quality < 40)** → 3 urgent recommendations focused on recovery and behavior reset. 
+Examples: “Prioritize at least 7 hours tonight.”, “Reduce evening stimulation.”, “Catch up on rest this week.” 
+
+### ADDITIONAL RULES FOR RECOMMENDATIONS 
+- Provide **exactly 3 actionable tips**, ≤15 words each. 
+- Avoid assumptions about lifestyle unless shown in data. 
+- Avoid vague encouragements like "Keep it up!" unless in Excellent Mode. 
+- Each tip must directly reference measureable data from the provided input (duration, sleepDebtHours, streakDays, bedtime, etc.). 
+- Never contradict the score (e.g., do not praise if quality < 75 ). 
+- Avoid repeating the same advice across different nights unless clearly relevant. 
+- If quality <= 60, you must NOT include any positive or congratulatory language. 
 
 ### USER DATA
 ${inputJSON}
