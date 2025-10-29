@@ -48,6 +48,9 @@ class AuthService: NSObject, ObservableObject {
                     } else {
                         print("ℹ️ Existing profile found for \(user.uid)")
                     }
+                    
+                    // refresh reviewer status so reviewer can bypass paywall
+                    await SuperwallService.shared.refreshReviewerStatus()
 
                     // Now update published state after everything is ready
                     await MainActor.run {
