@@ -21,55 +21,34 @@ struct RootView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
 
     @StateObject private var authService = AuthService.shared
+    @StateObject private var superwallService = SuperwallService.shared
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     @AppStorage("bedtimeActive") private var bedtimeActive = false
-    
-    private let isDemoMode = ProcessInfo.processInfo.environment["DEMO_MODE"] == "1"
 
     var body: some View {
         Group {
-            if isDemoMode {
-                if !hasOnboarded {
-                    OnboardingView()
-                } else if authService.currentUser != nil {
-                    // Onboarded + logged in
+            if superwallService.isSubscribed {
+                if authService.currentUser != nil {
+                    // Logged in
                     if bedtimeActive {
                         BedtimeView()
                     } else {
                         ContentView()
                     }
                 } else {
-                    // Onboarded but not signed in → ask to sign in
+                    // Subscribed but not signed in — now must sign in
                     AuthView(
-                        next: { Task { await userProfileViewModel.loadProfile() } },
+                        next: {
+                            Task { await userProfileViewModel.loadProfile() }
+                        },
                         previous: nil,
-                        showSkipButton: false
+                        showSkipButton: false // no skip allowed post-paywall
                     )
                 }
+            } else if hasOnboarded {
+                PaywallView()
             } else {
-                if Superwall.shared.subscriptionStatus.isActive {
-                    if authService.currentUser != nil {
-                        // Logged in
-                        if bedtimeActive {
-                            BedtimeView()
-                        } else {
-                            ContentView()
-                        }
-                    } else {
-                        // Subscribed but not signed in — now must sign in
-                        AuthView(
-                            next: {
-                                Task { await userProfileViewModel.loadProfile() }
-                            },
-                            previous: nil,
-                            showSkipButton: false // no skip allowed post-paywall
-                        )
-                    }
-                } else if hasOnboarded {
-                    PaywallView()
-                } else {
-                    OnboardingView()
-                }
+                OnboardingView()
             }
         }
         .onReceive(authService.$currentUser) { user in

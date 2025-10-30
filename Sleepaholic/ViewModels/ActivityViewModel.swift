@@ -33,7 +33,7 @@ final class ActivityViewModel: ObservableObject {
     func addActivity(_ activity: Activity) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         do {
-            try await service.save(activity, to: path(for: uid))
+            _ = try await service.save(activity, to: path(for: uid))
             await loadActivities()
         } catch {
             print("Error saving activity: \(error)")

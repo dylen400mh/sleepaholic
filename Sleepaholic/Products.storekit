@@ -1,0 +1,206 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "F0EFD16D",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6753325437",
+    "_developerTeamID" : "TQA45A7B6K",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 783475447.736485,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21803235",
+      "localizations" : [
+
+      ],
+      "name" : "Superwall",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6753949822",
+          "introductoryOffer" : {
+            "internalID" : "D4BF8969",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "7 day trial + yearly subscription to Sleepaholic",
+              "displayName" : "7 Day Trial + Yearly Subscription",
+              "locale" : "en_CA"
+            }
+          ],
+          "productID" : "7d_trial_yearly_29.99",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "7 Day Trial + Yearly",
+          "subscriptionGroupID" : "21803235",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "19.99",
+          "familyShareable" : false,
+          "groupNumber" : 4,
+          "internalID" : "6753950107",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Discounted yearly subscription to Sleepaholic",
+              "displayName" : "Discounted Yearly Subscription",
+              "locale" : "en_CA"
+            }
+          ],
+          "productID" : "yearly_20",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Discount Yearly",
+          "subscriptionGroupID" : "21803235",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "12.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "6753949882",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Monthly subscription to Sleepaholic",
+              "displayName" : "Monthly Subscription",
+              "locale" : "en_CA"
+            }
+          ],
+          "productID" : "monthly_13",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly",
+          "subscriptionGroupID" : "21803235",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6753882321",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Yearly subscription to Sleepaholic",
+              "displayName" : "Yearly",
+              "locale" : "en_CA"
+            }
+          ],
+          "productID" : "yearly_30",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Yearly",
+          "subscriptionGroupID" : "21803235",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

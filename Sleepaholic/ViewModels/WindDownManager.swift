@@ -422,7 +422,7 @@ class WindDownManager: ObservableObject, Codable {
         print("⏹️ Stopped recording clip at \(url)")
         
         // Build storage path
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard (Auth.auth().currentUser?.uid) != nil else { return }
         let timestamp = Int(Date().timeIntervalSince1970)
         let storagePath = "\(logPath)/clips/\(timestamp).m4a"
         

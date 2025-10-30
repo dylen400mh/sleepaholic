@@ -11,25 +11,56 @@ import FirebaseAuth
 import FirebaseFirestore
 import UserNotifications
 import SwiftUI
+import Combine
 
 @MainActor
 final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
     static let shared = SuperwallService()
     private override init() {}
     
+    private var cancellables = Set<AnyCancellable>()
+    
     private let userProfileViewModel = UserProfileViewModel()
+    
+    @Published var isSubscribed: Bool = false
     
     // MARK: - Configuration
     func configure() {
         guard !ProcessInfo.processInfo.environment.keys.contains("XCODE_RUNNING_FOR_PREVIEWS") else { return }
         
-        if let apiKey = Bundle.main.object(forInfoDictionaryKey: "SUPERWALL_API_KEY") as? String {
-            Superwall.configure(apiKey: apiKey)
-        } else {
+        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "SUPERWALL_API_KEY") as? String else {
             fatalError("❌ Superwall API key missing from Info.plist")
         }
-        
+
+        let options = SuperwallOptions()
+        options.shouldObservePurchases = true
+        Superwall.configure(apiKey: apiKey)
         Superwall.shared.delegate = self
+        
+        observeSubscriptionStatus()
+        
+        self.isSubscribed = Superwall.shared.subscriptionStatus.isActive
+        print("✅ Superwall configured — initial subscription state: \(self.isSubscribed)")
+    }
+    
+    private func observeSubscriptionStatus() {
+        Superwall.shared
+            .$subscriptionStatus
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                Task { @MainActor in
+                    self?.isSubscribed = status.isActive
+                    print("🔄 Subscription status changed (published): \(self?.isSubscribed == true ? "Active" : "Inactive")")
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    func subscriptionStatusDidChange(from oldValue: SubscriptionStatus, to newValue: SubscriptionStatus) {
+        Task { @MainActor in
+            self.isSubscribed = newValue.isActive
+            print("🔄 Subscription status changed (delegate): \(self.isSubscribed ? "Active" : "Inactive")")
+        }
     }
     
     // MARK: - Present Paywall
@@ -52,6 +83,9 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
         case .paywallOpen(_):
             print("🟢 Paywall opened")
             scheduleDiscountNotification()
+        case .transactionStart(let product, let paywallInfo):
+            print("🧾 Reviewer triggered purchase for \(product.productIdentifier)")
+            refreshReviewerStatus() // let apple reviewer bypass paywall
         case .transactionComplete(_, let product, let transactionType, let paywallInfo):
             print("💰 Transaction complete for product \(product.productIdentifier)")
 
