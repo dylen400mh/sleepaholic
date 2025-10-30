@@ -48,9 +48,6 @@ class AuthService: NSObject, ObservableObject {
                     } else {
                         print("ℹ️ Existing profile found for \(user.uid)")
                     }
-                    
-                    // refresh reviewer status so reviewer can bypass paywall
-                    await SuperwallService.shared.refreshReviewerStatus()
 
                     // Now update published state after everything is ready
                     await MainActor.run {
@@ -119,11 +116,6 @@ class AuthService: NSObject, ObservableObject {
     func signOut() {
         do {
             try Auth.auth().signOut()
-
-            // reset onboarding state for debugging
-            if ProcessInfo.processInfo.environment["DEMO_MODE"] == "1" {
-                UserDefaults.standard.set(false, forKey: "hasOnboarded")
-            }
             
             UserDefaults.standard.set(OnboardingStep.welcome.rawValue, forKey: "onboardingStep")
             
