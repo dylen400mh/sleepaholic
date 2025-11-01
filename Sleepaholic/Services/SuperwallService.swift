@@ -83,7 +83,6 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
         case .paywallOpen(_):
             print("🟢 Paywall opened")
             scheduleDiscountNotification()
-        case .transactionStart(let product, let paywallInfo):
         case .transactionComplete(_, let product, let transactionType, let paywallInfo):
             print("💰 Transaction complete for product \(product.productIdentifier)")
 
