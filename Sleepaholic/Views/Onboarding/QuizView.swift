@@ -74,38 +74,7 @@ struct QuizView: View {
                         
                         // MARK: - Answer input
                         Group {
-                            switch q.type {
-                            case .multipleChoice:
-                                ScrollView(.vertical) {
-                                    VStack(spacing: 16) {
-                                        ForEach(q.options, id: \.self) { option in
-                                            MultipleChoiceOption(
-                                                text: option,
-                                                isSelected: selectedOption == option,
-                                                icon: nil
-                                            ) {
-                                                HapticsManager.play(.light)
-                                                selectedOption = option
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                            case .textInput:
-                                VStack(spacing: 24) {
-                                    InputField(label: "Name", text: $name)
-                                    InputField(label: "Age", text: $age)
-                                }
-                                
-                            case .timePicker:
-                                DatePicker("",
-                                           selection: q.id == 12 ? $bedtime : $wakeup,
-                                           displayedComponents: .hourAndMinute)
-                                .datePickerStyle(.wheel)
-                                .labelsHidden()
-                                .foregroundColor(Color.white100)
-                                .frame(maxHeight: 200)
-                            }
+                            answerView(for: q)
                         }
                     }
                 }
@@ -180,6 +149,40 @@ struct QuizView: View {
     }
 
     // MARK: - Logic
+    private func answerView(for q: QuizQuestion) -> AnyView {
+        switch q.type {
+        case .multipleChoice:
+            return AnyView(
+                ScrollView(.vertical) {
+                    VStack(spacing: 16) {
+                        ForEach(q.options, id: \.self) { option in
+                            MultipleChoiceOption(
+                                text: option,
+                                isSelected: selectedOption == option,
+                                icon: nil
+                            ) {
+                                HapticsManager.play(.light)
+                                selectedOption = option
+                            }
+                        }
+                    }
+                }
+            )
+            
+        case .textInput:
+            return AnyView(
+                VStack(spacing: 24) {
+                    InputField(label: "Name", text: $name)
+                    InputField(label: "Age", text: $age)
+                }
+            )
+            
+        case .timePicker:
+            return AnyView(
+                StyledDatePicker(label: q.id == 12 ? "Bedtime" : "Wake-Up Time", date: q.id == 12 ? $bedtime : $wakeup)
+            )
+        }
+    }
 
     private func saveCurrentAnswer(for q: QuizQuestion) {
         switch q.type {

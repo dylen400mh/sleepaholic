@@ -89,6 +89,8 @@ struct ContentView: View {
                                     .font(.h3Semi)
                                     .foregroundColor(.white100)
                                 
+                                Spacer()
+                                
                                 NavigationLink(destination: LogActivityView()) {
                                     SecondaryButton(
                                         title: "Log Activity",
@@ -113,8 +115,9 @@ struct ContentView: View {
                         
                         // 💡 recommendations
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Sleep Recommendations")
+                            Text("Smart Sleep Insights")
                                 .font(.h3Semi)
+                                .foregroundStyle(Gradients.main)
                             
                             if sleepLogViewModel.recommendations.isEmpty {
                                 Text("No recommendations yet. Start wind down and sleep to see recommendations!")
@@ -124,10 +127,7 @@ struct ContentView: View {
                             } else {
                                 VStack(alignment: .leading, spacing: 8) {
                                     ForEach(sleepLogViewModel.recommendations, id: \.self) { rec in
-                                        Text("• \(rec)")
-                                            .font(.body2)
-                                            .foregroundColor(.white80)
-                                            .fixedSize(horizontal: false, vertical: true)
+                                        RecommendationRow(recommendation: rec)
                                     }
                                 }
                             }
