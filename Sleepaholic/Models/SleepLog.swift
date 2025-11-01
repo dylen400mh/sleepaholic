@@ -11,7 +11,7 @@ import FirebaseFirestore
 struct SleepLog: Identifiable, Codable, Equatable {
     @DocumentID var id: String?
     var start: Date
-    var end: Date
+    var end: Date?
     
     var sleepQuality: Int?
     var recommendations: [String]?

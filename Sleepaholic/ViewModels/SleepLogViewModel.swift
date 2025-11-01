@@ -79,7 +79,7 @@ final class SleepLogViewModel: ObservableObject {
         guard activeLog == nil else { return }
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
-        let log = SleepLog(start: Date(), end: Date())
+        let log = SleepLog(start: Date(), end: nil)
         activeLog = log
         bedtimeActive = true
         
@@ -141,7 +141,10 @@ final class SleepLogViewModel: ObservableObject {
         let calendar = Calendar.current
         
         let daysWithLogs: Set<Date> = Set(
-            sleepLogs.map { calendar.startOfDay(for: $0.end) }
+            sleepLogs.compactMap { log in
+                log.end.map { calendar.startOfDay(for: $0) }
+            }
+
         )
         guard !daysWithLogs.isEmpty else { return 0 }
         
@@ -176,15 +179,18 @@ final class SleepLogViewModel: ObservableObject {
 
             // Format times
             let startStr = timeFormatter.string(from: latest.start)
-            let endStr = timeFormatter.string(from: latest.end)
+            
+            guard let end = latest.end else { return nil }
+            
+            let endStr = timeFormatter.string(from: end)
 
             // Duration
-            let duration = latest.end.timeIntervalSince(latest.start)
+            let duration = end.timeIntervalSince(latest.start)
             let hours = Int(duration / 3600)
             let minutes = Int((duration.truncatingRemainder(dividingBy: 3600)) / 60)
 
             let durationStr = minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
-            let dateStr = dateFormatter.string(from: latest.end)
+            let dateStr = dateFormatter.string(from: end)
             
             return FormattedSleep(start: startStr, end: endStr, duration: durationStr, date: dateStr)
         } else {
@@ -212,8 +218,9 @@ final class SleepLogViewModel: ObservableObject {
         let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
         var debt = 0
 
-        for log in logs where log.end >= sevenDaysAgo {
-            let actualMinutes = Int(log.end.timeIntervalSince(log.start) / 60)
+        for log in logs {
+            guard let end = log.end, end >= sevenDaysAgo else { continue }
+            let actualMinutes = Int(end.timeIntervalSince(log.start) / 60)
 
             if actualMinutes < targetMinutes {
                 // slept less → add debt
@@ -261,10 +268,25 @@ final class SleepLogViewModel: ObservableObject {
         }
     }
     
+    func cancelBedtime() async {
+        guard let path = UserDefaults.standard.string(forKey: "activeSleepPath") else { return }
+
+        do {
+            try await Firestore.firestore().document(path).delete()
+            print("🗑️ Cancelled sleep session, deleted log")
+        } catch {
+            print("❌ Failed to delete cancelled sleep log: \(error)")
+        }
+
+        stopBedtime()
+    }
+    
     func stopBedtime() {
         // clear local state
         activeLog = nil
+        bedtimeActive = false
         UserDefaults.standard.removeObject(forKey: activeKey)
+        UserDefaults.standard.removeObject(forKey: "activeSleepPath")
     }
     
     func startListeningForSleepLogs(userAge: Int?) {

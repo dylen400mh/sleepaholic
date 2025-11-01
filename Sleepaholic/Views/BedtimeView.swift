@@ -152,8 +152,10 @@ struct BedtimeView: View {
                     Button("Cancel", role: .cancel) { }
                     Button("Quit", role: .destructive) {
                         windDown.reset()
-                        sleepLogViewModel.stopBedtime()
-                        goHome = true
+                        Task {
+                            await sleepLogViewModel.cancelBedtime()
+                            goHome = true
+                        }
                     }
                 } message: {
                     Text("Your bedtime session will end and sleep tracking will stop.")
