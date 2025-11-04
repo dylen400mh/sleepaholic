@@ -10,6 +10,8 @@ import AuthenticationServices
 import FirebaseAuth
 
 struct AuthView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
 
     let next: () -> Void
@@ -52,7 +54,7 @@ struct AuthView: View {
                         }
                     }
                 }
-                .frame(width: 342, height: 56)
+                .frame(height: 56)
                 .cornerRadius(100)
                 .buttonStyle(.plain)
 
@@ -95,7 +97,7 @@ struct AuthView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.bottom, 60)
+            .padding(.bottom, adaptivePadding)
         }
         .padding(.horizontal, 24)
         .onAppear {

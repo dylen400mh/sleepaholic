@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ReferralView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject private var viewModel: ReferralViewModel
     let next: () -> Void
     let previous: () -> Void
@@ -53,7 +55,7 @@ struct ReferralView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "referral_viewed")

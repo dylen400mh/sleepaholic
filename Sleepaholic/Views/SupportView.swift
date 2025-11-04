@@ -9,6 +9,8 @@ import SwiftUI
 import UIKit
 
 struct SupportView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @Environment(\.dismiss) private var dismiss
     @State private var showMailAlert = false
 
@@ -53,8 +55,10 @@ struct SupportView: View {
                 }
             }
         }
-        .padding(.vertical, 60)
+        .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .appBackground()
         .alert("Mail not configured", isPresented: $showMailAlert) {

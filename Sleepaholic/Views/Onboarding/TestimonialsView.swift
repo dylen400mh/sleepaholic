@@ -9,6 +9,8 @@ import SwiftUI
 import StoreKit
 
 struct TestimonialsView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @Environment(\.requestReview) private var requestReview
     
     let next: () -> Void
@@ -79,7 +81,7 @@ struct TestimonialsView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             requestReview()

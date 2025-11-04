@@ -16,6 +16,8 @@ struct RecoverySlide: Identifiable {
 }
 
 struct RecoveryView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @State private var currentIndex: Int = 0
     let slides: [RecoverySlide] = [
         .init(title: "Sleep is a superpower",
@@ -84,7 +86,7 @@ struct RecoveryView: View {
             footer
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .onAppear {
             currentIndex = startIndex
             AnalyticsService.shared.trackEvent(eventName: "recovery_viewed")

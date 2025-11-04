@@ -9,6 +9,8 @@ import SwiftUI
 import StoreKit
 
 struct SettingsView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     
@@ -80,8 +82,10 @@ struct SettingsView: View {
                 }
             }
         }
-        .padding(.vertical, 60)
+        .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .appBackground()
         .task {

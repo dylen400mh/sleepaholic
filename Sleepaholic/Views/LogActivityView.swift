@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct LogActivityView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @Environment(\.dismiss) private var dismiss
     
     struct ActivityOption: Identifiable {
@@ -69,8 +71,10 @@ struct LogActivityView: View {
             
             Spacer()
         }
-        .padding(.vertical, 60)
+        .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .appBackground()
     }

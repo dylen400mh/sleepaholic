@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct RecoveryBenefitsView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     let next: () -> Void
     let previous: () -> Void
 
@@ -91,7 +93,7 @@ struct RecoveryBenefitsView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "recovery_benefits_viewed")

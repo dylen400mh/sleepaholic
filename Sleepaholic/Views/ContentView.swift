@@ -9,6 +9,8 @@ import SwiftUI
 import FirebaseAuth
 
 struct ContentView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     @EnvironmentObject var activityViewModel: ActivityViewModel
@@ -150,7 +152,9 @@ struct ContentView: View {
             }
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .task {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()

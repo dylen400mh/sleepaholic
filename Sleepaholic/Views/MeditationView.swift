@@ -9,6 +9,8 @@ import SwiftUI
 import Combine
 
 struct MeditationView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @Environment(\.dismiss) private var dismiss
 
     // Box-breathing phases: up, right, down, left
@@ -104,8 +106,10 @@ struct MeditationView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.vertical, 60)
+        .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             // Start at bottom-left, begin first INHALE segment animating to 0.25

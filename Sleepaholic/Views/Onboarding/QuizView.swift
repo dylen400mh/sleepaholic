@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct QuizView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
 
@@ -131,7 +133,7 @@ struct QuizView: View {
                 .padding(.top, 16)
             }
             .padding(.horizontal, 24)
-            .padding(.bottom, 60)
+            .padding(.bottom, adaptivePadding)
             .task {
                 AnalyticsService.shared.trackEvent(eventName: "quiz_viewed")
                 

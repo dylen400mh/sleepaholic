@@ -9,6 +9,8 @@ import SwiftUI
 import UserNotifications
 
 struct PaywallView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @State private var userName: String = ""
     @State private var hasMarkedOnboarded = false
@@ -82,7 +84,7 @@ struct PaywallView: View {
             }
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .task {
             if let name = userProfileViewModel.profile?.name {
                 userName = name.components(separatedBy: " ").first ?? ""

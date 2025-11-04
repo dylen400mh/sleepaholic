@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct OnboardingHeader: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+    
     let previous: (() -> Void)?
 
     var body: some View {
@@ -30,7 +32,7 @@ struct OnboardingHeader: View {
             // invisible spacer to balance layout
             Color.clear.frame(width: 40, height: 40)
         }
-        .padding(.top, 60)
+        .padding(.top, adaptivePadding)
     }
 }
 

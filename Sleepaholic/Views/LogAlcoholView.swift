@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct LogAlcoholView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var activityViewModel: ActivityViewModel
     
@@ -57,8 +59,10 @@ struct LogAlcoholView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
-        .padding(.vertical, 60)
+        .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $goHome) {
             ContentView()
