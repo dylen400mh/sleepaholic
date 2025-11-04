@@ -9,6 +9,8 @@ import SwiftUI
 import FamilyControls
 
 struct RestrictionsView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
@@ -87,8 +89,10 @@ struct RestrictionsView: View {
                 }
             }
         }
-        .padding(.vertical, 60)
+        .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .familyActivityPicker(isPresented: $showPicker, selection: $windDown.restrictedApps)
         .appBackground()

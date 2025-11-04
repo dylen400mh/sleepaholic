@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct HeaderView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+    
     var body: some View {
         HStack {
             Image("SleepaholicLogo")
@@ -35,6 +37,6 @@ struct HeaderView: View {
             .buttonStyle(.plain)
             
         }
-        .padding(.top, 60)
+        .padding(.top, adaptivePadding)
     }
 }

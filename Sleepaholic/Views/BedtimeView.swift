@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct BedtimeView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @State private var goHome = false
@@ -162,8 +164,10 @@ struct BedtimeView: View {
                 }
             }
         }
-        .padding(.vertical, 60)
+        .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $goHome) {
             ContentView()

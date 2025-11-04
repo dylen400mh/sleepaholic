@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ProfileIntroView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     let next: () -> Void
     let previous: () -> Void
@@ -60,7 +62,7 @@ struct ProfileIntroView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.bottom, 60)
+            .padding(.bottom, adaptivePadding)
         }
         .padding(.horizontal, 24)
         .onAppear {

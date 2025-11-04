@@ -16,6 +16,8 @@ import SwiftUI
 import FirebaseFirestore
 
 struct ProfileView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     
@@ -135,8 +137,10 @@ struct ProfileView: View {
                 }
             }
         }
-        .padding(.vertical, 60)
+        .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .appBackground()
         .task {

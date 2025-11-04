@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct WelcomeView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+    
     let next: () -> Void
 
     var body: some View {
@@ -25,7 +27,6 @@ struct WelcomeView: View {
                     .font(.body2)
                     .foregroundColor(Color.white80)
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: 284)
             }
             
             Spacer()
@@ -44,7 +45,7 @@ struct WelcomeView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "welcome_viewed")
         }

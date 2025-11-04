@@ -9,6 +9,8 @@ import SwiftUI
 import CoreHaptics
 
 struct FinalCalculateView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
 
     @State private var currentText = ""
@@ -60,7 +62,7 @@ struct FinalCalculateView: View {
             Spacer()
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "final_calculate_viewed")

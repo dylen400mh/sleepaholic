@@ -9,6 +9,8 @@ import SwiftUI
 import CoreHaptics
 
 struct SymptomsView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject private var viewModel: SymptomsViewModel
 
     let next: () -> Void
@@ -93,7 +95,7 @@ struct SymptomsView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "symptoms_viewed")
         }

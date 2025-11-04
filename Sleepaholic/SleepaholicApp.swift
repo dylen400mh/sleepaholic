@@ -148,8 +148,11 @@ struct SleepaholicApp: App {
         WindowGroup {
             NavigationStack {
                 SplashScreenView()
+                    .frame(maxWidth: 600)
+                    .frame(maxWidth: .infinity)
                     .appBackground()
             }
+            .enableAdaptivePadding()
             .id(AuthService.shared.currentUser?.uid ?? "signed-out")
             .environmentObject(windDownManager)
             .environmentObject(userSettingsViewModel)

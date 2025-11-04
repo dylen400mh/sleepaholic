@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct GoalsView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @EnvironmentObject private var viewModel: GoalsViewModel
     let next: () -> Void
     let previous: () -> Void
@@ -61,7 +63,7 @@ struct GoalsView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
         .navigationBarBackButtonHidden(true)
         .onAppear {
             AnalyticsService.shared.trackEvent(eventName: "goals_viewed")

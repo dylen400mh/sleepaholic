@@ -9,6 +9,8 @@ import SwiftUI
 import CoreHaptics
 
 struct AnalysisView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+
     @State private var progress: Double = 0
     @State private var engine: CHHapticEngine?
     @State private var showResults = false
@@ -20,7 +22,7 @@ struct AnalysisView: View {
     private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack {
             // MARK: - Back Button
             if showResults {
                 OnboardingHeader(previous: previous)
@@ -86,6 +88,8 @@ struct AnalysisView: View {
             } else {
                 // MARK: - Results State
                 VStack(spacing: 24) {
+                    Spacer()
+                    
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Analysis Complete")
                             .font(.h2Semi)
@@ -125,6 +129,8 @@ struct AnalysisView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    
+                    Spacer()
 
                     Button {
                         HapticsManager.play(.medium)
@@ -144,7 +150,7 @@ struct AnalysisView: View {
             }
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 60)
+        .padding(.bottom, adaptivePadding)
     }
 
     // MARK: - Helpers
