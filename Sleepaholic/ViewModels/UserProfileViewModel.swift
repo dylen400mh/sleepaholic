@@ -31,7 +31,7 @@ final class UserProfileViewModel: ObservableObject {
                 } else if hasCachedProfile {
                     let newProfile = UserProfile(
                         name: cachedName,
-                        age: cachedAge,
+                        age: cachedAge > 0 ? cachedAge : nil,
                         gender: cachedGender,
                         createdAt: Date()
                     )
@@ -54,7 +54,7 @@ final class UserProfileViewModel: ObservableObject {
         if hasCachedProfile {
             profile = UserProfile(
                 name: cachedName,
-                age: cachedAge,
+                age: cachedAge > 0 ? cachedAge : nil,
                 gender: cachedGender,
                 createdAt: Date()
             )
@@ -74,8 +74,8 @@ final class UserProfileViewModel: ObservableObject {
             if !profile.name.isEmpty {
                 cachedName = profile.name
             }
-            if profile.age != 0 {
-                cachedAge = profile.age
+            if let age = profile.age {
+                cachedAge = age
             }
             if !profile.gender.isEmpty {
                 cachedGender = profile.gender

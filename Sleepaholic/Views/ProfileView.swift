@@ -147,7 +147,7 @@ struct ProfileView: View {
             await userProfileViewModel.loadProfile()
             if let profile = userProfileViewModel.profile {
                 name = profile.name
-                age = "\(profile.age)"
+                age = profile.age.map(String.init) ?? ""
                 gender = profile.gender
             }
         }
@@ -170,7 +170,6 @@ struct ProfileView: View {
     // MARK: - Validation
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
-        Int(age) != nil &&
         !gender.trimmingCharacters(in: .whitespaces).isEmpty
     }
     
@@ -178,7 +177,11 @@ struct ProfileView: View {
     private func saveProfile() async {
         guard var profile = userProfileViewModel.profile else { return }
         profile.name = name
-        profile.age = Int(age) ?? 0
+        if let ageValue = Int(age) {
+            profile.age = ageValue
+        } else {
+            profile.age = nil
+        }
         profile.gender = gender
         await userProfileViewModel.saveProfile(profile)
     }

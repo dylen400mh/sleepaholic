@@ -70,7 +70,10 @@ export const generateSleepInsights = onDocumentCreated(
   const profileSnap = await db.doc(`users/${userId}`).get();
   const profile = profileSnap.exists ? profileSnap.data() : {};
   const age = profile.age || null;
-  const targetHours = age < 18 ? 9 : age <= 64 ? 8 : 7.5;
+  let targetHours = 8;
+  if (age) {
+    targetHours = age < 18 ? 9 : age <= 64 ? 8 : 7.5;
+  }
   let sleepDebtHours = 0;
   let audioClipsCount = 0;
 

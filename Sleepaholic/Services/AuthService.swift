@@ -39,7 +39,7 @@ class AuthService: NSObject, ObservableObject {
                     if existingProfile == nil {
                         let profile = UserProfile(
                             name: user.displayName ?? "",
-                            age: 0,
+                            age: nil,
                             gender: "",
                             createdAt: Date()
                         )

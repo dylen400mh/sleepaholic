@@ -32,7 +32,16 @@ final class FirestoreService {
     func save<T: Codable>(_ item: T,
                           to collection: String,
                           id: String) async throws {
-        try db.collection(collection).document(id).setData(from: item, merge: true)
+        let ref = db.collection(collection).document(id)
+        
+        // this removes the user's age if its empty (age is optional)
+        if let userProfile = item as? UserProfile {
+            if userProfile.age == nil {
+                try await ref.updateData(["age": FieldValue.delete()])
+            }
+        }
+        
+        try ref.setData(from: item, merge: true)
     }
 
     // MARK: - Read All

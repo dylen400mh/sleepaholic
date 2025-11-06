@@ -208,7 +208,7 @@ struct QuizView: View {
             // Save profile info to Firestore
             let profile = UserProfile(
                 name: name,
-                age: Int(age) ?? 0,
+                age: age.trimmingCharacters(in: .whitespaces).isEmpty ? nil : Int(age),
                 gender: userProfileViewModel.profile?.gender ?? "",
                 createdAt: userProfileViewModel.profile?.createdAt ?? Date()
             )
@@ -282,7 +282,7 @@ struct QuizView: View {
     private func prefillUserData() {
         if let profile = userProfileViewModel.profile {
             if !profile.name.isEmpty { name = profile.name }
-            if profile.age != 0 { age = String(profile.age) }
+            if let ageValue = profile.age { age = String(ageValue) }
         }
 
         if let settings = userSettingsViewModel.settings {
@@ -301,9 +301,7 @@ struct QuizView: View {
         guard q.isRequired else { return selectedOption != nil || q.type != .multipleChoice }
         switch q.type {
         case .textInput:
-            let ageOK = Int(age) != nil && !age.trimmingCharacters(in: .whitespaces).isEmpty
-            let nameOK = !name.trimmingCharacters(in: .whitespaces).isEmpty
-            return nameOK && ageOK
+            return !name.trimmingCharacters(in: .whitespaces).isEmpty
         case .timePicker:
             return true
         case .multipleChoice:

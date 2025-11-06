@@ -199,7 +199,7 @@ final class SleepLogViewModel: ObservableObject {
     }
     
     func ageBasedTargetHours(for age: Int?) -> Double {
-        guard let age = age, age > 0 else {
+        guard let age = age else {
             return 8.0      // Default target hours if no age is provided
         }
         
