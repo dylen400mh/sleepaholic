@@ -137,7 +137,10 @@ struct PaywallView: View {
     }
     
     private func pressedButton() async {
-        let userAge = userProfileViewModel.profile?.age ?? 0
+        guard let userAge = userProfileViewModel.profile?.age else {
+            SuperwallService.shared.presentPaywall(placement: "no_age")
+            return
+        }
 
         if userAge < 18 {
             SuperwallService.shared.presentPaywall(placement: "under18")

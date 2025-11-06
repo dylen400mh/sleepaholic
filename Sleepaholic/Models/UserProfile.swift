@@ -11,7 +11,7 @@ import FirebaseFirestore
 struct UserProfile: Identifiable, Codable {
     @DocumentID var id: String?
     var name: String
-    var age: Int
+    var age: Int?
     var gender: String
     var createdAt: Date
 }
