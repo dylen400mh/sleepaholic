@@ -22,8 +22,23 @@ struct AdaptiveVerticalPaddingModifier: ViewModifier {
     @Environment(\.horizontalSizeClass) var hSize
 
     func body(content: Content) -> some View {
-        let value: CGFloat = (hSize == .regular) ? 500 : 60 // iPad vs iPhone
-        return content.environment(\.adaptiveVerticalPadding, value)
+        let bottomInset = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }?
+            .safeAreaInsets.bottom ?? 0
+
+        let adaptivePadding: CGFloat = bottomInset == 0
+        ? 100
+        : 40 + (bottomInset * 0.5)
+
+        return content.environment(\.adaptiveVerticalPadding, adaptivePadding)
+    }
+}
+
+private extension Comparable {
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        min(max(self, range.lowerBound), range.upperBound)
     }
 }
 
