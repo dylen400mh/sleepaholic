@@ -19,7 +19,6 @@ struct WindDownView: View {
     
     @State private var showPicker = false
     @State private var requestingAuth = false
-    @State private var authError: String?
     
     let sounds = ["White Noise", "Fan", "Ocean Waves", "Rain", "Crickets", "Campfire", "Birds", "Theta Waves"]
     
@@ -154,12 +153,6 @@ struct WindDownView: View {
                             }
                             .buttonStyle(.plain)
                             .disabled(!windDown.restrictApps)
-
-                            if let authError {
-                                Text(authError)
-                                    .font(.body3)
-                                    .foregroundColor(Color.appRed)
-                            }
                         }
                     }
                 }
@@ -235,7 +228,6 @@ struct WindDownView: View {
     // MARK: - Auth + Picker flow
     private func handleRestrictAppsOn() async {
         requestingAuth = true
-        authError = nil
         do {
             let status = AuthorizationCenter.shared.authorizationStatus
             if status != .approved {
@@ -245,7 +237,6 @@ struct WindDownView: View {
             windDown.restrictApps = true
             showPicker = true
         } catch {
-            authError = "Screen Time permission was not granted."
             windDown.restrictApps = false
         }
         requestingAuth = false
