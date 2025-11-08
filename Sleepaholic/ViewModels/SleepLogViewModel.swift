@@ -111,7 +111,6 @@ final class SleepLogViewModel: ObservableObject {
             if let path = UserDefaults.standard.string(forKey: "activeSleepPath") {
                 let ref = Firestore.firestore().document(path)
                 try await ref.updateData(["end": wakeTime])
-                WindDownManager.shared.stopMonitoringSleep(logPath: path)
                 UserDefaults.standard.removeObject(forKey: "activeSleepPath")
             } else {
                 _ = try await service.save(log, to: path(for: uid))

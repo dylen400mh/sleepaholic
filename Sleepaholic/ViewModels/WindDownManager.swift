@@ -29,6 +29,8 @@ class WindDownManager: ObservableObject, Codable {
     private let silenceDuration: TimeInterval = 3
     private var silenceStart: Date?
     
+    private var logPath: String?
+    
     private let store = ManagedSettingsStore()
     
     @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
@@ -145,6 +147,7 @@ class WindDownManager: ObservableObject, Codable {
     // Reset everything back to defaults
     func reset() {
         stopAllSounds()
+        stopMonitoringSleep()
         isActive = false
         selectedSounds.removeAll()
         isPlaying = true
@@ -376,13 +379,16 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
 
-    func stopMonitoringSleep(logPath: String) {
+    func stopMonitoringSleep() {
         meterTimer?.invalidate()
         meterTimer = nil
-        stopRecordingClip(logPath: logPath)
+        if let path = logPath {
+            stopRecordingClip(logPath: path)
+        }
         meterRecorder?.stop()
         meterRecorder = nil
         deactivateRecordingSession()
+        logPath = nil
     }
     
     private func deactivateRecordingSession() {
