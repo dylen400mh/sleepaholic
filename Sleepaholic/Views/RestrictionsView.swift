@@ -17,7 +17,6 @@ struct RestrictionsView: View {
     
     @State private var showPicker = false
     @State private var requestingAuth = false
-    @State private var authError: String?
 
     var body: some View {
         VStack(spacing: 48) {
@@ -80,12 +79,6 @@ struct RestrictionsView: View {
                     Text(summaryText)
                         .font(.body2)
                         .foregroundColor(.white70)
-
-                    if let authError {
-                        Text(authError)
-                            .font(.body3)
-                            .foregroundColor(Color.appRed)
-                    }
                 }
             }
         }
@@ -109,7 +102,6 @@ struct RestrictionsView: View {
     // MARK: - Toggle handling
     private func handleRestrictAppsToggle(_ enabled: Bool) async {
         guard var settings = userSettingsViewModel.settings else { return }
-        authError = nil
 
         if enabled {
             do {
@@ -120,7 +112,6 @@ struct RestrictionsView: View {
                 settings.restrictApps = true
                 await userSettingsViewModel.saveSettings(settings)
             } catch {
-                authError = "Screen Time permission was not granted."
                 settings.restrictApps = false
                 await userSettingsViewModel.saveSettings(settings)
             }
