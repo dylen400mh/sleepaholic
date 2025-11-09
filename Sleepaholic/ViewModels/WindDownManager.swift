@@ -363,6 +363,8 @@ class WindDownManager: ObservableObject, Codable {
     }
     
     func startMonitoringSleep(logPath: String) {
+        guard trackSleep else { return }
+        
         AVAudioApplication.requestRecordPermission { granted in
             DispatchQueue.main.async {
                 if granted {
