@@ -7,7 +7,7 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 import fetch from "node-fetch";
-import { onDocumentCreated, onDocumentDeleted } from "firebase-functions/v2/firestore";
+import { onDocumentWritten, onDocumentDeleted } from "firebase-functions/v2/firestore";
 import { setGlobalOptions } from "firebase-functions/v2";
 import admin from "firebase-admin";
 import { defineSecret } from "firebase-functions/params";
@@ -52,16 +52,18 @@ export const deleteUserData = onDocumentDeleted("users/{uid}", async (event) => 
   }
 });
 
-export const generateSleepInsights = onDocumentCreated(
+export const generateSleepInsights = onDocumentWritten(
   { 
     document: "users/{userId}/sleepLogs/{logId}", 
     secrets: [OPENAI_KEY] 
   },
   async (event) => {
-  const data = event.data?.data();
+  const data = event.data?.after?.data();
   const { userId, logId } = event.params;
 
   if (!data?.end) return; // skip incomplete logs
+  if (data?.sleepQuality) return; // skip already generated logs
+  if (data?.recommendations) return; // skip already generated recommendations
 
   const db = admin.firestore();
   const openaiKey = OPENAI_KEY.value();
