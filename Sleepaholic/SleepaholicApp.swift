@@ -146,31 +146,29 @@ struct SleepaholicApp: App {
     
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                SplashScreenView()
-                    .frame(maxWidth: 600)
-                    .frame(maxWidth: .infinity)
-                    .appBackground()
-            }
-            .enableAdaptivePadding()
-            .id(AuthService.shared.currentUser?.uid ?? "signed-out")
-            .environmentObject(windDownManager)
-            .environmentObject(userSettingsViewModel)
-            .environmentObject(activityViewModel)
-            .environmentObject(sleepLogViewModel)
-            .environmentObject(userProfileViewModel)
-            .environmentObject(sleepClipViewModel)
-            .onReceive(NotificationCenter.default.publisher(for: .didTriggerQuickAction)) { note in
-                if let action = (note.userInfo?["action"] as? QuickAction) ?? AppDelegate.pendingQuickAction {
-                    AppDelegate.pendingQuickAction = nil
-                    handleQuickAction(action)
+            SplashScreenView()
+                .frame(maxWidth: 600)
+                .frame(maxWidth: .infinity)
+                .appBackground()
+                .enableAdaptivePadding()
+                .id(AuthService.shared.currentUser?.uid ?? "signed-out")
+                .environmentObject(windDownManager)
+                .environmentObject(userSettingsViewModel)
+                .environmentObject(activityViewModel)
+                .environmentObject(sleepLogViewModel)
+                .environmentObject(userProfileViewModel)
+                .environmentObject(sleepClipViewModel)
+                .onReceive(NotificationCenter.default.publisher(for: .didTriggerQuickAction)) { note in
+                    if let action = (note.userInfo?["action"] as? QuickAction) ?? AppDelegate.pendingQuickAction {
+                        AppDelegate.pendingQuickAction = nil
+                        handleQuickAction(action)
+                    }
                 }
-            }
-            .onAppear {
-                consumePendingQuickActionIfAny()
-                preloadUserProfileIfNeeded()
-                identifyCurrentUserIfNeeded()
-            }
+                .onAppear {
+                    consumePendingQuickActionIfAny()
+                    preloadUserProfileIfNeeded()
+                    identifyCurrentUserIfNeeded()
+                }
         }
     }
     
@@ -216,5 +214,4 @@ struct SleepaholicApp: App {
         }
     }
 }
-
 

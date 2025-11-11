@@ -17,6 +17,8 @@ struct ContentView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
+    
+    private let tabBarClearance: CGFloat = 36
 
     var debtProgress: CGFloat {
         let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
@@ -150,6 +152,7 @@ struct ContentView: View {
                     windDown.isActive = true
                 })
             }
+            .padding(.bottom, tabBarClearance)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, adaptivePadding)
@@ -196,7 +199,5 @@ struct ContentView: View {
     .environmentObject(UserProfileViewModel())
     .environmentObject(SleepClipViewModel())
 }
-
-
 
 

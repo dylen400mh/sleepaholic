@@ -18,7 +18,8 @@ struct LogCaffeineView: View {
     @State private var customKind = ""
     @State private var amount: String = ""
     @State private var time = Date()
-    @State private var goHome = false
+    
+    private let tabBarClearance: CGFloat = 36
     
     let caffeineOptions: OrderedDictionary<String, Int> = [
         "Coffee": 95,
@@ -92,15 +93,12 @@ struct LogCaffeineView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
+        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $goHome) {
-            ContentView()
-                .navigationBarBackButtonHidden(true)
-        }
         .appBackground()
         
     }
@@ -131,7 +129,9 @@ struct LogCaffeineView: View {
         )
 
         await activityViewModel.addActivity(newActivity)
-        goHome = true
+        await MainActor.run {
+            dismiss()
+        }
     }
 }
 

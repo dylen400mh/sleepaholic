@@ -17,9 +17,10 @@ struct LogWorkoutView: View {
     @State private var otherDescription = ""
     @State private var duration = ""
     @State private var time = Date()
-    @State private var goHome = false
     
     let workoutOptions = ["Strength", "Cardio", "Other"]
+    
+    private let tabBarClearance: CGFloat = 36
     
     var body: some View {
         VStack(spacing: 48) {
@@ -77,15 +78,12 @@ struct LogWorkoutView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
+        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $goHome) {
-            ContentView()
-                .navigationBarBackButtonHidden(true)
-        }
         .appBackground()
     }
     
@@ -115,7 +113,9 @@ struct LogWorkoutView: View {
         )
 
         await activityViewModel.addActivity(newActivity)
-        goHome = true
+        await MainActor.run {
+            dismiss()
+        }
     }
 }
 

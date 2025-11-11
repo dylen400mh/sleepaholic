@@ -15,8 +15,8 @@ struct LogAlcoholView: View {
     
     @State private var drinks = ""
     @State private var time = Date()
-    @State private var goHome = false
     
+    private let tabBarClearance: CGFloat = 36
     
     var body: some View {
         VStack(spacing: 48) {
@@ -59,15 +59,12 @@ struct LogAlcoholView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
+        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $goHome) {
-            ContentView()
-                .navigationBarBackButtonHidden(true)
-        }
         .appBackground()
     }
     
@@ -91,7 +88,9 @@ struct LogAlcoholView: View {
         )
 
         await activityViewModel.addActivity(newActivity)
-        goHome = true
+        await MainActor.run {
+            dismiss()
+        }
     }
 }
 
