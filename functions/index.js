@@ -117,17 +117,20 @@ export const generateSleepInsights = onDocumentWritten(
       .slice(0, 7)
       .map((l) => ({
         start: l.start,
-        end: l.end,
-        sleepQuality: l.sleepQuality,
-        recommendations: l.recommendations,
+        end: l.end
       }));
 
     // Calculate sleep debt
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     let debtMinutes = 0;
 
-    for (const l of allLogs.filter((x) => new Date(x.end) >= sevenDaysAgo)) {
-      const duration = (new Date(l.end) - new Date(l.start)) / 60000;
+    for (const l of allLogs.filter((x) => {
+      const end = x.end?.toDate ? x.end.toDate() : new Date(x.end);
+      return end >= sevenDaysAgo;
+    })) {
+      const start = l.start?.toDate ? l.start.toDate() : new Date(l.start);
+      const end = l.end?.toDate ? l.end.toDate() : new Date(l.end);
+      const duration = (end - start) / 60000;
       const target = targetHours * 60;
       if (duration < target) debtMinutes += target - duration;
       else debtMinutes -= duration - target;
@@ -139,8 +142,14 @@ export const generateSleepInsights = onDocumentWritten(
     const calendar = new Date();
     const daysWithLogs = new Set(
       allLogs
-        .filter((l) => l.end && !isNaN(new Date(l.end)))
-        .map((l) => new Date(l.end).toISOString().split("T")[0])
+        .filter((l) => {
+          const end = l.end?.toDate ? l.end.toDate() : new Date(l.end);
+          return end && !isNaN(end);
+        })
+        .map((l) => {
+          const end = l.end?.toDate ? l.end.toDate() : new Date(l.end);
+          return end.toISOString().split("T")[0];
+        })
     );
 
     let streak = 0;
@@ -174,18 +183,25 @@ export const generateSleepInsights = onDocumentWritten(
     const previous = allLogs.find((l) => l.id !== logId);
     let diff = {};
 
-    const latestDuration = (new Date(latest.end) - new Date(latest.start)) / 3600000;
+    const start = latest.start?.toDate ? latest.start.toDate() : new Date(latest.start);
+    const end = latest.end?.toDate ? latest.end.toDate() : new Date(latest.end);
+    const latestDuration = (end - start) / 3600000;
+
     if (previous) {
-      const prevDuration = (new Date(previous.end) - new Date(previous.start)) / 3600000;
+      const prevStart = previous.start?.toDate ? previous.start.toDate() : new Date(previous.start);
+      const prevEnd = previous.end?.toDate ? previous.end.toDate() : new Date(previous.end);
+      const prevDuration = (prevEnd - prevStart) / 3600000;
       diff = {
         changeInDurationHrs: +(latestDuration - prevDuration).toFixed(2),
-        changeInBedtimeMins: ((new Date(latest.start) - new Date(previous.start)) / 60000).toFixed(0),
-        changeInWakeupMins: ((new Date(latest.end) - new Date(previous.end)) / 60000).toFixed(0),
-        prevQuality: previous.sleepQuality ?? null,
+        changeInBedtimeMins: ((start - prevStart) / 60000).toFixed(0),
+        changeInWakeupMins: ((end - prevEnd) / 60000).toFixed(0)
       };
     }
 
+    const quality = Math.min(100, Math.round((latestDuration / targetHours) * 100));
+
     const input = {
+      quality,
       age,
       targetHours,
       latestDuration,
@@ -202,6 +218,7 @@ export const generateSleepInsights = onDocumentWritten(
     // ======================================================
     // Send to OpenAI
     // ======================================================
+    console.log("🕒 Debug check:", input);
     const inputJSON = JSON.stringify(input, null, 2);
     const prompt = `
 You are a certified sleep health expert analyzing a user's recent sleep and lifestyle data. 
@@ -210,35 +227,11 @@ You are a certified sleep health expert analyzing a user's recent sleep and life
 
 ### OUTPUT FORMAT Respond with **only valid JSON**: 
 { 
-  "quality": <integer between 0 and 100>, 
   "recommendations": ["tip1", "tip2", "tip3"] 
 } 
 
-### STRICT SCORING LOGIC (MANDATORY) 
-You must calculate "quality" using these exact numerical steps — do NOT summarize or reinterpret. 
-1. Let base = 100. 
-2. Compute sleepDeficit = max(0, targetHours - latestDuration). 
-3. base = base - (10 * sleepDeficit). 
-4. If sleepDebtHours > 2, base -= 10. 
-5. If bedtime or wakeup vary by > 90 min from recent average, base -= 5. 
-6. If audioClipsCount > 3, base -= 10. 
-7. If latestDuration < 3 hours, set base = max(base, 25). 
-8. Clamp base between 15 and 100 and round to nearest integer. The score should NEVER be 0 
-9. Assign "quality" = base. 
-
-If your math or reasoning would normally rate the sleep higher, ignore that. 
-You must follow the formula above **exactly as written**. 
-Do not apply subjective judgment, reinterpretation, or averaging. 
-
-### SCORING INTERPRETATION 
-- 90–100 → Excellent 
-- 75–89 → Good 
-- 60–74 → Fair 
-- 40–59 → Poor 
-- 0–39 → Very poor 
-
 ### RECOMMENDATION LOGIC (MANDATORY) 
-Determine which mode to use based on "quality": 
+Determine which mode to use based on "quality" from the input JSON: 
 
 - **Excellent Mode (quality ≥ 90)** → All 3 recommendations must be **positive reinforcement**. 
 Examples: “Great consistency!”, “You met your sleep goal again!”, “Keep your routine steady.” 
@@ -264,6 +257,11 @@ Examples: “Prioritize at least 7 hours tonight.”, “Reduce evening stimulat
 - Avoid repeating the same advice across different nights unless clearly relevant. 
 - If quality <= 60, you must NOT include any positive or congratulatory language. 
 
+### IMPORTANT
+You are NOT calculating the quality score, that is done for you.
+Ignore any previous "recommendations" values found in the data.
+Always compute the new recommendations fresh using the strict rules above.
+
 ### USER DATA
 ${inputJSON}
 `;
@@ -278,7 +276,7 @@ ${inputJSON}
         model: "gpt-4o-mini",
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: "You are an expert in sleep science." },
+          { role: "system", content: `You are an expert in sleep science. session_id=${Date.now()}` },
           { role: "user", content: prompt },
         ],
         temperature: 0.9,
@@ -299,7 +297,6 @@ ${inputJSON}
 
     console.log("🧠 Parsed response:", parsed);
 
-    const quality = parsed?.quality;
     const recommendations = parsed?.recommendations;
 
     // ======================================================
@@ -316,16 +313,11 @@ ${inputJSON}
     console.error("❌ Error generating insights:", err);
 
     // Compute basic duration-based quality if AI call fails
-    const sleepDurationHrs =
-    (new Date(log.end) - new Date(log.start)) / (1000 * 60 * 60);
-    const targetDiff = Math.abs(sleepDurationHrs - targetHours);
+    const start = log.start?.toDate ? log.start.toDate() : new Date(log.start);
+    const end = log.end?.toDate ? log.end.toDate() : new Date(log.end);
+    const sleepDurationHrs = (end - start) / (1000 * 60 * 60);
 
-    let fallbackQuality;
-    if (sleepDurationHrs >= targetHours) fallbackQuality = 90;
-    else if (targetDiff < 1) fallbackQuality = 75;
-    else if (targetDiff < 2) fallbackQuality = 60;
-    else if (targetDiff < 3) fallbackQuality = 45;
-    else fallbackQuality = 30;
+    const fallbackQuality = Math.min(100, Math.round((latestDuration / targetHours) * 100));
 
     // Basic rule-based recommendations
     const fallbackRecs = [];
