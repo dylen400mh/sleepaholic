@@ -122,21 +122,31 @@ export const generateSleepInsights = onDocumentWritten(
 
     // Calculate sleep debt
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    let debtMinutes = 0;
-
-    for (const l of allLogs.filter((x) => {
+    
+    // Filter to only include completed logs within the past 7 days
+    const recentLogs = allLogs.filter((x) => {
       const end = x.end?.toDate ? x.end.toDate() : new Date(x.end);
-      return end >= sevenDaysAgo;
-    })) {
-      const start = l.start?.toDate ? l.start.toDate() : new Date(l.start);
-      const end = l.end?.toDate ? l.end.toDate() : new Date(l.end);
-      const duration = (end - start) / 60000;
-      const target = targetHours * 60;
-      if (duration < target) debtMinutes += target - duration;
-      else debtMinutes -= duration - target;
-      if (debtMinutes < 0) debtMinutes = 0;
+      return end >= sevenDaysAgo && x.start && x.end;
+    });
+
+    if (recentLogs.length > 0) {
+      // Total minutes actually slept
+      const totalSleptMinutes = recentLogs.reduce((sum, l) => {
+        const start = l.start?.toDate ? l.start.toDate() : new Date(l.start);
+        const end = l.end?.toDate ? l.end.toDate() : new Date(l.end);
+        return sum + (end - start) / 60000;
+      }, 0);
+
+      // Target = targetHours × number of logs
+      const targetTotalMinutes = targetHours * 60 * recentLogs.length;
+
+      // Debt = difference between target and actual, clamped at 0
+      const debtMinutes = Math.max(0, targetTotalMinutes - totalSleptMinutes);
+
+      sleepDebtHours = Math.round(debtMinutes / 60);
+    } else {
+      sleepDebtHours = 0;
     }
-    sleepDebtHours = Math.round(debtMinutes / 60);
 
     // calculate streak
     const calendar = new Date();
