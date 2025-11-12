@@ -16,7 +16,8 @@ struct LogMedicationView: View {
     @State private var name = ""
     @State private var dosage = ""
     @State private var time = Date()
-    @State private var goHome = false
+    
+    private let tabBarClearance: CGFloat = 36
 
     
     var body: some View {
@@ -66,15 +67,12 @@ struct LogMedicationView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
+        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $goHome) {
-            ContentView()
-                .navigationBarBackButtonHidden(true)
-        }
         .appBackground()
     }
     
@@ -96,7 +94,9 @@ struct LogMedicationView: View {
         )
 
         await activityViewModel.addActivity(newActivity)
-        goHome = true
+        await MainActor.run {
+            dismiss()
+        }
     }
 }
 

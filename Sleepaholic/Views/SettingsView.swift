@@ -9,6 +9,8 @@ import SwiftUI
 import StoreKit
 
 struct SettingsView: View {
+    var showsBackButton: Bool = true
+
     @Environment(\.adaptiveVerticalPadding) var adaptivePadding
 
     @Environment(\.dismiss) private var dismiss
@@ -20,7 +22,11 @@ struct SettingsView: View {
         VStack(spacing: 48) {
             // MARK: - Header
             HStack {
-                BackButtonView(previous: { dismiss() })
+                if showsBackButton {
+                    BackButtonView(previous: { dismiss() })
+                } else {
+                    Color.clear.frame(width: 40, height: 40)
+                }
                 Spacer()
                 Text("Settings")
                     .font(.h2Semi)
@@ -119,4 +125,3 @@ struct SettingsView: View {
         SettingsView()
     }
 }
-

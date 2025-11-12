@@ -81,6 +81,25 @@ struct PaywallView: View {
                     )
                 }
                 .buttonStyle(.plain)
+
+#if DEBUG
+                Button {
+                    skipPaywallForDevelopment()
+                } label: {
+                    Text("Skip Paywall (Dev Only)")
+                        .font(.body2Semi)
+                        .foregroundColor(.white80)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.white10)
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white20, lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+#endif
             }
         }
         .padding(.horizontal, 24)
@@ -155,6 +174,16 @@ struct PaywallView: View {
         }
     }
 }
+
+#if DEBUG
+private extension PaywallView {
+    @MainActor
+    func skipPaywallForDevelopment() {
+        SuperwallService.shared.isSubscribed = true
+        AnalyticsService.shared.trackEvent(eventName: "paywall_dev_skip")
+    }
+}
+#endif
 
 // MARK: - Support Views
 struct BenefitCard: View {

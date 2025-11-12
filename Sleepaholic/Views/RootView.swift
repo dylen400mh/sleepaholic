@@ -31,9 +31,11 @@ struct RootView: View {
                 if authService.currentUser != nil {
                     // Logged in
                     if bedtimeActive {
-                        BedtimeView()
+                        NavigationStack {
+                            BedtimeView()
+                        }
                     } else {
-                        ContentView()
+                        MainTabView()
                     }
                 } else {
                     // Subscribed but not signed in — now must sign in

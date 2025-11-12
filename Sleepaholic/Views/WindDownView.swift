@@ -9,6 +9,8 @@ import SwiftUI
 import FamilyControls
 
 struct WindDownView: View {
+    var showsBackButton: Bool = true
+
     @Environment(\.adaptiveVerticalPadding) var adaptivePadding
 
     @Environment(\.dismiss) private var dismiss
@@ -20,6 +22,8 @@ struct WindDownView: View {
     @State private var showPicker = false
     @State private var requestingAuth = false
     
+    private let tabBarClearance: CGFloat = 36
+    
     let sounds = ["White Noise", "Fan", "Ocean Waves", "Rain", "Crickets", "Campfire", "Birds", "Theta Waves"]
     
     var body: some View {
@@ -27,7 +31,11 @@ struct WindDownView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 48) {
                     HStack {
-                        BackButtonView(previous: { dismiss() })
+                        if showsBackButton {
+                            BackButtonView(previous: { dismiss() })
+                        } else {
+                            Color.clear.frame(width: 40, height: 40)
+                        }
                         Spacer()
                         Text("Wind Down")
                             .font(.h2Semi)
@@ -197,7 +205,9 @@ struct WindDownView: View {
                 
                 Button {
                     windDown.reset()
-                    dismiss()
+                    if showsBackButton {
+                        dismiss()
+                    }
                 } label: {
                     SecondaryButton(
                         title: "Cancel Wind Down",
@@ -208,6 +218,7 @@ struct WindDownView: View {
                 }
                 .buttonStyle(.plain)
             }
+            .padding(.bottom, tabBarClearance)
         }
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
@@ -251,5 +262,3 @@ struct WindDownView: View {
     .environmentObject(SleepLogViewModel())
     .environmentObject(UserProfileViewModel())
 }
-
-
