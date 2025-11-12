@@ -13,8 +13,6 @@ struct BedtimeView: View {
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
-
-    @State private var goHome = false
     
     @State private var now = Date()
     @State private var showFeatures = false
@@ -161,7 +159,6 @@ struct BedtimeView: View {
                         windDown.reset()
                         Task {
                             await sleepLogViewModel.cancelBedtime()
-                            goHome = true
                         }
                     }
                 } message: {
@@ -174,10 +171,6 @@ struct BedtimeView: View {
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $goHome) {
-            ContentView()
-                .navigationBarBackButtonHidden(true)
-        }
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { now = $0 }
         .appBackground()
     }

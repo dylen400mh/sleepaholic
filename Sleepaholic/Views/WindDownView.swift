@@ -211,23 +211,6 @@ struct WindDownView: View {
                         }
                     )
                 }
-                
-                NavigationLink {
-                    BedtimeView()
-                } label: {
-                    PrimaryButton(
-                        title: "Start Bedtime",
-                        icon: nil,
-                        size: .regular,
-                        isDisabled: false
-                    )
-                }
-                .buttonStyle(.plain)
-                .simultaneousGesture(TapGesture().onEnded {
-                    Task {
-                        await sleepLogViewModel.startBedtime()
-                    }
-                })
             }
             .padding(.bottom, tabBarClearance)
         }
