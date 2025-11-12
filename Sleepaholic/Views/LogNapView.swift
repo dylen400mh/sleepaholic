@@ -15,7 +15,8 @@ struct LogNapView: View {
     
     @State private var startTime = Date()
     @State private var endTime = Date().addingTimeInterval(1800)
-    @State private var goHome = false
+    
+    private let tabBarClearance: CGFloat = 36
     
     var body: some View {
         VStack(spacing: 48) {
@@ -54,15 +55,12 @@ struct LogNapView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
+        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $goHome) {
-            ContentView()
-                .navigationBarBackButtonHidden(true)
-        }
         .appBackground()
     }
     
@@ -90,7 +88,9 @@ struct LogNapView: View {
        )
 
        await activityViewModel.addActivity(newActivity)
-       goHome = true
+       await MainActor.run {
+           dismiss()
+       }
    }
 }
 

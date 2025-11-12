@@ -17,6 +17,8 @@ struct ContentView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
+    
+    private let tabBarClearance: CGFloat = 36
 
     var debtProgress: CGFloat {
         let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
@@ -139,17 +141,15 @@ struct ContentView: View {
                 
                 NavigationLink(destination: WindDownView()) {
                     PrimaryButton(
-                        title: windDown.isActive ? "Continue Wind Down" : "Start Wind Down",
+                        title: "Start Wind Down",
                         icon: nil,
                         size: .regular,
                         isDisabled: false
                     )
                 }
                 .buttonStyle(.plain)
-                .simultaneousGesture(TapGesture().onEnded {
-                    windDown.isActive = true
-                })
             }
+            .padding(.bottom, tabBarClearance)
         }
         .padding(.horizontal, 24)
         .padding(.bottom, adaptivePadding)
@@ -166,13 +166,6 @@ struct ContentView: View {
             }
             
             sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
-            
-            if let s = userSettingsViewModel.settings, !windDown.isActive {
-                windDown.targetBedtime  = WindDownManager.dateFromMinutes(s.bedtime)
-                windDown.targetWakeup   = WindDownManager.dateFromMinutes(s.wakeUpTime)
-                windDown.trackSleep     = s.trackSleep
-                windDown.restrictApps   = s.restrictApps
-            }
             
             if let age = userProfileViewModel.profile?.age {
                 sleepLogViewModel.startListeningForSleepLogs(userAge: age)
@@ -196,7 +189,5 @@ struct ContentView: View {
     .environmentObject(UserProfileViewModel())
     .environmentObject(SleepClipViewModel())
 }
-
-
 
 

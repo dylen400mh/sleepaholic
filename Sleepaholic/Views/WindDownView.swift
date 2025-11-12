@@ -9,6 +9,8 @@ import SwiftUI
 import FamilyControls
 
 struct WindDownView: View {
+    var showsBackButton: Bool = true
+
     @Environment(\.adaptiveVerticalPadding) var adaptivePadding
 
     @Environment(\.dismiss) private var dismiss
@@ -16,9 +18,12 @@ struct WindDownView: View {
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
+    @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     
     @State private var showPicker = false
     @State private var requestingAuth = false
+    
+    private let tabBarClearance: CGFloat = 36
     
     let sounds = ["White Noise", "Fan", "Ocean Waves", "Rain", "Crickets", "Campfire", "Birds", "Theta Waves"]
     
@@ -27,7 +32,11 @@ struct WindDownView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 48) {
                     HStack {
-                        BackButtonView(previous: { dismiss() })
+                        if showsBackButton {
+                            BackButtonView(previous: { dismiss() })
+                        } else {
+                            Color.clear.frame(width: 40, height: 40)
+                        }
                         Spacer()
                         Text("Wind Down")
                             .font(.h2Semi)
@@ -40,8 +49,26 @@ struct WindDownView: View {
                     
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 16) {
-                            StyledDatePicker(label: "Target Bedtime", date: $windDown.targetBedtime)
-                            StyledDatePicker(label: "Target Wake-Up", date: $windDown.targetWakeup)
+                            if let settings = userSettingsViewModel.settings {
+                                StyledDatePicker(
+                                    label: "Target Bedtime",
+                                    date: Binding(
+                                        get: { WindDownManager.dateFromMinutes(settings.bedtime) },
+                                        set: { newDate in
+                                            Task { await saveSettingChange(\.bedtime, newValue: WindDownManager.minutesFromDate(newDate)) }
+                                        }
+                                    )
+                                )
+                                StyledDatePicker(
+                                    label: "Target Wake-Up",
+                                    date: Binding(
+                                        get: { WindDownManager.dateFromMinutes(settings.wakeUpTime) },
+                                        set: { newDate in
+                                            Task { await saveSettingChange(\.wakeUpTime, newValue: WindDownManager.minutesFromDate(newDate)) }
+                                        }
+                                    )
+                                )
+                            }
                         }
                         
                         let targetHours = sleepLogViewModel.ageBasedTargetHours(for: userProfileViewModel.profile?.age)
@@ -100,8 +127,15 @@ struct WindDownView: View {
                                 .foregroundColor(Color.white100)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                            Toggle("", isOn: $windDown.trackSleep)
-                                .toggleStyle(ToggleButton())
+                            Toggle("", isOn:
+                                    Binding(
+                                        get: { userSettingsViewModel.settings?.trackSleep ?? false },
+                                        set: { newValue in
+                                            Task { await saveSettingChange(\.trackSleep, newValue: newValue) }
+                                        }
+                                    )
+                            )
+                            .toggleStyle(ToggleButton())
                         }
                     }
                     
@@ -123,13 +157,13 @@ struct WindDownView: View {
 
                                 Toggle("", isOn:
                                         Binding(
-                                            get: { windDown.restrictApps },
+                                            get: { userSettingsViewModel.settings?.restrictApps ?? false },
                                             set: { newValue in
                                                 if newValue {
                                                     Task { await handleRestrictAppsOn() }
                                                 } else {
                                                     showPicker = false
-                                                    windDown.restrictApps = false
+                                                    Task { await saveSettingChange(\.restrictApps, newValue: false) }
                                                 }
                                             }
                                         )
@@ -148,11 +182,11 @@ struct WindDownView: View {
                                     title: "Modify Restricted Apps",
                                     icon: nil,
                                     size: .small,
-                                    isDisabled: !windDown.restrictApps
+                                    isDisabled: !(userSettingsViewModel.settings?.restrictApps ?? false)
                                 )
                             }
                             .buttonStyle(.plain)
-                            .disabled(!windDown.restrictApps)
+                            .disabled(!(userSettingsViewModel.settings?.restrictApps ?? false))
                         }
                     }
                 }
@@ -194,20 +228,8 @@ struct WindDownView: View {
                         await sleepLogViewModel.startBedtime()
                     }
                 })
-                
-                Button {
-                    windDown.reset()
-                    dismiss()
-                } label: {
-                    SecondaryButton(
-                        title: "Cancel Wind Down",
-                        icon: nil,
-                        size: .regular,
-                        isDisabled: false
-                    )
-                }
-                .buttonStyle(.plain)
             }
+            .padding(.bottom, tabBarClearance)
         }
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
@@ -234,12 +256,18 @@ struct WindDownView: View {
                 try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
             }
             // Mark enabled and prompt for the selection (first-time or to edit)
-            windDown.restrictApps = true
+            await saveSettingChange(\.restrictApps, newValue: true)
             showPicker = true
         } catch {
-            windDown.restrictApps = false
+            await saveSettingChange(\.restrictApps, newValue: false)
         }
         requestingAuth = false
+    }
+    
+    private func saveSettingChange<T>(_ keyPath: WritableKeyPath<UserSettings, T>, newValue: T) async {
+        guard var settings = userSettingsViewModel.settings else { return }
+        settings[keyPath: keyPath] = newValue
+        await userSettingsViewModel.saveSettings(settings)
     }
 }
 
@@ -251,5 +279,3 @@ struct WindDownView: View {
     .environmentObject(SleepLogViewModel())
     .environmentObject(UserProfileViewModel())
 }
-
-

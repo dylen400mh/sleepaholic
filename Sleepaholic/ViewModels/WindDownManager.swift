@@ -17,6 +17,8 @@ import ManagedSettings
 class WindDownManager: ObservableObject, Codable {
     static let shared = WindDownManager()
     
+    weak var userSettingsViewModel: UserSettingsViewModel?
+    
     // sound player
     private var audioPlayers: [String: AVAudioPlayer] = [:]
     private var audioSessionConfigured = false
@@ -36,51 +38,15 @@ class WindDownManager: ObservableObject, Codable {
     @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
 
     enum CodingKeys: String, CodingKey {
-        case isActive, targetBedtime, targetWakeup, trackSleep,
-        restrictApps, restrictedApps, selectedSounds, isPlaying
+        case restrictedApps, selectedSounds, isPlaying
     }
     
-    // Settings applied during wind down
-    @Published var isActive: Bool = false {
-        didSet {
-            saveState()
-            scheduleNotifications()
-            if isActive {
-                applyShield()
-            } else {
-                clearShield()
-            }
-        }
-    }
-    @Published var targetBedtime: Date = Date() {
-        didSet {
-            saveState()
-            scheduleNotifications()
-        }
-    }
-    @Published var targetWakeup: Date = Date() {
-        didSet {
-            saveState()
-            scheduleNotifications()
-        }
-    }
-    @Published var trackSleep: Bool = false {
-        didSet {
-            saveState()
-        }
-    }
-    @Published var restrictApps: Bool = false {
-        didSet
-        {
-            saveState()
-            if isActive && restrictApps { applyShield() }
-            if !restrictApps { clearShield() }
-        }
-    }
     @Published var restrictedApps: FamilyActivitySelection = .init() {
         didSet {
             saveState()
-            if isActive && restrictApps { applyShield() }
+            Task {
+                await applyShield()
+            }
         }
     }
     @Published var selectedSounds: Set<String> = [] { didSet { saveState() } }
@@ -91,11 +57,6 @@ class WindDownManager: ObservableObject, Codable {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        isActive = try container.decode(Bool.self, forKey: .isActive)
-        targetBedtime = try container.decode(Date.self, forKey: .targetBedtime)
-        targetWakeup = try container.decode(Date.self, forKey: .targetWakeup)
-        trackSleep = try container.decode(Bool.self, forKey: .trackSleep)
-        restrictApps = try container.decode(Bool.self, forKey: .restrictApps)
         restrictedApps = try container.decodeIfPresent(FamilyActivitySelection.self, forKey: .restrictedApps) ?? .init()
         selectedSounds = try container.decode(Set<String>.self, forKey: .selectedSounds)
         isPlaying = try container.decode(Bool.self, forKey: .isPlaying)
@@ -104,27 +65,12 @@ class WindDownManager: ObservableObject, Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
-        try container.encode(isActive, forKey: .isActive)
-        try container.encode(targetBedtime, forKey: .targetBedtime)
-        try container.encode(targetWakeup, forKey: .targetWakeup)
-        try container.encode(trackSleep, forKey: .trackSleep)
-        try container.encode(restrictApps, forKey: .restrictApps)
         try container.encode(restrictedApps, forKey: .restrictedApps)
         try container.encode(selectedSounds, forKey: .selectedSounds)
         try container.encode(isPlaying, forKey: .isPlaying)
     }
 
-    init(settings: UserSettings? = nil) {
-        self.targetBedtime = settings != nil
-            ? WindDownManager.dateFromMinutes(settings!.bedtime)
-            : Date()
-        self.targetWakeup = settings != nil
-            ? WindDownManager.dateFromMinutes(settings!.wakeUpTime)
-            : Date()
-        self.trackSleep = settings?.trackSleep ?? false
-        self.restrictApps = settings?.restrictApps ?? false
-    }
-    
+    init() {}
     
     func saveState() {
         if let data = try? JSONEncoder().encode(self) {
@@ -134,13 +80,10 @@ class WindDownManager: ObservableObject, Codable {
         
     static func loadState() -> WindDownManager {
         if let data = UserDefaults.standard.data(forKey: storageKey),
-           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data),
-           decoded.isActive {
-            // Only restore if wind down was active
+           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data) {
             decoded.restoreSounds()
             return decoded
         }
-        // Otherwise return a fresh manager (resets sounds/settings)
         return WindDownManager()
     }
 
@@ -148,18 +91,18 @@ class WindDownManager: ObservableObject, Codable {
     func reset() {
         stopAllSounds()
         stopMonitoringSleep()
-        isActive = false
         selectedSounds.removeAll()
         isPlaying = true
-        trackSleep = false
-        restrictApps = false
         
         bedtimeActive = false
     }
     
     // MARK: - Screen Time (Shielding)
-    private func applyShield() {
-        guard restrictApps else { return }
+    private func applyShield() async {
+        guard (await MainActor.run(body: { userSettingsViewModel?.settings?.restrictApps })) != nil else {
+            clearShield()
+            return
+        }
 
         // Tokens the user selected via FamilyActivityPicker
         let apps = restrictedApps.applicationTokens
@@ -195,10 +138,15 @@ class WindDownManager: ObservableObject, Codable {
         return (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
     }
     
-    func scheduleNotifications() {
+    func scheduleNotifications() async {
+        guard let settings = await MainActor.run(body: { userSettingsViewModel?.settings }) else { return }
+        
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         
-        // Schedule wind down notification regardless of whether wind down is active or not
+        let targetBedtime = WindDownManager.dateFromMinutes(settings.bedtime)
+        let targetWakeup = WindDownManager.dateFromMinutes(settings.wakeUpTime)
+        
+        // Schedule wind down notification
         let reminderDate = Calendar.current.date(byAdding: .hour, value: -1, to: targetBedtime) ?? targetBedtime
         scheduleNotification(
             id: "winddown",
@@ -206,8 +154,6 @@ class WindDownManager: ObservableObject, Codable {
             body: "Your bedtime is in 1 hour. Start your wind down routine now.",
             date: reminderDate
         )
-        
-        guard isActive else { return }
         
         // Schedule bedtime
         scheduleNotification(
@@ -362,8 +308,9 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
     
-    func startMonitoringSleep(logPath: String) {
-        guard trackSleep else { return }
+    func startMonitoringSleep(logPath: String) async {
+        let shouldTrack = await MainActor.run(body: { userSettingsViewModel?.settings?.trackSleep == true })
+        guard shouldTrack else { return }
         
         AVAudioApplication.requestRecordPermission { granted in
             DispatchQueue.main.async {

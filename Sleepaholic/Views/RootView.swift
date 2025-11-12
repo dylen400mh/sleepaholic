@@ -17,6 +17,7 @@ import SuperwallKit
 
 struct RootView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
+    @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
 
@@ -31,9 +32,11 @@ struct RootView: View {
                 if authService.currentUser != nil {
                     // Logged in
                     if bedtimeActive {
-                        BedtimeView()
+                        NavigationStack {
+                            BedtimeView()
+                        }
                     } else {
-                        ContentView()
+                        MainTabView()
                     }
                 } else {
                     // Subscribed but not signed in — now must sign in
@@ -57,6 +60,9 @@ struct RootView: View {
             } else {
                 Task { await userProfileViewModel.loadProfile() }
             }
+        }
+        .task {
+            windDown.userSettingsViewModel = userSettingsViewModel
         }
     }
 }
