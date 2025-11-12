@@ -12,6 +12,8 @@ struct BedtimeView: View {
 
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
+    @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
+
     @State private var goHome = false
     
     @State private var now = Date()
@@ -46,9 +48,12 @@ struct BedtimeView: View {
                         .foregroundColor(.white100)
                 }
                 
-                Text("Target Wake-Up Time: \(windDown.targetWakeup.formatted(date: .omitted, time: .shortened))")
-                    .font(.body3)
-                    .foregroundColor(.white80)
+                if let settings = userSettingsViewModel.settings {
+                    let wakeupDate = WindDownManager.dateFromMinutes(settings.wakeUpTime)
+                    Text("Target Wake-Up Time: \(wakeupDate.formatted(date: .omitted, time: .shortened))")
+                        .font(.body3)
+                        .foregroundColor(.white80)
+                }
             }
             
             if !windDown.selectedSounds.isEmpty {
@@ -65,7 +70,7 @@ struct BedtimeView: View {
                     onStop: nil
                 )
             }
-            if (windDown.trackSleep || windDown.restrictApps) {
+            if (userSettingsViewModel.settings?.trackSleep == true || userSettingsViewModel.settings?.restrictApps == true) {
                 VStack(spacing: 8) {
                     Button {
                         showFeatures.toggle()
@@ -86,7 +91,7 @@ struct BedtimeView: View {
                     if showFeatures {
                         VStack(spacing: 12) {
                             // Track sleep indicator
-                            if windDown.trackSleep {
+                            if userSettingsViewModel.settings?.trackSleep == true {
                                 HStack(spacing: 8) {
                                     Image("microphone")
                                         .resizable()
@@ -106,7 +111,7 @@ struct BedtimeView: View {
                             }
                             
                             // Apps disabled card (only restriction feature)
-                            if windDown.restrictApps {
+                            if userSettingsViewModel.settings?.restrictApps == true {
                                 HStack(spacing: 8) {
                                     Image("apps")
                                         .resizable()
@@ -184,6 +189,7 @@ struct BedtimeView: View {
     }
     .environmentObject(WindDownManager())
     .environmentObject(SleepLogViewModel())
+    .environmentObject(UserSettingsViewModel())
 }
 
 

@@ -51,10 +51,6 @@ struct SleepScheduleView: View {
             if let settings = userSettingsViewModel.settings {
                 bedtime = WindDownManager.dateFromMinutes(settings.bedtime)
                 wakeTime = WindDownManager.dateFromMinutes(settings.wakeUpTime)
-            } else {
-                // fallback to manager defaults
-                bedtime = windDown.targetBedtime
-                wakeTime = windDown.targetWakeup
             }
         }
         .onChange(of: bedtime) { _, newValue in
@@ -69,16 +65,13 @@ struct SleepScheduleView: View {
     private func handleTimeChange(bedtime: Date, wake: Date) async {
         guard var settings = userSettingsViewModel.settings else { return }
         
-        // Update WindDownManager (this automatically reschedules notifications)
-        windDown.targetBedtime = bedtime
-        windDown.targetWakeup = wake
-        
         // Update only bedtime / wakeup values
         settings.bedtime = WindDownManager.minutesFromDate(bedtime)
         settings.wakeUpTime = WindDownManager.minutesFromDate(wake)
             
         // Persist changes
         await userSettingsViewModel.saveSettings(settings)
+        await windDown.scheduleNotifications()
         
         print("Updated bedtime and wake-up time, rescheduled notifications.")
     }

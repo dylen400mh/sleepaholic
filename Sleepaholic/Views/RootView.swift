@@ -17,6 +17,7 @@ import SuperwallKit
 
 struct RootView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
+    @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
 
@@ -59,6 +60,9 @@ struct RootView: View {
             } else {
                 Task { await userProfileViewModel.loadProfile() }
             }
+        }
+        .task {
+            windDown.userSettingsViewModel = userSettingsViewModel
         }
     }
 }

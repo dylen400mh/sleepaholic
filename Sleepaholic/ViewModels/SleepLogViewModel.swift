@@ -91,7 +91,7 @@ final class SleepLogViewModel: ObservableObject {
             UserDefaults.standard.set(data, forKey: activeKey)
             UserDefaults.standard.synchronize()
             
-            WindDownManager.shared.startMonitoringSleep(logPath: ref.path)
+            await WindDownManager.shared.startMonitoringSleep(logPath: ref.path)
             print("✅ Bedtime started — Firestore path: \(ref.path)")
         } catch {
             print("❌ Failed to encode active log: \(error)")
