@@ -215,26 +215,25 @@ final class SleepLogViewModel: ObservableObject {
     private func calculateSleepDebt(for logs: [SleepLog], age: Int?) -> Int {
         let targetMinutes = Int(ageBasedTargetHours(for: age) * 60)
         let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
-        var debt = 0
-
-        for log in logs {
-            guard let end = log.end, end >= sevenDaysAgo else { continue }
-            let actualMinutes = Int(end.timeIntervalSince(log.start) / 60)
-
-            if actualMinutes < targetMinutes {
-                // slept less → add debt
-                debt += targetMinutes - actualMinutes
-            } else {
-                // overslept → repay
-                debt -= actualMinutes - targetMinutes
-            }
-
-            // Cap at 0
-            if debt < 0 {
-                debt = 0
-            }
+        
+        // Filter logs within the last 7 days and that have an end time
+        let recentLogs = logs.filter { log in
+            guard let end = log.end else { return false }
+            return end >= sevenDaysAgo
         }
-
+        
+        guard !recentLogs.isEmpty else { return 0 }
+        
+        // Total minutes slept in that period
+        let totalSlept = recentLogs.reduce(0) { total, log in
+            guard let end = log.end else { return total }
+            return total + Int(end.timeIntervalSince(log.start) / 60)
+        }
+        
+        let targetTotal = targetMinutes * recentLogs.count
+        
+        // Sleep debt = how much below your weekly target you are
+        let debt = max(0, targetTotal - totalSlept)
         return debt
     }
     
