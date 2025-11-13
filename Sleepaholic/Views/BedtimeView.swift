@@ -17,7 +17,16 @@ struct BedtimeView: View {
     @State private var now = Date()
     @State private var showFeatures = false
     @State private var showQuitAlert = false
-
+    @State private var showTooShortAlert = false
+    @State private var navigateToWakeup = false
+    
+    private var sleptLongEnough: Bool {
+        guard let start = sleepLogViewModel.activeLog?.start else {
+            return true
+        }
+        let diff = Date().timeIntervalSince(start)
+        return diff >= 30 * 60  // 30 min in seconds
+    }
 
     var body: some View {
         VStack(spacing: 24) {
@@ -136,8 +145,12 @@ struct BedtimeView: View {
             Spacer()
             
             VStack(spacing: 16) {
-                NavigationLink {
-                    WakeupView()
+                Button {
+                    if sleptLongEnough {
+                        navigateToWakeup = true
+                    } else {
+                        showTooShortAlert = true
+                    }
                 } label: {
                     SecondaryButton(
                         title: "Log Wake-Up",
@@ -147,6 +160,12 @@ struct BedtimeView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .alert("Too Early to Log Wake-Up", isPresented: $showTooShortAlert) {
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text("You must sleep at least 30 minutes before logging a wake-up.")
+                }
+
 
                 Button("Quit") {
                     showQuitAlert = true
@@ -173,6 +192,9 @@ struct BedtimeView: View {
         .navigationBarBackButtonHidden(true)
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { now = $0 }
         .appBackground()
+        .navigationDestination(isPresented: $navigateToWakeup) {
+            WakeupView()
+        }
     }
 }
 
