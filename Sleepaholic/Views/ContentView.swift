@@ -139,9 +139,13 @@ struct ContentView: View {
                     }
                 }
                 
-                NavigationLink(destination: WindDownView()) {
+                Button {
+                    Task {
+                        await sleepLogViewModel.startBedtime()
+                    }
+                } label: {
                     PrimaryButton(
-                        title: "Start Wind Down",
+                        title: "Start Bedtime",
                         icon: nil,
                         size: .regular,
                         isDisabled: false
