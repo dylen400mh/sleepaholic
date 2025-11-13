@@ -9,8 +9,6 @@ import SwiftUI
 import FamilyControls
 
 struct WindDownView: View {
-    var showsBackButton: Bool = true
-
     @Environment(\.adaptiveVerticalPadding) var adaptivePadding
 
     @Environment(\.dismiss) private var dismiss
@@ -23,8 +21,6 @@ struct WindDownView: View {
     @State private var showPicker = false
     @State private var requestingAuth = false
     
-    private let tabBarClearance: CGFloat = 36
-    
     let sounds = ["White Noise", "Fan", "Ocean Waves", "Rain", "Crickets", "Campfire", "Birds", "Theta Waves"]
     
     var body: some View {
@@ -32,19 +28,12 @@ struct WindDownView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 48) {
                     HStack {
-                        if showsBackButton {
-                            BackButtonView(previous: { dismiss() })
-                        } else {
-                            Color.clear.frame(width: 40, height: 40)
-                        }
                         Spacer()
                         Text("Wind Down")
                             .font(.h2Semi)
                             .foregroundColor(Color.white100)
                             .multilineTextAlignment(.center)
                         Spacer()
-                        // preserve layout balance
-                        Color.clear.frame(width: 40, height: 40)
                     }
                     
                     VStack(alignment: .leading, spacing: 12) {
@@ -212,15 +201,10 @@ struct WindDownView: View {
                     )
                 }
             }
-            .padding(.bottom, tabBarClearance)
         }
         .padding(.vertical, adaptivePadding)
-        .padding(.horizontal, 24)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
         .familyActivityPicker(isPresented: $showPicker, selection: $windDown.restrictedApps)
-        .appBackground()
     }
     
     private var summaryText: String {

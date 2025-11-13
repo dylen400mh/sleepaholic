@@ -17,8 +17,6 @@ struct ContentView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
-    
-    private let tabBarClearance: CGFloat = 36
 
     var debtProgress: CGFloat {
         let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
@@ -153,12 +151,8 @@ struct ContentView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.bottom, tabBarClearance)
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, adaptivePadding)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
+        .padding(.bottom, 24)
         .task {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
@@ -177,7 +171,6 @@ struct ContentView: View {
                 sleepLogViewModel.startListeningForSleepLogs(userAge: nil)
             }
         }
-        .appBackground()
     }
 }
 

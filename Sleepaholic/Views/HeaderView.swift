@@ -17,25 +17,7 @@ struct HeaderView: View {
                 .scaledToFit()
                 .frame(height: 28)
 
-            
             Spacer()
-            
-            NavigationLink(destination: SettingsView()) {
-                Image("settings")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(.white100)
-                    .padding(8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color.white40, lineWidth: 0.5)
-                            .background(Color.clear)
-                    )
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            
         }
         .padding(.top, adaptivePadding)
     }

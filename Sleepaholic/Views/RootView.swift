@@ -32,9 +32,7 @@ struct RootView: View {
                 if authService.currentUser != nil {
                     // Logged in
                     if bedtimeActive {
-                        NavigationStack {
-                            BedtimeView()
-                        }
+                        BedtimeView()
                     } else {
                         MainTabView()
                     }

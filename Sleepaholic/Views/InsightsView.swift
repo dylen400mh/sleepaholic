@@ -44,12 +44,8 @@ struct InsightsView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, 24)
         .padding(.vertical, adaptivePadding)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .appBackground()
         .task {
             await loadClipsIfNeeded()
         }

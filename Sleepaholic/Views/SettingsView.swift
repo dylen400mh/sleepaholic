@@ -89,11 +89,7 @@ struct SettingsView: View {
             }
         }
         .padding(.vertical, adaptivePadding)
-        .padding(.horizontal, 24)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .appBackground()
         .task {
             await userSettingsViewModel.loadSettings()
             if let settings = userSettingsViewModel.settings {

@@ -19,8 +19,6 @@ struct LogCaffeineView: View {
     @State private var amount: String = ""
     @State private var time = Date()
     
-    private let tabBarClearance: CGFloat = 36
-    
     let caffeineOptions: OrderedDictionary<String, Int> = [
         "Coffee": 95,
         "Espresso": 63,
@@ -93,7 +91,6 @@ struct LogCaffeineView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
-        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)

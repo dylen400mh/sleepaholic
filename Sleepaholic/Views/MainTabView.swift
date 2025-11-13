@@ -36,48 +36,33 @@ enum AppTab: Int, CaseIterable {
 }
 
 struct MainTabView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
+    
     @State private var selection: AppTab = .sleep
-    @State private var insightsPath = NavigationPath()
-    @State private var activitiesPath = NavigationPath()
-    @State private var sleepPath = NavigationPath()
-    @State private var windDownPath = NavigationPath()
-    @State private var settingsPath = NavigationPath()
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
                 switch selection {
                 case .insights:
-                    NavigationStack(path: $insightsPath) {
-                        InsightsView()
-                            .navigationBarHidden(true)
-                    }
+                    InsightsView()
                 case .activities:
-                    NavigationStack(path: $activitiesPath) {
-                        ActivitiesView()
-                            .navigationBarHidden(true)
-                    }
+                    ActivitiesView()
                 case .sleep:
-                    NavigationStack(path: $sleepPath) {
-                        ContentView()
-                            .navigationBarHidden(true)
-                    }
+                    ContentView()
                 case .windDown:
-                    NavigationStack(path: $windDownPath) {
-                        WindDownView(showsBackButton: false)
-                            .navigationBarHidden(true)
-                    }
+                    WindDownView()
                 case .settings:
-                    NavigationStack(path: $settingsPath) {
-                        SettingsView(showsBackButton: false)
-                            .navigationBarHidden(true)
-                    }
+                    SettingsView(showsBackButton: false)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             CustomTabBar(selection: $selection)
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 24)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -170,5 +155,4 @@ private struct SleepTabButton: View {
         .environmentObject(UserProfileViewModel())
         .environmentObject(SleepClipViewModel())
         .enableAdaptivePadding()
-        .appBackground()
 }

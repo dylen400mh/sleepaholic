@@ -23,12 +23,8 @@ struct ActivitiesView: View {
             dateStrip
             content
         }
-        .padding(.horizontal, 24)
         .padding(.vertical, adaptivePadding)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .appBackground()
         .task {
             await activityViewModel.loadActivities(for: selectedDate)
         }
