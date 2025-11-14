@@ -23,6 +23,7 @@ struct RootView: View {
 
     @StateObject private var authService = AuthService.shared
     @StateObject private var superwallService = SuperwallService.shared
+    @StateObject private var onboardingAudioManager = OnboardingAudioManager()
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     @AppStorage("bedtimeActive") private var bedtimeActive = false
 
@@ -59,6 +60,12 @@ struct RootView: View {
                 Task { await userProfileViewModel.loadProfile() }
             }
         }
+        .onAppear {
+            updateOnboardingAudioPlayback()
+        }
+        .onChange(of: superwallService.isSubscribed) {
+            updateOnboardingAudioPlayback()
+        }
         .task {
             windDown.userSettingsViewModel = userSettingsViewModel
         }
@@ -68,4 +75,18 @@ struct RootView: View {
 #Preview {
     RootView()
         .environmentObject(UserProfileViewModel())
+}
+
+private extension RootView {
+    var shouldPlayOnboardingAudio: Bool {
+        !superwallService.isSubscribed
+    }
+    
+    func updateOnboardingAudioPlayback() {
+        if shouldPlayOnboardingAudio {
+            onboardingAudioManager.start()
+        } else {
+            onboardingAudioManager.stop()
+        }
+    }
 }
