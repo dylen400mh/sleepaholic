@@ -65,7 +65,7 @@ struct RootView: View {
         .onAppear {
             updateOnboardingAudioPlayback()
         }
-        .onChange(of: superwallService.isSubscribed) { _ in
+        .onChange(of: superwallService.isSubscribed) {
             updateOnboardingAudioPlayback()
         }
         .task {

@@ -10,7 +10,7 @@ import AVFoundation
 
 @MainActor
 final class OnboardingAudioManager: ObservableObject {
-    private let soundNames = ["crickets", "campfire"]
+    private let soundNames = ["Crickets", "Campfire"]
     private var audioPlayers: [String: AVAudioPlayer] = [:]
     private var audioSessionConfigured = false
     private var isPlaying = false
