@@ -9,8 +9,6 @@ import SwiftUI
 import FirebaseAuth
 
 struct ContentView: View {
-    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
-
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     @EnvironmentObject var activityViewModel: ActivityViewModel

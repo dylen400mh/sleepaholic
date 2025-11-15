@@ -9,10 +9,6 @@ import SwiftUI
 import FamilyControls
 
 struct WindDownView: View {
-    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
-
-    @Environment(\.dismiss) private var dismiss
-    
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
@@ -182,27 +178,24 @@ struct WindDownView: View {
             }
             
             // Bottom anchored bar
-            VStack(spacing: 16) {
-                if !windDown.selectedSounds.isEmpty {
-                    MixCard(
-                        sounds: windDown.selectedSounds,
-                        isPlaying: windDown.isPlaying,
-                        onPlayPause: {
-                            if windDown.isPlaying {
-                                windDown.pauseAllSounds()
-                            } else {
-                                windDown.resumeAllSounds()
-                            }
-                        },
-                        onStop: {
-                            windDown.stopAllSounds()
-                            windDown.selectedSounds.removeAll()
+            if !windDown.selectedSounds.isEmpty {
+                MixCard(
+                    sounds: windDown.selectedSounds,
+                    isPlaying: windDown.isPlaying,
+                    onPlayPause: {
+                        if windDown.isPlaying {
+                            windDown.pauseAllSounds()
+                        } else {
+                            windDown.resumeAllSounds()
                         }
-                    )
-                }
+                    },
+                    onStop: {
+                        windDown.stopAllSounds()
+                        windDown.selectedSounds.removeAll()
+                    }
+                )
             }
         }
-        .padding(.vertical, adaptivePadding)
         .navigationBarBackButtonHidden(true)
         .familyActivityPicker(isPresented: $showPicker, selection: $windDown.restrictedApps)
     }

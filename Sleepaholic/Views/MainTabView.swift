@@ -60,7 +60,7 @@ struct MainTabView: View {
             CustomTabBar(selection: $selection)
         }
         .padding(.horizontal, 24)
-        .padding(.bottom, 24)
+        .padding(.vertical, adaptivePadding)
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
     }
@@ -70,43 +70,36 @@ private struct CustomTabBar: View {
     @Binding var selection: AppTab
 
     var body: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 16) {
-                ForEach(AppTab.allCases, id: \.self) { tab in
-                    Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            selection = tab
-                        }
-                    } label: {
-                        if tab == .sleep {
-                            SleepTabButton(isSelected: selection == .sleep)
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            VStack(spacing: 6) {
-                                Image(systemName: tab.iconName)
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(selection == tab ? .white100 : .white70)
-                                Text(tab.title)
-                                    .font(.system(size: tab == .windDown ? 10 : 12, weight: .semibold))
-                                    .foregroundColor(selection == tab ? .white100 : .white70)
-                                    .lineLimit(tab == .windDown ? 2 : 1)
-                                    .multilineTextAlignment(.center)
-                                    .minimumScaleFactor(0.7)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
+        HStack(spacing: 16) {
+            ForEach(AppTab.allCases, id: \.self) { tab in
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        selection = tab
                     }
-                    .buttonStyle(.plain)
+                } label: {
+                    if tab == .sleep {
+                        SleepTabButton(isSelected: selection == .sleep)
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        VStack(spacing: 6) {
+                            Image(systemName: tab.iconName)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(selection == tab ? .white100 : .white70)
+                            Text(tab.title)
+                                .font(.system(size: tab == .windDown ? 10 : 12, weight: .semibold))
+                                .foregroundColor(selection == tab ? .white100 : .white70)
+                                .lineLimit(tab == .windDown ? 2 : 1)
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(0.7)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle()) 
+                    }
                 }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
-
-            Color.clear
-                .frame(height: 4)
         }
-        .padding(.bottom, 12)
+        .padding(.top, 8)
         .background(
             LinearGradient(
                 colors: [Color.background.opacity(0.95), Color.background.opacity(0.8)],

@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct HeaderView: View {
-    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
-    
     var body: some View {
         HStack {
             Image("SleepaholicLogo")
@@ -19,6 +17,5 @@ struct HeaderView: View {
 
             Spacer()
         }
-        .padding(.top, adaptivePadding)
     }
 }

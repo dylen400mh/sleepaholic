@@ -18,7 +18,7 @@ struct DayStripSelector: View {
     }()
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             ForEach(weekDates, id: \.self) { day in
                 let isSelected = calendar.isDate(day, inSameDayAs: selectedDate)
                 Button {
