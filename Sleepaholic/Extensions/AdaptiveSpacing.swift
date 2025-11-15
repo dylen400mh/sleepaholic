@@ -19,18 +19,20 @@ extension EnvironmentValues {
 }
 
 struct AdaptiveVerticalPaddingModifier: ViewModifier {
-    @Environment(\.horizontalSizeClass) var hSize
-
     func body(content: Content) -> some View {
         let bottomInset = UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap { $0.windows }
-            .first { $0.isKeyWindow }?
+            .first(where: { $0.isKeyWindow })?
             .safeAreaInsets.bottom ?? 0
 
-        let adaptivePadding: CGFloat = bottomInset == 0
-        ? 100
-        : 40 + (bottomInset * 0.5)
+        let adaptivePadding: CGFloat
+
+        if bottomInset > 0 {
+            adaptivePadding = 36
+        } else {
+            adaptivePadding = 90
+        }
 
         return content.environment(\.adaptiveVerticalPadding, adaptivePadding)
     }
