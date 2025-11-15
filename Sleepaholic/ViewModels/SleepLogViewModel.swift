@@ -17,6 +17,12 @@ struct FormattedSleep {
     let date: String
 }
 
+struct UnifiedSleepSession {
+    let healthSegments: [SleepSegment]?
+    let manualLog: SleepLog?
+    let clips: [SleepClip]
+}
+
 @MainActor
 final class SleepLogViewModel: ObservableObject {
     @Published var sleepLogs: [SleepLog] = []
@@ -35,6 +41,9 @@ final class SleepLogViewModel: ObservableObject {
     @Published private(set) var sleepQuality: Int
     
     @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
+    
+    // Apple Health sleep segments cache (per day)
+    @Published var healthSegmentsByDate: [Date: [SleepSegment]] = [:]
     
     init() {
         // restore active session if app was restarted
@@ -323,5 +332,50 @@ final class SleepLogViewModel: ObservableObject {
                 }
             }
     }
+    
+    func loadHealthSleep(for date: Date) async {
+        // Prevent repeat fetches for the same day
+        if healthSegmentsByDate[Calendar.current.startOfDay(for: date)] != nil {
+            return
+        }
 
+        // Only fetch if user enabled Apple Health
+        let useAppleHealth = UserDefaults.standard.bool(forKey: "useAppleHealthSleep")
+        if !useAppleHealth { return }
+
+        guard HealthKitManager.shared.isAuthorized() else {
+            return
+        }
+
+        do {
+            let segments = try await HealthKitManager.shared.fetchSleepSegments(for: date)
+            let key = Calendar.current.startOfDay(for: date)
+            await MainActor.run {
+                self.healthSegmentsByDate[key] = segments
+            }
+        } catch {
+            print("❌ Failed to load HealthKit sleep for \(date): \(error)")
+        }
+    }
+    
+    func buildUnifiedSession(for date: Date, clips: [SleepClip]) -> UnifiedSleepSession {
+        let calendar = Calendar.current
+        let dayStart = calendar.startOfDay(for: date)
+
+        let hkSegments = healthSegmentsByDate[dayStart]
+
+        // Find matching manual log (if any)
+        let manual = sleepLogs.first { log in
+            if let end = log.end {
+                return calendar.isDate(end, inSameDayAs: date)
+            }
+            return calendar.isDate(log.start, inSameDayAs: date)
+        }
+
+        return UnifiedSleepSession(
+            healthSegments: hkSegments,
+            manualLog: manual,
+            clips: clips
+        )
+    }
 }
