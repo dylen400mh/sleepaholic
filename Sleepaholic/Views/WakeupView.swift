@@ -18,7 +18,6 @@ struct WakeupView: View {
     @EnvironmentObject var windDown: WindDownManager
     
     @State private var manualWakeTime = Date()
-    @State private var goHome = false
     @State private var showAlert = false
     @State private var alertType: AlertType? = nil
     
@@ -110,10 +109,6 @@ struct WakeupView: View {
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .navigationDestination(isPresented: $goHome) {
-            ContentView()
-                .navigationBarBackButtonHidden(true)
-        }
         .alert(isPresented: $showAlert) {
             switch alertType {
             case .currentTime:
@@ -129,7 +124,6 @@ struct WakeupView: View {
                                 audioClipsCount: sleepClipViewModel.clips.count
                             )
                             windDown.reset()
-                            goHome = true
                         }
                     },
                     secondaryButton: .cancel()
@@ -147,7 +141,6 @@ struct WakeupView: View {
                                 audioClipsCount: sleepClipViewModel.clips.count
                             )
                             windDown.reset()
-                            goHome = true
                         }
                     },
                     secondaryButton: .cancel()

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ActivitiesView: View {
-    @Environment(\.adaptiveVerticalPadding) private var adaptivePadding
     @EnvironmentObject private var activityViewModel: ActivityViewModel
 
     @State private var selectedDate = Date()
@@ -23,12 +22,7 @@ struct ActivitiesView: View {
             dateStrip
             content
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, adaptivePadding)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .appBackground()
         .task {
             await activityViewModel.loadActivities(for: selectedDate)
         }
@@ -110,5 +104,4 @@ struct ActivitiesView: View {
         ActivitiesView()
             .environmentObject(ActivityViewModel())
     }
-    .enableAdaptivePadding()
 }

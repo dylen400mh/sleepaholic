@@ -16,8 +16,6 @@ struct LogNapView: View {
     @State private var startTime = Date()
     @State private var endTime = Date().addingTimeInterval(1800)
     
-    private let tabBarClearance: CGFloat = 36
-    
     var body: some View {
         VStack(spacing: 48) {
             // MARK: - Header
@@ -55,7 +53,6 @@ struct LogNapView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
-        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)

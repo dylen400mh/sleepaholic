@@ -7,7 +7,6 @@
 import SwiftUI
 
 struct InsightsView: View {
-    @Environment(\.adaptiveVerticalPadding) private var adaptivePadding
     @EnvironmentObject private var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject private var sleepClipViewModel: SleepClipViewModel
 
@@ -44,12 +43,7 @@ struct InsightsView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, adaptivePadding)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .appBackground()
         .task {
             await loadClipsIfNeeded()
         }
@@ -230,5 +224,4 @@ private struct InsightsMetricCard: View {
             .environmentObject(SleepLogViewModel())
             .environmentObject(SleepClipViewModel())
     }
-    .enableAdaptivePadding()
 }

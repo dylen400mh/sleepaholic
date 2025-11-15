@@ -20,8 +20,6 @@ struct LogWorkoutView: View {
     
     let workoutOptions = ["Strength", "Cardio", "Other"]
     
-    private let tabBarClearance: CGFloat = 36
-    
     var body: some View {
         VStack(spacing: 48) {
             // MARK: - Header
@@ -78,7 +76,6 @@ struct LogWorkoutView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
-        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)
