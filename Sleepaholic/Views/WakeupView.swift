@@ -124,6 +124,7 @@ struct WakeupView: View {
                                 audioClipsCount: sleepClipViewModel.clips.count
                             )
                             windDown.reset()
+                            dismiss()
                         }
                     },
                     secondaryButton: .cancel()
@@ -141,6 +142,7 @@ struct WakeupView: View {
                                 audioClipsCount: sleepClipViewModel.clips.count
                             )
                             windDown.reset()
+                            dismiss()
                         }
                     },
                     secondaryButton: .cancel()

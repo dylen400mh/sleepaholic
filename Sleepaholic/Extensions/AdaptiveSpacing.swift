@@ -29,7 +29,7 @@ struct AdaptiveVerticalPaddingModifier: ViewModifier {
         let adaptivePadding: CGFloat
 
         if bottomInset > 0 {
-            adaptivePadding = 36
+            adaptivePadding = 40
         } else {
             adaptivePadding = 90
         }
