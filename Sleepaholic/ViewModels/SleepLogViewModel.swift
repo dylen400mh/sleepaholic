@@ -32,7 +32,6 @@ final class SleepLogViewModel: ObservableObject {
     @Published private(set) var lastSleep: FormattedSleep?
     @Published private(set) var sleepDebt: String
     @Published private(set) var recommendations: [String]
-    @Published private(set) var sleepQuality: Int
     
     @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
     @AppStorage("useAppleHealthSleep") private var useAppleHealthSleep = false
@@ -56,7 +55,6 @@ final class SleepLogViewModel: ObservableObject {
         lastSleep = nil
         sleepDebt = ""
         recommendations = []
-        sleepQuality = 0
     }
     
     deinit {
@@ -267,9 +265,8 @@ final class SleepLogViewModel: ObservableObject {
         let debtMinutes = calculateSleepDebt(for: sleepLogs, age: userAge)
         sleepDebt = formatMinutes(debtMinutes)
         
-        // Sleep Quality + Recommendations
+        // Recommendations
         if let latest = sleepLogs.first {
-            sleepQuality = latest.sleepQuality ?? 0
             recommendations = latest.recommendations ?? []
         }
     }

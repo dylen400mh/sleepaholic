@@ -62,7 +62,6 @@ export const generateSleepInsights = onDocumentWritten(
   const { userId, logId } = event.params;
 
   if (!data?.end) return; // skip incomplete logs
-  if (data?.sleepQuality) return; // skip already generated logs
   if (data?.recommendations) return; // skip already generated recommendations
 
   const db = admin.firestore();
@@ -313,11 +312,10 @@ ${inputJSON}
     // Update Firestore document
     // ======================================================
     await db.doc(`users/${userId}/sleepLogs/${logId}`).update({
-      sleepQuality: quality,
       recommendations
     });
 
-    console.log(`✅ Insights for ${userId}/${logId}: Quality ${quality}, ${recommendations.length} recs`);
+    console.log(`✅ Insights for ${userId}/${logId}: ${recommendations.length} recs`);
     console.log(`✅ Insights generated for ${userId}/${logId}`);
   } catch (err) {
     console.error("❌ Error generating insights:", err);
@@ -326,8 +324,6 @@ ${inputJSON}
     const start = log.start?.toDate ? log.start.toDate() : new Date(log.start);
     const end = log.end?.toDate ? log.end.toDate() : new Date(log.end);
     const sleepDurationHrs = (end - start) / (1000 * 60 * 60);
-
-    const fallbackQuality = Math.min(100, Math.round((latestDuration / targetHours) * 100));
 
     // Basic rule-based recommendations
     const fallbackRecs = [];
@@ -338,7 +334,6 @@ ${inputJSON}
     fallbackRecs.push("Maintain consistent bed and wake times.");
 
     await db.doc(`users/${userId}/sleepLogs/${logId}`).update({
-      sleepQuality: fallbackQuality,
       recommendations: fallbackRecs
     });
 

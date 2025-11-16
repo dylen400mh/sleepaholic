@@ -154,10 +154,8 @@ struct InsightsView: View {
                 title: "Time Asleep",
                 value: timeAsleepText,
                 subtitle: hasHealthData
-                ? "Unknown"
-                : hasHealthData
-                    ? "Based on Apple Health"
-                    : "Requires Apple Health"
+                ? "Based on Apple Health"
+                : "Requires Apple Health"
             )
         }
     }
@@ -171,9 +169,9 @@ struct InsightsView: View {
             if hasHealthData {
                 let start = healthSegmentsForDay.first!.start
                 let end   = healthSegmentsForDay.last!.end
-                timelineBox(start: start, end: end, source: "Apple Health")
+                timelineBox(start: start, end: end, source: "From Apple Health")
             } else if let log = manualLogForDay, let end = log.end {
-                timelineBox(start: log.start, end: end, source: "Sleepaholic")
+                timelineBox(start: log.start, end: end, source: "From Sleepaholic")
             } else {
                 Text("No sleep recorded for this day yet.")
                     .font(.body3)
@@ -283,6 +281,7 @@ struct InsightsView: View {
                 }
             } else {
                 Text("Enable Apple Health to view sleep stages.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .font(.body3)
                     .foregroundColor(.white70)
                     .padding(16)
