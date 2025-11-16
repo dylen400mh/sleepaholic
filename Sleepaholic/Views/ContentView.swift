@@ -147,12 +147,6 @@ struct ContentView: View {
         .task {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
-            // 💤 Load clips for the most recent sleep log (if available)
-            if let latestLog = sleepLogViewModel.sleepLogs.first {
-                if let id = latestLog.id  {
-                    await sleepClipViewModel.loadClips(for: id)
-                }
-            }
             
             sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
             
