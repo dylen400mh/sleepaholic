@@ -20,6 +20,7 @@ enum OnboardingStep: Int, CaseIterable {
     case goals
     case referral
     case testimonials
+    case healthIntro
     case finalCalculate
     case paywall
 }
@@ -121,6 +122,8 @@ struct OnboardingView: View {
                     .environmentObject(referralViewModel)
             case .testimonials:
                 TestimonialsView(next: goToNext, previous: goToPrevious)
+            case .healthIntro:
+                HealthIntroView(next: goToNext, previous: goToPrevious)
             case .finalCalculate:
                 FinalCalculateView(next: goToNext)
             default:
