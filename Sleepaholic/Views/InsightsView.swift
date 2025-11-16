@@ -76,6 +76,10 @@ struct InsightsView: View {
     private var hasManualData: Bool {
         manualLogForDay != nil
     }
+    
+    private var healthAuthorized: Bool {
+        HealthKitManager.shared.isAuthorized()
+    }
 
     var body: some View {
         VStack(spacing: 24) {
@@ -137,8 +141,12 @@ struct InsightsView: View {
                 value: sleepScoreText,
                 subtitle: hasHealthData
                 ? "Based on Apple Health"
-                : "Requires Apple Health"
+                : healthAuthorized
+                    ? "No Apple Health data for this night"
+                    : "Enable Apple Health to view"
             )
+            
+            
             
             InsightsMetricCard(
                 title: "Time in Bed",
@@ -155,7 +163,9 @@ struct InsightsView: View {
                 value: timeAsleepText,
                 subtitle: hasHealthData
                 ? "Based on Apple Health"
-                : "Requires Apple Health"
+                : healthAuthorized
+                    ? "No Apple Health data for this night"
+                    : "Enable Apple Health to view"
             )
         }
     }
@@ -279,6 +289,14 @@ struct InsightsView: View {
                         .contentShape(Rectangle())
                     }
                 }
+            } else if healthAuthorized {
+                Text("No sleep stage data available for this night.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .font(.body3)
+                    .foregroundColor(.white70)
+                    .padding(16)
+                    .background(Color.white5)
+                    .cornerRadius(16)
             } else {
                 Text("Enable Apple Health to view sleep stages.")
                     .frame(maxWidth: .infinity, alignment: .leading)
