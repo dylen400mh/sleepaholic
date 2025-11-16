@@ -14,6 +14,7 @@ extension Font {
     static let h3Semi = Font.custom("Nunito-SemiBold", size: 20)
     static let body1Semi = Font.custom("Nunito-SemiBold", size: 18)
     static let body2Semi = Font.custom("Nunito-SemiBold", size: 16)
+    static let body3Semi = Font.custom("Nunito-SemiBold", size: 14)
 
     // MARK: - Nunito Regular
     static let body1 = Font.custom("Nunito-Regular", size: 18)

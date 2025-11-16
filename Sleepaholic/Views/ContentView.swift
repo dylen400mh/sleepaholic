@@ -15,7 +15,7 @@ struct ContentView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
-
+    
     var debtProgress: CGFloat {
         let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
         var totalMinutes = 0
@@ -26,22 +26,18 @@ struct ContentView: View {
                 totalMinutes += Int(part.replacingOccurrences(of: "m", with: "")) ?? 0
             }
         }
-        // Cap between 0–1
-        let maxDebtMinutes = 14 * 60 // assuming 14 hours is max
+        let maxDebtMinutes = 14 * 60
         return min(CGFloat(totalMinutes) / CGFloat(maxDebtMinutes), 1.0)
     }
     
     var body: some View {
         ZStack {
             VStack(spacing: 24) {
-                // Sticky header
                 HeaderView()
                 
-                // Scrollable content
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
                         VStack(spacing: 16) {
-                            // sleep quality & streak
                             HStack(spacing: 12) {
                                 if sleepLogViewModel.sleepQuality != 0 {
                                     SummaryCard(
@@ -50,6 +46,7 @@ struct ContentView: View {
                                         subtitle: "Sleep Quality"
                                     )
                                 }
+                                
                                 SummaryCard(
                                     icon: "flame.fill",
                                     title: "\(sleepLogViewModel.streakDays) nights",
@@ -57,7 +54,6 @@ struct ContentView: View {
                                 )
                             }
                             
-                            // last sleep
                             if let sleep = sleepLogViewModel.getLastSleep() {
                                 VStack(spacing: 8) {
                                     Text("Last Sleep: \(sleep.duration)")
@@ -75,14 +71,11 @@ struct ContentView: View {
                             }
                         }
                         
-                        
-                        // MARK: - Sleep Debt Progress
                         SleepDebtProgressView(
                             progress: debtProgress,
                             sleepDebt: sleepLogViewModel.sleepDebt
                         )
                         
-                        // 📋 activities
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
                                 Text("Today's Activities")
@@ -105,15 +98,12 @@ struct ContentView: View {
                             VStack(spacing: 4) {
                                 ForEach(activityViewModel.activities) { activity in
                                     ActivityRow(activity: activity, onDelete: {
-                                        Task {
-                                            await activityViewModel.deleteActivity(activity)
-                                        }
+                                        Task { await activityViewModel.deleteActivity(activity) }
                                     })
                                 }
                             }
                         }
                         
-                        // 💡 recommendations
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Smart Sleep Insights")
                                 .font(.h3Semi)
@@ -136,9 +126,7 @@ struct ContentView: View {
                 }
                 
                 Button {
-                    Task {
-                        await sleepLogViewModel.startBedtime()
-                    }
+                    Task { await sleepLogViewModel.startBedtime() }
                 } label: {
                     PrimaryButton(
                         title: "Start Bedtime",
@@ -154,11 +142,10 @@ struct ContentView: View {
         .task {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
-            // 💤 Load clips for the most recent sleep log (if available)
-            if let latestLog = sleepLogViewModel.sleepLogs.first {
-                if let id = latestLog.id  {
-                    await sleepClipViewModel.loadClips(for: id)
-                }
+            
+            if let latestLog = sleepLogViewModel.sleepLogs.first,
+               let id = latestLog.id {
+                await sleepClipViewModel.loadClips(for: id)
             }
             
             sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
@@ -172,7 +159,6 @@ struct ContentView: View {
     }
 }
 
-
 #Preview {
     NavigationStack {
         ContentView()
@@ -184,5 +170,3 @@ struct ContentView: View {
     .environmentObject(UserProfileViewModel())
     .environmentObject(SleepClipViewModel())
 }
-
-

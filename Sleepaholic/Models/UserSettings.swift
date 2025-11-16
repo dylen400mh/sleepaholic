@@ -17,4 +17,5 @@ struct UserSettings: Identifiable, Codable {
     
     var trackSleep: Bool
     var restrictApps: Bool
+    var hasCompletedGuidedTour: Bool = false
 }

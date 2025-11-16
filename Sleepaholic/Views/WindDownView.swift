@@ -174,6 +174,7 @@ struct WindDownView: View {
                             .disabled(!(userSettingsViewModel.settings?.restrictApps ?? false))
                         }
                     }
+                   
                 }
             }
             

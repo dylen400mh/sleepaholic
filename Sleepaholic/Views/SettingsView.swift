@@ -13,8 +13,10 @@ struct SettingsView: View {
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
+    @EnvironmentObject var guidedTourManager: GuidedTourManager
     
     @State private var trackSleepWithMic = false
+    @State private var replayGuidedTour = false
     
     var body: some View {
         VStack(spacing: 48) {
@@ -62,6 +64,22 @@ struct SettingsView: View {
                         .onChange(of: trackSleepWithMic) { _, newValue in
                             Task {
                                 await saveSettingChange(newValue)
+                            }
+                        }
+                        SettingsSeparator()
+                        
+                        SettingsRow(
+                            iconName: "moon_sleep",
+                            title: "Replay Guided Tour",
+                            hasArrow: false,
+                            toggleBinding: $replayGuidedTour
+                        )
+                        .onChange(of: replayGuidedTour) { _, newValue in
+                            if newValue {
+                                guidedTourManager.requestReplayFromSettings()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    replayGuidedTour = false
+                                }
                             }
                         }
                         SettingsSeparator()
