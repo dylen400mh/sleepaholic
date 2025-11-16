@@ -16,8 +16,6 @@ struct LogAlcoholView: View {
     @State private var drinks = ""
     @State private var time = Date()
     
-    private let tabBarClearance: CGFloat = 36
-    
     var body: some View {
         VStack(spacing: 48) {
             // MARK: - Header
@@ -59,7 +57,6 @@ struct LogAlcoholView: View {
             .buttonStyle(.plain)
             .disabled(!isFormValid)
         }
-        .padding(.bottom, tabBarClearance)
         .padding(.vertical, adaptivePadding)
         .padding(.horizontal, 24)
         .frame(maxWidth: 600)

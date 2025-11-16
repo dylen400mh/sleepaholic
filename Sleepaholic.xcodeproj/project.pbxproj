@@ -305,6 +305,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sleepaholic/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Sleepaholic uses your Apple Health sleep data to provide accurate sleep stages, time asleep, and sleep insights. This data stays on your device and is never uploaded to servers.\n";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Sleepaholic requires access to your Apple Health information to provide accurate sleep insights and analytics. This data remains private on your device.\n";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Sleepaholic needs microphone access to track sleep sounds.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -347,6 +349,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sleepaholic/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Sleepaholic uses your Apple Health sleep data to provide accurate sleep stages, time asleep, and sleep insights. This data stays on your device and is never uploaded to servers.\n";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Sleepaholic requires access to your Apple Health information to provide accurate sleep insights and analytics. This data remains private on your device.\n";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Sleepaholic needs microphone access to track sleep sounds.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

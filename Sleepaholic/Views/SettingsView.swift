@@ -11,8 +11,6 @@ import StoreKit
 struct SettingsView: View {
     var showsBackButton: Bool = true
 
-    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
-
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     
@@ -88,12 +86,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .padding(.vertical, adaptivePadding)
-        .padding(.horizontal, 24)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .appBackground()
         .task {
             await userSettingsViewModel.loadSettings()
             if let settings = userSettingsViewModel.settings {

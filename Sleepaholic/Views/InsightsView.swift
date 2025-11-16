@@ -7,28 +7,61 @@
 import SwiftUI
 
 struct InsightsView: View {
-    @Environment(\.adaptiveVerticalPadding) private var adaptivePadding
     @EnvironmentObject private var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject private var sleepClipViewModel: SleepClipViewModel
 
     @State private var selectedDate = Date()
 
-    private var selectedLog: SleepLog? {
-        let calendar = Calendar.current
-        return sleepLogViewModel.sleepLogs.first { log in
-            if let end = log.end {
-                return calendar.isDate(end, inSameDayAs: selectedDate)
-            }
-            return calendar.isDate(log.start, inSameDayAs: selectedDate)
-        }
+    private var session: UnifiedSleepSession? {
+        let clips = sleepClipViewModel.clips
+        return sleepLogViewModel.buildUnifiedSession(for: selectedDate, clips: clips)
     }
 
     private var durationText: String {
-        guard let log = selectedLog, let end = log.end else { return "--" }
-        let duration = end.timeIntervalSince(log.start)
-        let hours = Int(duration / 3600)
-        let minutes = Int((duration.truncatingRemainder(dividingBy: 3600)) / 60)
+        guard let session = session else { return "--" }
+        
+        // Prefer Apple Health segments
+        if let segments = session.healthSegments, !segments.isEmpty {
+            let total = segments.reduce(0) { $0 + $1.duration }
+            return formatDuration(total)
+        }
+
+        // Fallback to manual
+        if let log = session.manualLog, let end = log.end {
+            let total = end.timeIntervalSince(log.start)
+            return formatDuration(total)
+        }
+
+        return "--"
+    }
+    
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let hours = Int(seconds / 3600)
+        let minutes = Int((seconds.truncatingRemainder(dividingBy: 3600)) / 60)
         return minutes == 0 ? "\(hours)h" : "\(hours)h \(minutes)m"
+    }
+    
+    private var sleepScoreText: String {
+        guard let session = session else { return "--" }
+
+        // Apple Health sleep score (HK only)
+        if let segments = session.healthSegments, !segments.isEmpty {
+            return calculateSleepScore(from: segments)
+        }
+
+        // Manual logs have no sleep staging → no score
+        return "--"
+    }
+
+    private func calculateSleepScore(from segments: [SleepSegment]) -> String {
+        let total = segments.reduce(0) { $0 + $1.duration }
+        if total == 0 { return "--" }
+
+        let deep = segments.filter { $0.stage == .deep }.reduce(0) { $0 + $1.duration }
+        let rem = segments.filter { $0.stage == .rem }.reduce(0) { $0 + $1.duration }
+
+        let score = Int(((deep + rem) / total) * 100)
+        return "\(score)"
     }
 
     var body: some View {
@@ -44,12 +77,7 @@ struct InsightsView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, adaptivePadding)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
         .navigationBarBackButtonHidden(true)
-        .appBackground()
         .task {
             await loadClipsIfNeeded()
         }
@@ -88,14 +116,20 @@ struct InsightsView: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
             InsightsMetricCard(
                 title: "Sleep Score",
-                value: selectedLog?.sleepQuality.map { "\($0)" } ?? "--",
-                subtitle: "/100"
+                value: sleepScoreText,
+                subtitle: session?.healthSegments?.isEmpty == false
+                ? "Based on Apple Health"
+                : "Requires Apple Health"
             )
 
             InsightsMetricCard(
                 title: "Time Asleep",
                 value: durationText,
-                subtitle: selectedLog == nil ? "Log sleep to unlock" : "Calculated from your sleep session"
+                subtitle: session == nil
+                ? "No data"
+                : session?.healthSegments?.isEmpty == false
+                    ? "Apple Health Data"
+                    : "Sleepaholic Log"
             )
         }
     }
@@ -106,41 +140,61 @@ struct InsightsView: View {
                 .font(.h3Semi)
                 .foregroundColor(.white100)
 
-            if let log = selectedLog {
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Bedtime")
-                            .font(.body2)
-                            .foregroundColor(.white70)
-                        Text(log.start.formatted(date: .omitted, time: .shortened))
-                            .font(.body1Semi)
-                            .foregroundColor(.white100)
-                    }
+            if let session = session {
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Wake")
-                            .font(.body2)
-                            .foregroundColor(.white70)
-                        Text(log.end?.formatted(date: .omitted, time: .shortened) ?? "--")
-                            .font(.body1Semi)
-                            .foregroundColor(.white100)
-                    }
+                // Prefer Apple Health in-bed timeline
+                if let segments = session.healthSegments, !segments.isEmpty {
+                    let start = segments.first!.start
+                    let end = segments.last!.end
 
-                    Spacer()
+                    timelineBox(start: start, end: end, source: "Apple Health")
+
+                // Fallback to manual log
+                } else if let log = session.manualLog, let end = log.end {
+                    timelineBox(start: log.start, end: end, source: "Sleepaholic")
+                } else {
+                    Text("No sleep recorded for this day yet.")
+                        .font(.body3)
+                        .foregroundColor(.white70)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.white5)
+                        .cornerRadius(16)
                 }
-                .padding()
-                .background(Color.white5)
-                .cornerRadius(16)
-            } else {
-                Text("No sleep recorded for this day yet.")
-                    .font(.body3)
-                    .foregroundColor(.white70)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white5)
-                    .cornerRadius(16)
             }
         }
+    }
+    
+    @ViewBuilder
+    private func timelineBox(start: Date, end: Date, source: String) -> some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Bedtime")
+                    .font(.body2)
+                    .foregroundColor(.white70)
+                Text(start.formatted(date: .omitted, time: .shortened))
+                    .font(.body1Semi)
+                    .foregroundColor(.white100)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Wake")
+                    .font(.body2)
+                    .foregroundColor(.white70)
+                Text(end.formatted(date: .omitted, time: .shortened))
+                    .font(.body1Semi)
+                    .foregroundColor(.white100)
+            }
+
+            Spacer()
+
+            Text(source)
+                .font(.caption)
+                .foregroundColor(.white70)
+        }
+        .padding()
+        .background(Color.white5)
+        .cornerRadius(16)
     }
 
     private var recordingsCard: some View {
@@ -149,9 +203,11 @@ struct InsightsView: View {
                 .font(.h3Semi)
                 .foregroundColor(.white100)
 
-            if let log = selectedLog, log.id != nil, !sleepClipViewModel.clips.isEmpty {
+            if let session = session,
+               let _ = session.manualLog,
+               !session.clips.isEmpty {
                 VStack(spacing: 12) {
-                    ForEach(sleepClipViewModel.clips) { clip in
+                    ForEach(session.clips) { clip in
                         HStack {
                             Image(systemName: "waveform")
                                 .font(.system(size: 20, weight: .medium))
@@ -192,10 +248,18 @@ struct InsightsView: View {
     }
 
     private func loadClipsIfNeeded() async {
-        guard let log = selectedLog, let id = log.id else {
+        guard let session = session else {
             sleepClipViewModel.clips = []
             return
         }
+        
+        // Only manual logs have Firestore IDs for clips
+        guard let manual = session.manualLog,
+              let id = manual.id else {
+            sleepClipViewModel.clips = []
+            return
+        }
+        
         await sleepClipViewModel.loadClips(for: id)
     }
 }
@@ -230,5 +294,4 @@ private struct InsightsMetricCard: View {
             .environmentObject(SleepLogViewModel())
             .environmentObject(SleepClipViewModel())
     }
-    .enableAdaptivePadding()
 }
