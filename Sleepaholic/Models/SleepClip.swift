@@ -9,6 +9,12 @@ import Foundation
 import FirebaseFirestore
 
 struct SleepClip: Identifiable, Codable {
-    @DocumentID var id: String?
+    var id: String?
     var storagePath: String
+    
+    var recordedDate: Date? {
+        guard let id,
+              let ts = Double(id.replacingOccurrences(of: ".m4a", with: "")) else { return nil }
+        return Date(timeIntervalSince1970: ts)
+    }
 }

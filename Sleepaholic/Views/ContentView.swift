@@ -41,15 +41,8 @@ struct ContentView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
                         VStack(spacing: 16) {
-                            // sleep quality & streak
+                            // streak
                             HStack(spacing: 12) {
-                                if sleepLogViewModel.sleepQuality != 0 {
-                                    SummaryCard(
-                                        icon: "moon.fill",
-                                        title: "\(sleepLogViewModel.sleepQuality)%",
-                                        subtitle: "Sleep Quality"
-                                    )
-                                }
                                 SummaryCard(
                                     icon: "flame.fill",
                                     title: "\(sleepLogViewModel.streakDays) nights",
