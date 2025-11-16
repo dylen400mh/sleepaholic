@@ -53,12 +53,15 @@ final class HealthKitManager {
         }
 
         let calendar = Calendar.current
+        
         let dayStart = calendar.startOfDay(for: date)
-        let nextDay = calendar.date(byAdding: .day, value: 1, to: dayStart)!
+        let yesterdayStart = calendar.date(byAdding: .day, value: -1, to: dayStart)!
+        let endOfToday = calendar.date(byAdding: .second, value: -1,
+            to: calendar.date(byAdding: .day, value: 1, to: dayStart)!)!
 
         let predicate = HKQuery.predicateForSamples(
-            withStart: dayStart,
-            end: nextDay,
+            withStart: yesterdayStart,
+            end: endOfToday,
             options: []
         )
 

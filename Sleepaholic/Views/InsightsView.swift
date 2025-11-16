@@ -6,11 +6,31 @@
 
 import SwiftUI
 
+extension TimeInterval {
+    func formattedAsHhMm() -> String {
+        let h = Int(self / 3600)
+        let m = Int((self.truncatingRemainder(dividingBy: 3600)) / 60)
+        
+        if h == 0 { return "\(m)m" }
+        if m == 0 { return "\(h)h" }
+        return "\(h)h \(m)m"
+    }
+}
+
+extension Date {
+    func isYesterday(relativeTo reference: Date) -> Bool {
+        Calendar.current.isDate(self, inSameDayAs: reference.addingTimeInterval(-86400))
+    }
+}
+
 struct InsightsView: View {
     @EnvironmentObject private var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject private var sleepClipViewModel: SleepClipViewModel
+    
+    @AppStorage("useAppleHealthSleep") private var useAppleHealthSleep = false
 
     @State private var selectedDate = Date()
+    @State private var selectedStage: SleepSegment?
 
     private var session: UnifiedSleepSession? {
         let clips = sleepClipViewModel.clips
@@ -18,50 +38,14 @@ struct InsightsView: View {
     }
 
     private var durationText: String {
-        guard let session = session else { return "--" }
-        
-        // Prefer Apple Health segments
-        if let segments = session.healthSegments, !segments.isEmpty {
-            let total = segments.reduce(0) { $0 + $1.duration }
-            return formatDuration(total)
+        if let seconds = session?.timeAsleep {
+            return sleepLogViewModel.formatDuration(seconds)
         }
-
-        // Fallback to manual
-        if let log = session.manualLog, let end = log.end {
-            let total = end.timeIntervalSince(log.start)
-            return formatDuration(total)
-        }
-
         return "--"
-    }
-    
-    private func formatDuration(_ seconds: TimeInterval) -> String {
-        let hours = Int(seconds / 3600)
-        let minutes = Int((seconds.truncatingRemainder(dividingBy: 3600)) / 60)
-        return minutes == 0 ? "\(hours)h" : "\(hours)h \(minutes)m"
     }
     
     private var sleepScoreText: String {
-        guard let session = session else { return "--" }
-
-        // Apple Health sleep score (HK only)
-        if let segments = session.healthSegments, !segments.isEmpty {
-            return calculateSleepScore(from: segments)
-        }
-
-        // Manual logs have no sleep staging → no score
-        return "--"
-    }
-
-    private func calculateSleepScore(from segments: [SleepSegment]) -> String {
-        let total = segments.reduce(0) { $0 + $1.duration }
-        if total == 0 { return "--" }
-
-        let deep = segments.filter { $0.stage == .deep }.reduce(0) { $0 + $1.duration }
-        let rem = segments.filter { $0.stage == .rem }.reduce(0) { $0 + $1.duration }
-
-        let score = Int(((deep + rem) / total) * 100)
-        return "\(score)"
+        session?.sleepScore.map { "\($0)" } ?? "--"
     }
 
     var body: some View {
@@ -72,6 +56,7 @@ struct InsightsView: View {
                 VStack(spacing: 20) {
                     metricsGrid
                     timelineCard
+                    sleepStagesCard
                     recordingsCard
                 }
                 .frame(maxWidth: .infinity)
@@ -79,11 +64,23 @@ struct InsightsView: View {
         }
         .navigationBarBackButtonHidden(true)
         .task {
+            await sleepLogViewModel.loadHealthSleep(for: selectedDate)
             await loadClipsIfNeeded()
         }
-        .onChange(of: selectedDate) { _, _ in
-            Task { await loadClipsIfNeeded() }
+        .onChange(of: selectedDate) { _, newValue in
+            let today = Calendar.current.startOfDay(for: Date())
+            let newDay = Calendar.current.startOfDay(for: newValue)
+
+            if newDay > today {
+                return
+            }
+            
+            Task {
+                await sleepLogViewModel.loadHealthSleep(for: newValue)
+                await loadClipsIfNeeded()
+            }
         }
+        .onTapGesture { selectedStage = nil }
     }
 
     private var header: some View {
@@ -97,14 +94,6 @@ struct InsightsView: View {
                     .foregroundColor(.white100)
             }
             Spacer()
-            Button {
-                // placeholder action for future trends page
-            } label: {
-                Text("Trends")
-                    .font(.body2Semi)
-                    .foregroundStyle(Gradients.main)
-            }
-            .buttonStyle(.plain)
         }
     }
 
@@ -121,12 +110,21 @@ struct InsightsView: View {
                 ? "Based on Apple Health"
                 : "Requires Apple Health"
             )
+            
+            InsightsMetricCard(
+                title: "Time in Bed",
+                value: session?.timeInBed
+                    .map { sleepLogViewModel.formatDuration($0) } ?? "--",
+                subtitle: session?.healthSegments?.isEmpty == false
+                    ? "Apple Health Data"
+                    : "Sleepaholic Log"
+            )
 
             InsightsMetricCard(
                 title: "Time Asleep",
                 value: durationText,
                 subtitle: session == nil
-                ? "No data"
+                ? "Unknown"
                 : session?.healthSegments?.isEmpty == false
                     ? "Apple Health Data"
                     : "Sleepaholic Log"
@@ -195,6 +193,167 @@ struct InsightsView: View {
         .padding()
         .background(Color.white5)
         .cornerRadius(16)
+    }
+    
+    private var sleepStagesCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+
+            Text("Sleep Stages")
+                .font(.h3Semi)
+                .foregroundColor(.white100)
+
+            if let segments = session?.healthSegments?
+                .filter({ $0.stage != .inBed }),
+               !segments.isEmpty {
+
+                VStack(spacing: 20) {
+                    sleepStagesStepChart(segments)
+                    sleepStageTimeLabels(segments)
+                    sleepStagesLegendHorizontal(segments)
+                }
+                .padding(16)
+                .background(Color.white5)
+                .cornerRadius(16)
+            } else {
+                Text("Enable Apple Health to view sleep stages.")
+                    .font(.body3)
+                    .foregroundColor(.white70)
+                    .padding(16)
+                    .background(Color.white5)
+                    .cornerRadius(16)
+            }
+        }
+        .overlay(alignment: .center) {
+            if let s = selectedStage {
+                // Build display strings
+                let cal = Calendar.current
+                
+                let startIsYesterday = s.start.isYesterday(relativeTo: selectedDate)
+                let endIsYesterday = s.end.isYesterday(relativeTo: selectedDate)
+                let endIsToday = cal.isDate(s.end, inSameDayAs: selectedDate)
+
+                let startDayString = startIsYesterday ? "Yesterday" : "Today"
+                let endDayString = endIsYesterday ? "Yesterday" :
+                                  endIsToday ? "Today" : startDayString
+
+                let startTime = s.start.formatted(date: .omitted, time: .shortened)
+                let endTime = s.end.formatted(date: .omitted, time: .shortened)
+
+                let rangeString =
+                    startDayString == endDayString
+                    ? "\(startDayString), \(startTime) – \(endTime)"
+                    : "\(startDayString), \(startTime) – \(endDayString), \(endTime)"
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(s.stage.name == "Awake" ? s.stage.name : "\(s.stage.name) Sleep")
+                        .font(.body1)
+                        .foregroundColor(.white100)
+                    
+                    Text(s.duration.formattedAsHhMm())
+                        .font(.body1Semi)
+                        .foregroundColor(.white100)
+
+                    // Combined date + time range
+                    Text(rangeString)
+                        .font(.caption)
+                        .foregroundColor(.white70)
+                }
+                .padding()
+                .background(Color.main)
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white5, lineWidth: 1)
+                )
+                .padding()
+                .contentShape(Rectangle())
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func sleepStagesStepChart(_ segments: [SleepSegment]) -> some View {
+        let total = segments
+            .filter { $0.stage != .inBed }
+            .reduce(0) { $0 + $1.duration }
+
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                ForEach(segments) { segment in
+                    let widthPct = segment.duration / total
+
+                    // x offset based on all previous segments
+                    let xOffsetPct = segments.prefix { $0.id != segment.id }
+                        .reduce(0.0) { $0 + $1.duration / total }
+
+                    let barHeight: CGFloat = 20
+                    let yPos = (1 - segment.stage.depth) * (geo.size.height - barHeight)
+
+                    Rectangle()
+                        .fill(segment.stage.color)
+                        .frame(
+                            width: geo.size.width * widthPct,
+                            height: barHeight
+                        )
+                        .offset(
+                            x: geo.size.width * xOffsetPct,
+                            y: yPos
+                        )
+                        .onTapGesture {
+                            selectedStage = segment
+                        }
+                }
+            }
+        }
+        .frame(height: 100)
+    }
+    
+    private func sleepStageTimeLabels(_ segments: [SleepSegment]) -> some View {
+        return HStack {
+            Text(segments.first!.start.formatted(date: .omitted, time: .shortened))
+                .font(.caption2)
+                .foregroundColor(.white70)
+
+            Spacer()
+
+            Text(segments.last!.end.formatted(date: .omitted, time: .shortened))
+                .font(.caption2)
+                .foregroundColor(.white70)
+        }
+    }
+
+    private func sleepStagesLegendHorizontal(_ segments: [SleepSegment]) -> some View {
+        let stages = segments
+            .map { $0.stage }
+            .filter { $0 != .inBed }
+            .reduce(into: [SleepStage]()) { result, stage in
+                if !result.contains(stage) {
+                    result.append(stage)
+                }
+            }
+            .sorted { $0.sortOrder < $1.sortOrder }
+
+        return LazyVGrid(
+            columns: [
+                GridItem(.adaptive(minimum: 90), spacing: 12)
+            ],
+            spacing: 12
+        ) {
+            ForEach(stages, id: \.self) { stage in
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(stage.color)
+                        .frame(width: 10, height: 10)
+
+                    Text(stage.name)
+                        .font(.caption)
+                        .foregroundColor(.white80)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .padding(.horizontal, 4)
+            }
+        }
     }
 
     private var recordingsCard: some View {
@@ -270,19 +429,21 @@ private struct InsightsMetricCard: View {
     let subtitle: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading) {
             Text(title)
                 .font(.body2)
                 .foregroundColor(.white70)
+            Spacer(minLength: 4)
             Text(value)
                 .font(.h2Semi)
                 .foregroundColor(.white100)
+            Spacer(minLength: 4)
             Text(subtitle)
                 .font(.body3)
                 .foregroundColor(.white70)
         }
         .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 140, alignment: .leading)
         .background(Color.white10)
         .cornerRadius(16)
     }

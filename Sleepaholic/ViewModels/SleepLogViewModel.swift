@@ -21,6 +21,10 @@ struct UnifiedSleepSession {
     let healthSegments: [SleepSegment]?
     let manualLog: SleepLog?
     let clips: [SleepClip]
+    
+    let sleepScore: Int?
+    let timeInBed: TimeInterval?
+    let timeAsleep: TimeInterval?
 }
 
 @MainActor
@@ -41,10 +45,10 @@ final class SleepLogViewModel: ObservableObject {
     @Published private(set) var sleepQuality: Int
     
     @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
+    @AppStorage("useAppleHealthSleep") private var useAppleHealthSleep = false
     
-    // Apple Health sleep segments cache (per day)
-    @Published var healthSegmentsByDate: [Date: [SleepSegment]] = [:]
-    
+    @Published var fetchedHealthSegments: [SleepSegment] = []
+
     init() {
         // restore active session if app was restarted
         if let data = UserDefaults.standard.data(forKey: activeKey) {
@@ -334,14 +338,8 @@ final class SleepLogViewModel: ObservableObject {
     }
     
     func loadHealthSleep(for date: Date) async {
-        // Prevent repeat fetches for the same day
-        if healthSegmentsByDate[Calendar.current.startOfDay(for: date)] != nil {
-            return
-        }
-
         // Only fetch if user enabled Apple Health
-        let useAppleHealth = UserDefaults.standard.bool(forKey: "useAppleHealthSleep")
-        if !useAppleHealth { return }
+        if !useAppleHealthSleep { return }
 
         guard HealthKitManager.shared.isAuthorized() else {
             return
@@ -349,9 +347,24 @@ final class SleepLogViewModel: ObservableObject {
 
         do {
             let segments = try await HealthKitManager.shared.fetchSleepSegments(for: date)
-            let key = Calendar.current.startOfDay(for: date)
+            
+            // cluster into distinct sleep sessions
+            let sessions = clusterSessions(segments)
+
+            // find the session whose END matches this day
+            let calendar = Calendar.current
+            guard let matched = sessions.first(where: { session in
+                if let last = session.last {
+                    return calendar.isDate(last.end, inSameDayAs: date)
+                }
+                return false
+            }) else {
+                await MainActor.run { self.fetchedHealthSegments = [] }
+                return
+            }
+
             await MainActor.run {
-                self.healthSegmentsByDate[key] = segments
+                self.fetchedHealthSegments = matched.sorted { $0.start < $1.start }
             }
         } catch {
             print("❌ Failed to load HealthKit sleep for \(date): \(error)")
@@ -360,9 +373,8 @@ final class SleepLogViewModel: ObservableObject {
     
     func buildUnifiedSession(for date: Date, clips: [SleepClip]) -> UnifiedSleepSession {
         let calendar = Calendar.current
-        let dayStart = calendar.startOfDay(for: date)
 
-        let hkSegments = healthSegmentsByDate[dayStart]
+        let hkSegments = useAppleHealthSleep ? fetchedHealthSegments : nil
 
         // Find matching manual log (if any)
         let manual = sleepLogs.first { log in
@@ -371,11 +383,93 @@ final class SleepLogViewModel: ObservableObject {
             }
             return calendar.isDate(log.start, inSameDayAs: date)
         }
+        
+        let score: Int? = {
+            if let s = hkSegments, !s.isEmpty { return computeSleepScore(from: s) }
+            return nil
+        }()
+        
+        var timeInBed: TimeInterval? {
+            guard let s = hkSegments, !s.isEmpty else { return nil }
+            return s.last!.end.timeIntervalSince(s.first!.start)
+        }
+
+        let timeAsleep: TimeInterval? = {
+            if let s = hkSegments, !s.isEmpty { return computeTimeAsleep(from: s) }
+            if let log = manual, let end = log.end {
+                return end.timeIntervalSince(log.start)
+            }
+            return nil
+        }()
 
         return UnifiedSleepSession(
             healthSegments: hkSegments,
             manualLog: manual,
-            clips: clips
+            clips: clips,
+            sleepScore: score,
+            timeInBed: timeInBed,
+            timeAsleep: timeAsleep
         )
+    }
+    
+    /// Groups incoming HK segments into separate sleep sessions.
+    /// Any gap > 90 minutes indicates a new session.
+    func clusterSessions(_ segments: [SleepSegment]) -> [[SleepSegment]] {
+        guard !segments.isEmpty else { return [] }
+
+        var sessions: [[SleepSegment]] = []
+        var current: [SleepSegment] = [segments[0]]
+
+        for i in 1..<segments.count {
+            let prev = segments[i-1]
+            let next = segments[i]
+
+            let gap = next.start.timeIntervalSince(prev.end)
+
+            if gap > 90 * 60 {
+                // New session
+                sessions.append(current)
+                current = [next]
+            } else {
+                // Same session
+                current.append(next)
+            }
+        }
+
+        sessions.append(current)
+        return sessions
+    }
+    
+    func computeSleepScore(from segments: [SleepSegment]) -> Int {
+        // total in-bed time
+        let inBed = segments
+            .filter { $0.stage == .inBed }
+            .reduce(0) { $0 + $1.duration }
+
+        // total asleep time
+        let asleep = segments
+            .filter { $0.stage.isAsleep }
+            .reduce(0) { $0 + $1.duration }
+
+        guard inBed > 0 else { return 0 }
+
+        // efficiency ratio
+        let efficiency = asleep / inBed
+
+        // convert to score
+        let score = Int(efficiency * 100)
+
+        return score
+    }
+    
+    func computeTimeAsleep(from segments: [SleepSegment]) -> TimeInterval {
+        let realSleep = segments.filter { $0.stage.isAsleep }
+        return realSleep.reduce(0) { $0 + $1.duration }
+    }
+    
+    func formatDuration(_ seconds: TimeInterval) -> String {
+        let hours = Int(seconds / 3600)
+        let minutes = Int((seconds.truncatingRemainder(dividingBy: 3600)) / 60)
+        return minutes == 0 ? "\(hours)h" : "\(hours)h \(minutes)m"
     }
 }
