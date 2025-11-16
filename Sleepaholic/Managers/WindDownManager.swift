@@ -15,9 +15,22 @@ import FamilyControls
 import ManagedSettings
 
 class WindDownManager: ObservableObject, Codable {
-    static let shared = WindDownManager()
+    static private let storageKey = "windDownState"
+    
+    static let shared: WindDownManager = {
+        if let data = UserDefaults.standard.data(forKey: storageKey),
+           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data) {
+            decoded.restoreSounds()
+            return decoded
+        }
+        return WindDownManager()
+    }()
     
     weak var userSettingsViewModel: UserSettingsViewModel?
+    
+    func bindUserSettings(_ vm: UserSettingsViewModel) {
+        self.userSettingsViewModel = vm
+    }
     
     // sound player
     private var audioPlayers: [String: AVAudioPlayer] = [:]
@@ -51,8 +64,6 @@ class WindDownManager: ObservableObject, Codable {
     }
     @Published var selectedSounds: Set<String> = [] { didSet { saveState() } }
     @Published var isPlaying: Bool = false { didSet { saveState() } }
-
-    static private let storageKey = "windDownState"
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -76,15 +87,6 @@ class WindDownManager: ObservableObject, Codable {
         if let data = try? JSONEncoder().encode(self) {
             UserDefaults.standard.set(data, forKey: Self.storageKey)
         }
-    }
-        
-    static func loadState() -> WindDownManager {
-        if let data = UserDefaults.standard.data(forKey: storageKey),
-           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data) {
-            decoded.restoreSounds()
-            return decoded
-        }
-        return WindDownManager()
     }
 
     // Reset everything back to defaults

@@ -100,9 +100,7 @@ final class SleepLogViewModel: ObservableObject {
     }
 
     func logWakeup(at wakeTime: Date,
-                   profile: UserProfile?,
-                   activities: [Activity],
-                   audioClipsCount: Int) async {
+                   profile: UserProfile?) async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         guard var log = activeLog else { return }
         

@@ -13,8 +13,6 @@ struct WakeupView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
-    @EnvironmentObject var activityViewModel: ActivityViewModel
-    @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
     @EnvironmentObject var windDown: WindDownManager
     
     @State private var manualWakeTime = Date()
@@ -119,9 +117,7 @@ struct WakeupView: View {
                         Task {
                             await sleepLogViewModel.logWakeup(
                                 at: Date(),
-                                profile: userProfileViewModel.profile,
-                                activities: activityViewModel.activities,
-                                audioClipsCount: sleepClipViewModel.clips.count
+                                profile: userProfileViewModel.profile
                             )
                             windDown.reset()
                             dismiss()
@@ -137,9 +133,7 @@ struct WakeupView: View {
                         Task {
                             await sleepLogViewModel.logWakeup(
                                 at: manualWakeTime,
-                                profile: userProfileViewModel.profile,
-                                activities: activityViewModel.activities,
-                                audioClipsCount: sleepClipViewModel.clips.count
+                                profile: userProfileViewModel.profile
                             )
                             windDown.reset()
                             dismiss()

@@ -403,31 +403,7 @@ struct InsightsView: View {
             if hasManualData, !sleepClipViewModel.clips.isEmpty {
                 VStack(spacing: 12) {
                     ForEach(sleepClipViewModel.clips) { clip in
-                        HStack {
-                            Image(systemName: "waveform")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(.white80)
-                                .padding(12)
-                                .background(Circle().fill(Color.white5))
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Recording")
-                                    .font(.body1Semi)
-                                    .foregroundColor(.white100)
-                                Text("Tap to play")
-                                    .font(.body3)
-                                    .foregroundColor(.white70)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(.white100)
-                        }
-                        .padding()
-                        .background(Color.white10)
-                        .cornerRadius(16)
+                        SleepClipPlayer(clip: clip)
                     }
                 }
             } else {
