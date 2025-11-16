@@ -17,16 +17,6 @@ struct FormattedSleep {
     let date: String
 }
 
-struct UnifiedSleepSession {
-    let healthSegments: [SleepSegment]?
-    let manualLog: SleepLog?
-    let clips: [SleepClip]
-    
-    let sleepScore: Int?
-    let timeInBed: TimeInterval?
-    let timeAsleep: TimeInterval?
-}
-
 @MainActor
 final class SleepLogViewModel: ObservableObject {
     @Published var sleepLogs: [SleepLog] = []
@@ -128,6 +118,11 @@ final class SleepLogViewModel: ObservableObject {
             } else {
                 _ = try await service.save(log, to: path(for: uid))
             }
+            
+            HealthKitManager.shared.writeSleep(
+                start: log.start,
+                end: wakeTime
+            )
 
             await loadSleepLogs()
             recalcStats(userAge: profile?.age)
@@ -337,11 +332,17 @@ final class SleepLogViewModel: ObservableObject {
             }
     }
     
+    // MARK: HealthKit
+    
     func loadHealthSleep(for date: Date) async {
         // Only fetch if user enabled Apple Health
-        if !useAppleHealthSleep { return }
+        guard useAppleHealthSleep else {
+            await MainActor.run { fetchedHealthSegments = [] }
+            return
+        }
 
         guard HealthKitManager.shared.isAuthorized() else {
+            await MainActor.run { fetchedHealthSegments = [] }
             return
         }
 
@@ -371,47 +372,6 @@ final class SleepLogViewModel: ObservableObject {
         }
     }
     
-    func buildUnifiedSession(for date: Date, clips: [SleepClip]) -> UnifiedSleepSession {
-        let calendar = Calendar.current
-
-        let hkSegments = useAppleHealthSleep ? fetchedHealthSegments : nil
-
-        // Find matching manual log (if any)
-        let manual = sleepLogs.first { log in
-            if let end = log.end {
-                return calendar.isDate(end, inSameDayAs: date)
-            }
-            return calendar.isDate(log.start, inSameDayAs: date)
-        }
-        
-        let score: Int? = {
-            if let s = hkSegments, !s.isEmpty { return computeSleepScore(from: s) }
-            return nil
-        }()
-        
-        var timeInBed: TimeInterval? {
-            guard let s = hkSegments, !s.isEmpty else { return nil }
-            return s.last!.end.timeIntervalSince(s.first!.start)
-        }
-
-        let timeAsleep: TimeInterval? = {
-            if let s = hkSegments, !s.isEmpty { return computeTimeAsleep(from: s) }
-            if let log = manual, let end = log.end {
-                return end.timeIntervalSince(log.start)
-            }
-            return nil
-        }()
-
-        return UnifiedSleepSession(
-            healthSegments: hkSegments,
-            manualLog: manual,
-            clips: clips,
-            sleepScore: score,
-            timeInBed: timeInBed,
-            timeAsleep: timeAsleep
-        )
-    }
-    
     /// Groups incoming HK segments into separate sleep sessions.
     /// Any gap > 90 minutes indicates a new session.
     func clusterSessions(_ segments: [SleepSegment]) -> [[SleepSegment]] {
@@ -439,6 +399,8 @@ final class SleepLogViewModel: ObservableObject {
         sessions.append(current)
         return sessions
     }
+    
+    // MARK: Stats & Helpers
     
     func computeSleepScore(from segments: [SleepSegment]) -> Int {
         // total in-bed time

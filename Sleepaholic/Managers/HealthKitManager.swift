@@ -82,43 +82,42 @@ final class HealthKitManager {
 
             self.healthStore.execute(query)
         }
+        
+        // filter out Sleepaholic's own writes - no need to read it again
+        let filtered = samples.filter { sample in
+            sample.sourceRevision.source.name != "Sleepaholic"
+        }
 
         // Convert into SleepSegment models
-        let segments = samples.compactMap(mapSampleToSegment)
+        let segments = filtered.compactMap(mapSampleToSegment)
         
         return segments.sorted { $0.start < $1.start }
     }
     
-    /// Fetches sleep segments within a date range.
-    /// Useful for future weekly/monthly reports.
-    func fetchSleepSegments(from start: Date, to end: Date) async throws -> [SleepSegment] {
-        guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
-            throw HealthKitError.dataTypeUnavailable
-        }
+    func writeSleep(start: Date, end: Date) {
+        let inBedType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis)!
 
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let inBedSample = HKCategorySample(
+            type: inBedType,
+            value: HKCategoryValueSleepAnalysis.inBed.rawValue,
+            start: start,
+            end: end
+        )
 
-        let samples: [HKCategorySample] = try await withCheckedThrowingContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: sleepType,
-                predicate: predicate,
-                limit: HKObjectQueryNoLimit,
-                sortDescriptors: nil
-            ) { _, results, error in
-                
-                if let error = error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: results as? [HKCategorySample] ?? [])
-                }
+        let asleepSample = HKCategorySample(
+            type: inBedType,
+            value: HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
+            start: start,
+            end: end
+        )
+
+        healthStore.save([inBedSample, asleepSample]) { success, error in
+            if let error = error {
+                print("❌ Error saving sleep: \(error)")
+            } else {
+                print("✅ Saved manual sleep to HealthKit")
             }
-
-            self.healthStore.execute(query)
         }
-
-        let segments = samples.compactMap(mapSampleToSegment)
-        
-        return segments.sorted(by: { $0.start < $1.start })
     }
     
     // MARK: - Helpers

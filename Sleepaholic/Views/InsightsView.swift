@@ -32,20 +32,49 @@ struct InsightsView: View {
     @State private var selectedDate = Date()
     @State private var selectedStage: SleepSegment?
 
-    private var session: UnifiedSleepSession? {
-        let clips = sleepClipViewModel.clips
-        return sleepLogViewModel.buildUnifiedSession(for: selectedDate, clips: clips)
+    private var healthSegmentsForDay: [SleepSegment] {
+        sleepLogViewModel.fetchedHealthSegments
     }
 
-    private var durationText: String {
-        if let seconds = session?.timeAsleep {
-            return sleepLogViewModel.formatDuration(seconds)
+    private var manualLogForDay: SleepLog? {
+        sleepLogViewModel.sleepLogs.first { log in
+            guard let end = log.end else { return false }
+            return Calendar.current.isDate(end, inSameDayAs: selectedDate)
+        }
+    }
+    
+    // MARK: - Metric strings
+
+    private var sleepScoreText: String {
+        guard !healthSegmentsForDay.isEmpty else { return "--" }
+        let score = sleepLogViewModel.computeSleepScore(from: healthSegmentsForDay)
+        return "\(score)"
+    }
+
+    private var timeInBedText: String {
+        if !healthSegmentsForDay.isEmpty {
+            let start = healthSegmentsForDay.first!.start
+            let end   = healthSegmentsForDay.last!.end
+            return sleepLogViewModel.formatDuration(end.timeIntervalSince(start))
+        }
+        if let log = manualLogForDay, let end = log.end {
+            return sleepLogViewModel.formatDuration(end.timeIntervalSince(log.start))
         }
         return "--"
     }
-    
-    private var sleepScoreText: String {
-        session?.sleepScore.map { "\($0)" } ?? "--"
+
+    private var timeAsleepText: String {
+        guard !healthSegmentsForDay.isEmpty else { return "--" }
+        let asleep = sleepLogViewModel.computeTimeAsleep(from: healthSegmentsForDay)
+        return sleepLogViewModel.formatDuration(asleep)
+    }
+
+    private var hasHealthData: Bool {
+        !healthSegmentsForDay.isEmpty
+    }
+
+    private var hasManualData: Bool {
+        manualLogForDay != nil
     }
 
     var body: some View {
@@ -106,28 +135,29 @@ struct InsightsView: View {
             InsightsMetricCard(
                 title: "Sleep Score",
                 value: sleepScoreText,
-                subtitle: session?.healthSegments?.isEmpty == false
+                subtitle: hasHealthData
                 ? "Based on Apple Health"
                 : "Requires Apple Health"
             )
             
             InsightsMetricCard(
                 title: "Time in Bed",
-                value: session?.timeInBed
-                    .map { sleepLogViewModel.formatDuration($0) } ?? "--",
-                subtitle: session?.healthSegments?.isEmpty == false
-                    ? "Apple Health Data"
-                    : "Sleepaholic Log"
+                value: timeInBedText,
+                subtitle: hasHealthData
+                    ? "Based on Apple Health"
+                    :  hasManualData
+                        ? "Based on Sleepaholic Log"
+                        : "No Data"
             )
 
             InsightsMetricCard(
                 title: "Time Asleep",
-                value: durationText,
-                subtitle: session == nil
+                value: timeAsleepText,
+                subtitle: hasHealthData
                 ? "Unknown"
-                : session?.healthSegments?.isEmpty == false
-                    ? "Apple Health Data"
-                    : "Sleepaholic Log"
+                : hasHealthData
+                    ? "Based on Apple Health"
+                    : "Requires Apple Health"
             )
         }
     }
@@ -138,27 +168,20 @@ struct InsightsView: View {
                 .font(.h3Semi)
                 .foregroundColor(.white100)
 
-            if let session = session {
-
-                // Prefer Apple Health in-bed timeline
-                if let segments = session.healthSegments, !segments.isEmpty {
-                    let start = segments.first!.start
-                    let end = segments.last!.end
-
-                    timelineBox(start: start, end: end, source: "Apple Health")
-
-                // Fallback to manual log
-                } else if let log = session.manualLog, let end = log.end {
-                    timelineBox(start: log.start, end: end, source: "Sleepaholic")
-                } else {
-                    Text("No sleep recorded for this day yet.")
-                        .font(.body3)
-                        .foregroundColor(.white70)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.white5)
-                        .cornerRadius(16)
-                }
+            if hasHealthData {
+                let start = healthSegmentsForDay.first!.start
+                let end   = healthSegmentsForDay.last!.end
+                timelineBox(start: start, end: end, source: "Apple Health")
+            } else if let log = manualLogForDay, let end = log.end {
+                timelineBox(start: log.start, end: end, source: "Sleepaholic")
+            } else {
+                Text("No sleep recorded for this day yet.")
+                    .font(.body3)
+                    .foregroundColor(.white70)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.white5)
+                    .cornerRadius(16)
             }
         }
     }
@@ -176,7 +199,7 @@ struct InsightsView: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Wake")
+                Text("Wake-Up")
                     .font(.body2)
                     .foregroundColor(.white70)
                 Text(end.formatted(date: .omitted, time: .shortened))
@@ -202,18 +225,62 @@ struct InsightsView: View {
                 .font(.h3Semi)
                 .foregroundColor(.white100)
 
-            if let segments = session?.healthSegments?
-                .filter({ $0.stage != .inBed }),
-               !segments.isEmpty {
-
+            let stageSegments = healthSegmentsForDay.filter { $0.stage != .inBed }
+            if !stageSegments.isEmpty {
                 VStack(spacing: 20) {
-                    sleepStagesStepChart(segments)
-                    sleepStageTimeLabels(segments)
-                    sleepStagesLegendHorizontal(segments)
+                    sleepStagesStepChart(stageSegments)
+                    sleepStageTimeLabels(stageSegments)
+                    sleepStagesLegendHorizontal(stageSegments)
                 }
                 .padding(16)
                 .background(Color.white5)
                 .cornerRadius(16)
+                .overlay(alignment: .center) {
+                    if let s = selectedStage {
+                        // Build display strings
+                        let cal = Calendar.current
+                        
+                        let startIsYesterday = s.start.isYesterday(relativeTo: selectedDate)
+                        let endIsYesterday = s.end.isYesterday(relativeTo: selectedDate)
+                        let endIsToday = cal.isDate(s.end, inSameDayAs: selectedDate)
+
+                        let startDayString = startIsYesterday ? "Yesterday" : "Today"
+                        let endDayString = endIsYesterday ? "Yesterday" :
+                                          endIsToday ? "Today" : startDayString
+
+                        let startTime = s.start.formatted(date: .omitted, time: .shortened)
+                        let endTime = s.end.formatted(date: .omitted, time: .shortened)
+
+                        let rangeString =
+                            startDayString == endDayString
+                            ? "\(startDayString), \(startTime) – \(endTime)"
+                            : "\(startDayString), \(startTime) – \(endDayString), \(endTime)"
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(s.stage.name == "Awake" ? s.stage.name : "\(s.stage.name) Sleep")
+                                .font(.body1)
+                                .foregroundColor(.white100)
+                            
+                            Text(s.duration.formattedAsHhMm())
+                                .font(.body1Semi)
+                                .foregroundColor(.white100)
+
+                            // Combined date + time range
+                            Text(rangeString)
+                                .font(.caption)
+                                .foregroundColor(.white70)
+                        }
+                        .padding()
+                        .background(Color.main)
+                        .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.white5, lineWidth: 1)
+                        )
+                        .padding()
+                        .contentShape(Rectangle())
+                    }
+                }
             } else {
                 Text("Enable Apple Health to view sleep stages.")
                     .font(.body3)
@@ -221,52 +288,6 @@ struct InsightsView: View {
                     .padding(16)
                     .background(Color.white5)
                     .cornerRadius(16)
-            }
-        }
-        .overlay(alignment: .center) {
-            if let s = selectedStage {
-                // Build display strings
-                let cal = Calendar.current
-                
-                let startIsYesterday = s.start.isYesterday(relativeTo: selectedDate)
-                let endIsYesterday = s.end.isYesterday(relativeTo: selectedDate)
-                let endIsToday = cal.isDate(s.end, inSameDayAs: selectedDate)
-
-                let startDayString = startIsYesterday ? "Yesterday" : "Today"
-                let endDayString = endIsYesterday ? "Yesterday" :
-                                  endIsToday ? "Today" : startDayString
-
-                let startTime = s.start.formatted(date: .omitted, time: .shortened)
-                let endTime = s.end.formatted(date: .omitted, time: .shortened)
-
-                let rangeString =
-                    startDayString == endDayString
-                    ? "\(startDayString), \(startTime) – \(endTime)"
-                    : "\(startDayString), \(startTime) – \(endDayString), \(endTime)"
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(s.stage.name == "Awake" ? s.stage.name : "\(s.stage.name) Sleep")
-                        .font(.body1)
-                        .foregroundColor(.white100)
-                    
-                    Text(s.duration.formattedAsHhMm())
-                        .font(.body1Semi)
-                        .foregroundColor(.white100)
-
-                    // Combined date + time range
-                    Text(rangeString)
-                        .font(.caption)
-                        .foregroundColor(.white70)
-                }
-                .padding()
-                .background(Color.main)
-                .cornerRadius(20)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white5, lineWidth: 1)
-                )
-                .padding()
-                .contentShape(Rectangle())
             }
         }
     }
@@ -362,11 +383,9 @@ struct InsightsView: View {
                 .font(.h3Semi)
                 .foregroundColor(.white100)
 
-            if let session = session,
-               let _ = session.manualLog,
-               !session.clips.isEmpty {
+            if hasManualData, !sleepClipViewModel.clips.isEmpty {
                 VStack(spacing: 12) {
-                    ForEach(session.clips) { clip in
+                    ForEach(sleepClipViewModel.clips) { clip in
                         HStack {
                             Image(systemName: "waveform")
                                 .font(.system(size: 20, weight: .medium))
@@ -407,18 +426,10 @@ struct InsightsView: View {
     }
 
     private func loadClipsIfNeeded() async {
-        guard let session = session else {
+        guard let log = manualLogForDay, let id = log.id else {
             sleepClipViewModel.clips = []
             return
         }
-        
-        // Only manual logs have Firestore IDs for clips
-        guard let manual = session.manualLog,
-              let id = manual.id else {
-            sleepClipViewModel.clips = []
-            return
-        }
-        
         await sleepClipViewModel.loadClips(for: id)
     }
 }
