@@ -14,7 +14,11 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     
+    @AppStorage("useAppleHealthSleep") private var useAppleHealthSleep = false
+    @State private var appleHealthToggle = false
+
     @State private var trackSleepWithMic = false
+    @State private var showHealthAlert = false
     
     var body: some View {
         VStack(spacing: 48) {
@@ -66,6 +70,17 @@ struct SettingsView: View {
                         }
                         SettingsSeparator()
                         
+                        SettingsRow(
+                            iconName: "bed",
+                            title: "Use Apple Health Sleep Data",
+                            hasArrow: false,
+                            toggleBinding: $appleHealthToggle
+                        )
+                        .onChange(of: appleHealthToggle) { _, newValue in
+                            Task { await handleAppleHealthToggleChange(newValue) }
+                        }
+                        SettingsSeparator()
+                        
                         NavigationLink(destination: SupportView()) {
                             SettingsRow(iconName: "support", title: "Support")
                         }
@@ -92,7 +107,22 @@ struct SettingsView: View {
             if let settings = userSettingsViewModel.settings {
                 trackSleepWithMic = settings.trackSleep
             }
+            appleHealthToggle = useAppleHealthSleep
         }
+        .alert("Health Access Required", isPresented: $showHealthAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("""
+                To use Apple Health sleep data, Sleepaholic needs access to your Sleep Analysis data.
+
+                Please enable it by following this path:
+
+                Health App → Browse → Sleep → Data Sources & Access
+
+                Make sure Sleepaholic can read data and is selected as a data source.
+                """)
+        }
+
     }
     
     // MARK: - Save Toggle Change
@@ -104,6 +134,28 @@ struct SettingsView: View {
         await userSettingsViewModel.saveSettings(updated)
     }
     
+    private func handleAppleHealthToggleChange(_ newValue: Bool) async {
+        if newValue == true {
+            await HealthKitManager.shared.requestAuthorization()
+            
+            let authorized = HealthKitManager.shared.isAuthorized()
+            
+            if authorized {
+                useAppleHealthSleep = true
+                appleHealthToggle = true
+            } else {
+                // Revert toggle
+                useAppleHealthSleep = false
+                appleHealthToggle = false
+                showHealthAlert = true
+            }
+        } else {
+            // User manually disabled Apple Health integration
+            useAppleHealthSleep = false
+            appleHealthToggle = false
+        }
+    }
+
     // MARK: - Manage Subscription
     private func openSubscriptionSettings() {
         guard let url = URL(string: "https://apps.apple.com/account/subscriptions") else { return }

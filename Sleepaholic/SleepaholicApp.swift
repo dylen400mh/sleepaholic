@@ -134,6 +134,8 @@ extension UIApplication {
 struct SleepaholicApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("useAppleHealthSleep") private var useAppleHealthSleep = false
     
     @StateObject private var windDownManager = WindDownManager.loadState()
     @StateObject private var userSettingsViewModel = UserSettingsViewModel()
@@ -170,6 +172,16 @@ struct SleepaholicApp: App {
                 consumePendingQuickActionIfAny()
                 preloadUserProfileIfNeeded()
                 identifyCurrentUserIfNeeded()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    let allowed = HealthKitManager.shared.isAuthorized()
+                    
+                    // If permission was revoked in Health app → disable integration
+                    if !allowed {
+                        useAppleHealthSleep = false
+                    }
+                }
             }
         }
     }

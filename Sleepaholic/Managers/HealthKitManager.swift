@@ -19,27 +19,21 @@ final class HealthKitManager {
     // MARK: - Permission
     
     /// Requests sleep data read permission.
-    /// (Actual request logic will be filled in later.)
-    func requestAuthorization() async throws {
-        // 1. Make sure HealthKit is available
-        guard HKHealthStore.isHealthDataAvailable() else {
-            throw HealthKitError.notAvailableOnDevice
+    func requestAuthorization() async -> Void {
+        let types = Set([
+            HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
+        ])
+
+        do {
+            if HKHealthStore.isHealthDataAvailable() {
+                try await healthStore.requestAuthorization(toShare: types, read: types)
+            }
+        } catch {
+            print("❌ HealthKit authorization failed: \(error)")
         }
-        
-        // 2. Make sure the sleep type exists
-        guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
-            throw HealthKitError.dataTypeUnavailable
-        }
-        
-        // 3. Request read permission (we do not write anything to HealthKit)
-        let toRead: Set<HKObjectType> = [sleepType]
-        
-        // async/await authorization request
-        try await healthStore.requestAuthorization(toShare: [], read: toRead)
     }
-    
+
     /// Checks whether the app currently has permission to read sleep data.
-    /// (Logic added later.)
     func isAuthorized() -> Bool {
         guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
             return false
