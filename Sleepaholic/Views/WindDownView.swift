@@ -150,6 +150,7 @@ struct WindDownView: View {
                                                     showPicker = false
                                                     Task { await saveSettingChange(\.restrictApps, newValue: false) }
                                                 }
+                                                Task { await windDown.applyShield() }
                                             }
                                         )
                                 )

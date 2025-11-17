@@ -26,7 +26,7 @@ final class AudioPlaybackManager: ObservableObject {
     
     // MARK: - Load & Play
     func loadAndPlay(storagePath: String) async {
-        if loadedPath == storagePath, let player {
+        if loadedPath == storagePath {
             play()
             return
         }
