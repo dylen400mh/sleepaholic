@@ -107,6 +107,8 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
             // Remove notifications
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
             UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["discount_offer"])
+            
+            GuidedTourManager.shared.schedulePostPaywallTour()
         default:
             break
         }

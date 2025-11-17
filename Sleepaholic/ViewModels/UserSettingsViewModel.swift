@@ -83,5 +83,32 @@ final class UserSettingsViewModel: ObservableObject {
             self.settings = settings
         }
     }
+    
+    func markGuidedTourCompletedIfNeeded() async {
+        if var existing = settings {
+            guard !existing.hasCompletedGuidedTour else { return }
+            existing.hasCompletedGuidedTour = true
+            await saveSettings(existing)
+            return
+        }
+        
+        await loadSettings()
+        
+        if var loaded = settings {
+            if !loaded.hasCompletedGuidedTour {
+                loaded.hasCompletedGuidedTour = true
+                await saveSettings(loaded)
+            }
+            return
+        }
+        
+        let fallback = UserSettings(
+            bedtime: cachedBedtime,
+            wakeUpTime: cachedWakeUpTime,
+            trackSleep: false,
+            restrictApps: false,
+            hasCompletedGuidedTour: true
+        )
+        await saveSettings(fallback)
+    }
 }
-

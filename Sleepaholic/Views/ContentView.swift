@@ -26,22 +26,18 @@ struct ContentView: View {
                 totalMinutes += Int(part.replacingOccurrences(of: "m", with: "")) ?? 0
             }
         }
-        // Cap between 0–1
-        let maxDebtMinutes = 14 * 60 // assuming 14 hours is max
+        let maxDebtMinutes = 14 * 60
         return min(CGFloat(totalMinutes) / CGFloat(maxDebtMinutes), 1.0)
     }
     
     var body: some View {
         ZStack {
             VStack(spacing: 24) {
-                // Sticky header
                 HeaderView()
                 
-                // Scrollable content
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
                         VStack(spacing: 16) {
-                            // streak
                             HStack(spacing: 12) {
                                 SummaryCard(
                                     icon: "flame.fill",
@@ -50,7 +46,6 @@ struct ContentView: View {
                                 )
                             }
                             
-                            // last sleep
                             if let sleep = sleepLogViewModel.getLastSleep() {
                                 VStack(spacing: 8) {
                                     Text("Last Sleep: \(sleep.duration)")
@@ -75,7 +70,6 @@ struct ContentView: View {
                             sleepDebt: sleepLogViewModel.sleepDebt
                         )
                         
-                        // 📋 activities
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
                                 Text("Today's Activities")
@@ -106,7 +100,6 @@ struct ContentView: View {
                             }
                         }
                         
-                        // 💡 recommendations
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Smart Sleep Insights")
                                 .font(.h3Semi)
@@ -159,7 +152,6 @@ struct ContentView: View {
     }
 }
 
-
 #Preview {
     NavigationStack {
         ContentView()
@@ -171,5 +163,3 @@ struct ContentView: View {
     .environmentObject(UserProfileViewModel())
     .environmentObject(SleepClipViewModel())
 }
-
-

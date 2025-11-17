@@ -143,6 +143,7 @@ struct SleepaholicApp: App {
     @StateObject private var sleepLogViewModel = SleepLogViewModel()
     @StateObject private var userProfileViewModel = UserProfileViewModel()
     @StateObject private var sleepClipViewModel = SleepClipViewModel()
+    @StateObject private var guidedTourManager = GuidedTourManager.shared
     
     private let feedbackFormURL = URL(string: "https://forms.gle/r9qt8PP5YFs8SzWSA")!
     
@@ -162,6 +163,7 @@ struct SleepaholicApp: App {
             .environmentObject(sleepLogViewModel)
             .environmentObject(userProfileViewModel)
             .environmentObject(sleepClipViewModel)
+            .environmentObject(guidedTourManager)
             .onReceive(NotificationCenter.default.publisher(for: .didTriggerQuickAction)) { note in
                 if let action = (note.userInfo?["action"] as? QuickAction) ?? AppDelegate.pendingQuickAction {
                     AppDelegate.pendingQuickAction = nil
@@ -229,4 +231,3 @@ struct SleepaholicApp: App {
         }
     }
 }
-
