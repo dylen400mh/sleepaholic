@@ -43,7 +43,10 @@ struct RestrictionsView: View {
                         toggleBinding: Binding(
                             get: { userSettingsViewModel.settings?.restrictApps ?? false },
                             set: { newValue in
-                                Task { await handleRestrictAppsToggle(newValue) }
+                                Task {
+                                    await handleRestrictAppsToggle(newValue)
+                                    await windDown.applyShield()
+                                }
                             }
                         )
                     )

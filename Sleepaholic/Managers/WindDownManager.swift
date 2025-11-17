@@ -100,12 +100,19 @@ class WindDownManager: ObservableObject, Codable {
     }
     
     // MARK: - Screen Time (Shielding)
-    private func applyShield() async {
-        guard (await MainActor.run(body: { userSettingsViewModel?.settings?.restrictApps })) != nil else {
+    func applyShield() async {
+        // If settings not loaded yet — do nothing
+        guard let restrictOn = await MainActor.run(body: { userSettingsViewModel?.settings?.restrictApps }) else {
+            return
+        }
+        
+        // If toggle is OFF — clear shield
+        if !restrictOn {
             clearShield()
             return
         }
-
+        
+        // toggle is on - apply shield
         // Tokens the user selected via FamilyActivityPicker
         let apps = restrictedApps.applicationTokens
         let categories = restrictedApps.categoryTokens
@@ -120,7 +127,7 @@ class WindDownManager: ObservableObject, Codable {
     }
 
 
-    private func clearShield() {
+    func clearShield() {
         store.clearAllSettings()
         print("🧹 Shield cleared.")
     }
