@@ -121,7 +121,7 @@ final class SleepLogViewModel: ObservableObject {
             )
 
             await loadSleepLogs()
-            recalcStats(userAge: profile?.age)
+            await recalcStats(userAge: profile?.age)
             stopBedtime()
         } catch {
             print("Error logging wakeup: \(error)")
@@ -172,8 +172,51 @@ final class SleepLogViewModel: ObservableObject {
         return streak
     }
     
-    func getLastSleep() -> FormattedSleep? {
-        if let latest = sleepLogs.first {
+    func getLastSleep() async -> FormattedSleep? {
+        let calendar = Calendar.current
+
+        // Determine the most recent day with either HealthKit or manual data
+        let today = calendar.startOfDay(for: Date())
+
+        await loadHealthSleep(for: today)
+
+        // Prefer HealthKit if available
+        let healthSegments = fetchedHealthSegments // health segments for today
+        if !healthSegments.isEmpty {
+            guard let first = healthSegments.first,
+                  let last = healthSegments.last else {
+                return nil
+            }
+
+            let hasRealSleep = healthSegments.contains { $0.stage.isAsleep }
+            if hasRealSleep {
+                let timeFormatter = DateFormatter()
+                timeFormatter.timeStyle = .short
+                
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateStyle = .medium
+                
+                let startStr = timeFormatter.string(from: first.start)
+                let endStr   = timeFormatter.string(from: last.end)
+                
+                let duration = last.end.timeIntervalSince(first.start)
+                let h = Int(duration / 3600)
+                let m = Int((duration.truncatingRemainder(dividingBy: 3600)) / 60)
+                let durationStr = m > 0 ? "\(h)h \(m)m" : "\(h)h"
+                
+                let dateStr = dateFormatter.string(from: last.end)
+                
+                return FormattedSleep(
+                    start: startStr,
+                    end: endStr,
+                    duration: durationStr,
+                    date: dateStr
+                )
+            }
+        }
+        
+        // manual sleep log if no health data
+        if let latest = sleepLogs.first, let end = latest.end {
             let timeFormatter = DateFormatter()
             timeFormatter.timeStyle = .short
 
@@ -182,9 +225,6 @@ final class SleepLogViewModel: ObservableObject {
 
             // Format times
             let startStr = timeFormatter.string(from: latest.start)
-            
-            guard let end = latest.end else { return nil }
-            
             let endStr = timeFormatter.string(from: end)
 
             // Duration
@@ -196,9 +236,9 @@ final class SleepLogViewModel: ObservableObject {
             let dateStr = dateFormatter.string(from: end)
             
             return FormattedSleep(start: startStr, end: endStr, duration: durationStr, date: dateStr)
-        } else {
-            return nil
         }
+        
+        return nil
     }
     
     func ageBasedTargetHours(for age: Int?) -> Double {
@@ -216,28 +256,56 @@ final class SleepLogViewModel: ObservableObject {
         }
     }
     
-    private func calculateSleepDebt(for logs: [SleepLog], age: Int?) -> Int {
+    private func calculateSleepDebt(for logs: [SleepLog], age: Int?) async -> Int {
+        let calendar = Calendar.current
         let targetMinutes = Int(ageBasedTargetHours(for: age) * 60)
-        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
         
-        // Filter logs within the last 7 days and that have an end time
-        let recentLogs = logs.filter { log in
-            guard let end = log.end else { return false }
-            return end >= sevenDaysAgo
+        // look at today + previous 6 days
+        let today = calendar.startOfDay(for: Date())
+        let days = (0..<7).compactMap {
+            calendar.date(byAdding: .day, value: -$0, to: today)
         }
         
-        guard !recentLogs.isEmpty else { return 0 }
+        var totalSleptMinutes = 0
+        var daysCounted = 0
         
-        // Total minutes slept in that period
-        let totalSlept = recentLogs.reduce(0) { total, log in
-            guard let end = log.end else { return total }
-            return total + Int(end.timeIntervalSince(log.start) / 60)
+        for day in days {
+            await loadHealthSleep(for: day)
+            // Prefer HealthKit if available for that day
+            let segments = fetchedHealthSegments
+            if let first = segments.first,
+               let last = segments.last {
+                let hasRealSleep = segments.contains { $0.stage.isAsleep }
+                  
+                if hasRealSleep {
+                    let duration = last.end.timeIntervalSince(first.start)
+                    let hkDuration = Int(duration / 60)
+                       totalSleptMinutes += hkDuration
+                       daysCounted += 1
+                       continue
+                }
+           }
+
+            // Else fallback to manual Sleepaholic log
+            if let log = logs.first(where: { log in
+                guard let end = log.end else { return false }
+                return calendar.isDate(end, inSameDayAs: day)
+            }) {
+                if let end = log.end {
+                    let minutes = Int(end.timeIntervalSince(log.start) / 60)
+                    totalSleptMinutes += minutes
+                    daysCounted += 1
+                    continue
+                }
+            }
+
+            // no data for this day → skip
         }
-        
-        let targetTotal = targetMinutes * recentLogs.count
-        
-        // Sleep debt = how much below your weekly target you are
-        let debt = max(0, targetTotal - totalSlept)
+
+        guard daysCounted > 0 else { return 0 }
+
+        let targetTotal = targetMinutes * daysCounted
+        let debt = max(0, targetTotal - totalSleptMinutes)
         return debt
     }
     
@@ -252,15 +320,15 @@ final class SleepLogViewModel: ObservableObject {
         }
     }
     
-    func recalcStats(userAge: Int?) {
+    func recalcStats(userAge: Int?) async -> Void {
         // 🔥 streak
         streakDays = calculateStreak()
 
         // 🕒 last sleep
-        lastSleep = getLastSleep()
+        lastSleep = await getLastSleep()
 
         // 😴 sleep debt
-        let debtMinutes = calculateSleepDebt(for: sleepLogs, age: userAge)
+        let debtMinutes = await calculateSleepDebt(for: sleepLogs, age: userAge)
         sleepDebt = formatMinutes(debtMinutes)
         
         // Recommendations
@@ -319,7 +387,7 @@ final class SleepLogViewModel: ObservableObject {
 
                     Task { @MainActor in
                         self.sleepLogs = fetched
-                        self.recalcStats(userAge: userAge)
+                        await self.recalcStats(userAge: userAge)
                     }
                 } catch {
                     print("❌ Decoding error: \(error)")

@@ -15,6 +15,8 @@ struct ContentView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
+    
+    @State private var lastSleep: FormattedSleep?
 
     var debtProgress: CGFloat {
         let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
@@ -46,7 +48,7 @@ struct ContentView: View {
                                 )
                             }
                             
-                            if let sleep = sleepLogViewModel.getLastSleep() {
+                            if let sleep = lastSleep {
                                 VStack(spacing: 8) {
                                     Text("Last Sleep: \(sleep.duration)")
                                         .font(.h2Semi)
@@ -141,7 +143,9 @@ struct ContentView: View {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
             
-            sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
+            lastSleep = await sleepLogViewModel.getLastSleep()
+            
+            await sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
             
             if let age = userProfileViewModel.profile?.age {
                 sleepLogViewModel.startListeningForSleepLogs(userAge: age)
