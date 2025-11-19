@@ -16,6 +16,8 @@ struct ContentView: View {
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
     
+    @State private var lastSleep: FormattedSleep?
+
     var debtProgress: CGFloat {
         let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
         var totalMinutes = 0
@@ -39,14 +41,6 @@ struct ContentView: View {
                     VStack(spacing: 24) {
                         VStack(spacing: 16) {
                             HStack(spacing: 12) {
-                                if sleepLogViewModel.sleepQuality != 0 {
-                                    SummaryCard(
-                                        icon: "moon.fill",
-                                        title: "\(sleepLogViewModel.sleepQuality)%",
-                                        subtitle: "Sleep Quality"
-                                    )
-                                }
-                                
                                 SummaryCard(
                                     icon: "flame.fill",
                                     title: "\(sleepLogViewModel.streakDays) nights",
@@ -54,7 +48,7 @@ struct ContentView: View {
                                 )
                             }
                             
-                            if let sleep = sleepLogViewModel.getLastSleep() {
+                            if let sleep = lastSleep {
                                 VStack(spacing: 8) {
                                     Text("Last Sleep: \(sleep.duration)")
                                         .font(.h2Semi)
@@ -71,6 +65,8 @@ struct ContentView: View {
                             }
                         }
                         
+                        
+                        // MARK: - Sleep Debt Progress
                         SleepDebtProgressView(
                             progress: debtProgress,
                             sleepDebt: sleepLogViewModel.sleepDebt
@@ -98,7 +94,9 @@ struct ContentView: View {
                             VStack(spacing: 4) {
                                 ForEach(activityViewModel.activities) { activity in
                                     ActivityRow(activity: activity, onDelete: {
-                                        Task { await activityViewModel.deleteActivity(activity) }
+                                        Task {
+                                            await activityViewModel.deleteActivity(activity)
+                                        }
                                     })
                                 }
                             }
@@ -126,7 +124,9 @@ struct ContentView: View {
                 }
                 
                 Button {
-                    Task { await sleepLogViewModel.startBedtime() }
+                    Task {
+                        await sleepLogViewModel.startBedtime()
+                    }
                 } label: {
                     PrimaryButton(
                         title: "Start Bedtime",
@@ -143,12 +143,9 @@ struct ContentView: View {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
             
-            if let latestLog = sleepLogViewModel.sleepLogs.first,
-               let id = latestLog.id {
-                await sleepClipViewModel.loadClips(for: id)
-            }
+            lastSleep = await sleepLogViewModel.getLastSleep()
             
-            sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
+            await sleepLogViewModel.recalcStats(userAge: userProfileViewModel.profile?.age)
             
             if let age = userProfileViewModel.profile?.age {
                 sleepLogViewModel.startListeningForSleepLogs(userAge: age)

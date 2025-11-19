@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// High-level sleep stages we care about for insights + visualization.
 enum SleepStage: String, Codable, CaseIterable {
@@ -49,3 +50,70 @@ struct SleepSegment: Identifiable, Codable, Hashable {
     }
 }
 
+extension SleepStage {
+    var color: Color {
+        switch self {
+        case .inBed:
+            return Color.white20
+        case .asleepUnspecified:
+            return Color.red
+        case .core:
+            return Color.blue
+        case .deep:
+            return Color.purple
+        case .rem:
+            return Color.green
+        case .awake:
+            return Color.yellow
+        }
+    }
+
+    var name: String {
+        switch self {
+        case .inBed:
+            return "In Bed"
+        case .asleepUnspecified:
+            return "Asleep"
+        case .core:
+            return "Core"
+        case .deep:
+            return "Deep"
+        case .rem:
+            return "REM"
+        case .awake:
+            return "Awake"
+        }
+    }
+    
+    /// 0 = highest (awake), 1 = lowest (deep)
+    var depth: CGFloat {
+        switch self {
+        case .awake: return 1.0
+        case .inBed: return 0.5
+        case .asleepUnspecified: return 0.5
+        case .core: return 0.33
+        case .rem: return 0.66
+        case .deep: return 0
+        }
+    }
+    
+    var isAsleep: Bool {
+        switch self {
+        case .core, .deep, .rem, .asleepUnspecified:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var sortOrder: Int {
+        switch self {
+        case .awake: return 0
+        case .inBed: return 1
+        case .asleepUnspecified: return 2
+        case .core: return 3
+        case .rem: return 4
+        case .deep: return 5
+        }
+    }
+}

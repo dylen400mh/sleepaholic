@@ -21,6 +21,8 @@ struct DayStripSelector: View {
         HStack(spacing: 8) {
             ForEach(weekDates, id: \.self) { day in
                 let isSelected = calendar.isDate(day, inSameDayAs: selectedDate)
+                let isFuture = day > Date()
+
                 Button {
                     withAnimation(.spring(response: 0.25, dampingFraction: 0.85)) {
                         selectedDate = day
@@ -45,6 +47,8 @@ struct DayStripSelector: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .disabled(isFuture)
+                .opacity(isFuture ? 0.5 : 1)
             }
         }
     }

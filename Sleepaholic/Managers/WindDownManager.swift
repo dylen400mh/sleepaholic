@@ -15,9 +15,22 @@ import FamilyControls
 import ManagedSettings
 
 class WindDownManager: ObservableObject, Codable {
-    static let shared = WindDownManager()
+    static private let storageKey = "windDownState"
+    
+    static let shared: WindDownManager = {
+        if let data = UserDefaults.standard.data(forKey: storageKey),
+           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data) {
+            decoded.restoreSounds()
+            return decoded
+        }
+        return WindDownManager()
+    }()
     
     weak var userSettingsViewModel: UserSettingsViewModel?
+    
+    func bindUserSettings(_ vm: UserSettingsViewModel) {
+        self.userSettingsViewModel = vm
+    }
     
     // sound player
     private var audioPlayers: [String: AVAudioPlayer] = [:]
@@ -51,8 +64,6 @@ class WindDownManager: ObservableObject, Codable {
     }
     @Published var selectedSounds: Set<String> = [] { didSet { saveState() } }
     @Published var isPlaying: Bool = false { didSet { saveState() } }
-
-    static private let storageKey = "windDownState"
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -77,15 +88,6 @@ class WindDownManager: ObservableObject, Codable {
             UserDefaults.standard.set(data, forKey: Self.storageKey)
         }
     }
-        
-    static func loadState() -> WindDownManager {
-        if let data = UserDefaults.standard.data(forKey: storageKey),
-           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data) {
-            decoded.restoreSounds()
-            return decoded
-        }
-        return WindDownManager()
-    }
 
     // Reset everything back to defaults
     func reset() {
@@ -98,12 +100,19 @@ class WindDownManager: ObservableObject, Codable {
     }
     
     // MARK: - Screen Time (Shielding)
-    private func applyShield() async {
-        guard (await MainActor.run(body: { userSettingsViewModel?.settings?.restrictApps })) != nil else {
+    func applyShield() async {
+        // If settings not loaded yet — do nothing
+        guard let restrictOn = await MainActor.run(body: { userSettingsViewModel?.settings?.restrictApps }) else {
+            return
+        }
+        
+        // If toggle is OFF — clear shield
+        if !restrictOn {
             clearShield()
             return
         }
-
+        
+        // toggle is on - apply shield
         // Tokens the user selected via FamilyActivityPicker
         let apps = restrictedApps.applicationTokens
         let categories = restrictedApps.categoryTokens
@@ -118,7 +127,7 @@ class WindDownManager: ObservableObject, Codable {
     }
 
 
-    private func clearShield() {
+    func clearShield() {
         store.clearAllSettings()
         print("🧹 Shield cleared.")
     }

@@ -134,8 +134,10 @@ extension UIApplication {
 struct SleepaholicApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("useAppleHealthSleep") private var useAppleHealthSleep = false
     
-    @StateObject private var windDownManager = WindDownManager.loadState()
+    @StateObject private var windDownManager = WindDownManager.shared
     @StateObject private var userSettingsViewModel = UserSettingsViewModel()
     @StateObject private var activityViewModel = ActivityViewModel()
     @StateObject private var sleepLogViewModel = SleepLogViewModel()
@@ -168,10 +170,20 @@ struct SleepaholicApp: App {
                     handleQuickAction(action)
                 }
             }
-            .onAppear {
+            .onAppear {      
                 consumePendingQuickActionIfAny()
                 preloadUserProfileIfNeeded()
                 identifyCurrentUserIfNeeded()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    let allowed = HealthKitManager.shared.isAuthorized()
+                    
+                    // If permission was revoked in Health app → disable integration
+                    if !allowed {
+                        useAppleHealthSleep = false
+                    }
+                }
             }
         }
     }
@@ -197,6 +209,7 @@ struct SleepaholicApp: App {
             if Auth.auth().currentUser != nil {
                 await userProfileViewModel.loadProfile()
                 await userSettingsViewModel.loadSettings()
+                windDownManager.bindUserSettings(userSettingsViewModel)
                 print("📄 User profile preloaded at app launch.")
             } else {
                 print("ℹ️ No signed-in user; skipping profile preload.")
