@@ -466,9 +466,9 @@ final class SleepLogViewModel: ObservableObject {
     // MARK: Stats & Helpers
     
     func computeSleepScore(from segments: [SleepSegment]) -> Int {
-        // total in-bed time
-        let inBed = segments
-            .filter { $0.stage == .inBed }
+        // total awake time
+        let awake = segments
+            .filter { $0.stage == .awake }
             .reduce(0) { $0 + $1.duration }
 
         // total asleep time
@@ -476,15 +476,13 @@ final class SleepLogViewModel: ObservableObject {
             .filter { $0.stage.isAsleep }
             .reduce(0) { $0 + $1.duration }
 
-        guard inBed > 0 else { return 0 }
+        let timeInBed = asleep + awake
+        guard timeInBed > 0 else { return 0 }
+        
+        let ratio = asleep / timeInBed
+        let clamped = min(max(ratio, 0), 1)
 
-        // efficiency ratio
-        let efficiency = asleep / inBed
-
-        // convert to score
-        let score = Int(efficiency * 100)
-
-        return score
+        return Int(clamped * 100)
     }
     
     func computeTimeAsleep(from segments: [SleepSegment]) -> TimeInterval {
