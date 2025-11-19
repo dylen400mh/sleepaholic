@@ -15,6 +15,7 @@ struct ContentView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
     
     @State private var lastSleep: FormattedSleep?
 
@@ -138,7 +139,7 @@ struct ContentView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.bottom, 24)
+        .padding(.bottom, adaptivePadding)
         .task {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
