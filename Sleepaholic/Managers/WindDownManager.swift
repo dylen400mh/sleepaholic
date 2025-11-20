@@ -34,6 +34,10 @@ class WindDownManager: ObservableObject {
             manager.isPlaying = decoded.isPlaying
             manager.prepareAudioSessionForCurrentState()
             manager.restoreSounds()
+            
+            if manager.bedtimeActive, let existingPath = manager.logPath {
+                manager.restartMonitoringAfterRelaunch(logPath: existingPath)
+            }
         }
         
         return manager
@@ -56,7 +60,7 @@ class WindDownManager: ObservableObject {
     private let silenceDuration: TimeInterval = 3
     private var silenceStart: Date?
     
-    private var logPath: String?
+    @AppStorage("logPath") private var logPath: String?
     
     private let store = ManagedSettingsStore()
     
@@ -340,6 +344,19 @@ class WindDownManager: ObservableObject {
         meterRecorder = nil
         AudioSessionManager.shared.deactivate()
         logPath = nil
+    }
+    
+    func restartMonitoringAfterRelaunch(logPath: String) {
+        AudioSessionManager.shared.configurePlayAndRecord()
+        setupMeterRecorder()
+        meterTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            Task { @MainActor in
+                self.checkAudioLevel(logPath: logPath)
+            }
+        }
+        
+        print("🔄 Monitoring resumed after relaunch")
     }
 
     private func startRecordingClip(logPath: String) {
