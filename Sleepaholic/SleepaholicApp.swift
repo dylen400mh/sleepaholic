@@ -170,7 +170,10 @@ struct SleepaholicApp: App {
                     handleQuickAction(action)
                 }
             }
-            .onAppear {      
+            .onReceive(AuthService.shared.$currentUser) { _ in
+                preloadUserProfileIfNeeded()
+            }
+            .onAppear {
                 consumePendingQuickActionIfAny()
                 preloadUserProfileIfNeeded()
                 identifyCurrentUserIfNeeded()
@@ -212,7 +215,10 @@ struct SleepaholicApp: App {
                 windDownManager.bindUserSettings(userSettingsViewModel)
                 print("📄 User profile preloaded at app launch.")
             } else {
-                print("ℹ️ No signed-in user; skipping profile preload.")
+                // Clear data on sign-out
+                userProfileViewModel.profile = nil
+                userSettingsViewModel.settings = nil
+                print("ℹ️ Cleared user state (signed-out).")
             }
         }
     }
