@@ -12,6 +12,7 @@ struct SettingsView: View {
     var showsBackButton: Bool = true
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
     @EnvironmentObject var userSettingsViewModel: UserSettingsViewModel
     @EnvironmentObject var guidedTourManager: GuidedTourManager
     
@@ -117,6 +118,7 @@ struct SettingsView: View {
                         }
                     }
                 }
+                .padding(.bottom, adaptivePadding)
             }
         }
         .navigationBarBackButtonHidden(true)

@@ -24,6 +24,7 @@ extension Date {
 }
 
 struct InsightsView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
     @EnvironmentObject private var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject private var sleepClipViewModel: SleepClipViewModel
     
@@ -93,6 +94,7 @@ struct InsightsView: View {
                     recordingsCard
                 }
                 .frame(maxWidth: .infinity)
+                .padding(.bottom, adaptivePadding)
             }
         }
         .navigationBarBackButtonHidden(true)
