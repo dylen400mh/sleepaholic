@@ -14,16 +14,29 @@ import FirebaseAuth
 import FamilyControls
 import ManagedSettings
 
-class WindDownManager: ObservableObject, Codable {
+@MainActor
+class WindDownManager: ObservableObject {
     static private let storageKey = "windDownState"
     
+    private struct PersistedState: Codable {
+        var restrictedApps: FamilyActivitySelection
+        var selectedSounds: Set<String>
+        var isPlaying: Bool
+    }
+    
     static let shared: WindDownManager = {
+        let manager = WindDownManager()
+        
         if let data = UserDefaults.standard.data(forKey: storageKey),
-           let decoded = try? JSONDecoder().decode(WindDownManager.self, from: data) {
-            decoded.restoreSounds()
-            return decoded
+           let decoded = try? JSONDecoder().decode(PersistedState.self, from: data) {
+            manager.restrictedApps = decoded.restrictedApps
+            manager.selectedSounds = decoded.selectedSounds
+            manager.isPlaying = decoded.isPlaying
+            manager.prepareAudioSessionForCurrentState()
+            manager.restoreSounds()
         }
-        return WindDownManager()
+        
+        return manager
     }()
     
     weak var userSettingsViewModel: UserSettingsViewModel?
@@ -34,7 +47,6 @@ class WindDownManager: ObservableObject, Codable {
     
     // sound player
     private var audioPlayers: [String: AVAudioPlayer] = [:]
-    private var audioSessionConfigured = false
     
     // recording sleep sounds
     private var audioRecorder: AVAudioRecorder?
@@ -64,27 +76,17 @@ class WindDownManager: ObservableObject, Codable {
     }
     @Published var selectedSounds: Set<String> = [] { didSet { saveState() } }
     @Published var isPlaying: Bool = false { didSet { saveState() } }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        restrictedApps = try container.decodeIfPresent(FamilyActivitySelection.self, forKey: .restrictedApps) ?? .init()
-        selectedSounds = try container.decode(Set<String>.self, forKey: .selectedSounds)
-        isPlaying = try container.decode(Bool.self, forKey: .isPlaying)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-
-        try container.encode(restrictedApps, forKey: .restrictedApps)
-        try container.encode(selectedSounds, forKey: .selectedSounds)
-        try container.encode(isPlaying, forKey: .isPlaying)
-    }
 
     init() {}
     
     func saveState() {
-        if let data = try? JSONEncoder().encode(self) {
+        let state = PersistedState(
+            restrictedApps: restrictedApps,
+            selectedSounds: selectedSounds,
+            isPlaying: isPlaying
+        )
+        
+        if let data = try? JSONEncoder().encode(state) {
             UserDefaults.standard.set(data, forKey: Self.storageKey)
         }
     }
@@ -95,7 +97,6 @@ class WindDownManager: ObservableObject, Codable {
         stopMonitoringSleep()
         selectedSounds.removeAll()
         isPlaying = true
-        
         bedtimeActive = false
     }
     
@@ -200,26 +201,7 @@ class WindDownManager: ObservableObject, Codable {
         }
     }
     
-    private func setupSharedAudioSession() {
-        guard !audioSessionConfigured else { return }
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(
-                .playAndRecord,
-                mode: .measurement,
-                options: [.allowBluetooth, .defaultToSpeaker, .mixWithOthers]
-            )
-            try session.setActive(true)
-            audioSessionConfigured = true
-        } catch {
-            print("❌ Failed to set up audio session: \(error)")
-        }
-    }
-    
     func playSound(named soundName: String) {
-        // setup audio session so sound can be played without the app open (this only happens once then we don't need to do it again)
-        setupSharedAudioSession()
-        
         let possibleExtensions = ["m4a", "wav"]
         var foundURL: URL? = nil
         
@@ -280,15 +262,18 @@ class WindDownManager: ObservableObject, Codable {
         if selectedSounds.contains(soundName) {
             selectedSounds.remove(soundName)
             stopSound(named: soundName)
+            
+            if selectedSounds.isEmpty {
+                AudioSessionManager.shared.deactivate()
+            }
         } else {
+            AudioSessionManager.shared.configurePlayback()
             selectedSounds.insert(soundName)
             playSound(named: soundName)
         }
     }
     
     func restoreSounds() {
-        setupSharedAudioSession()
-        
         for sound in selectedSounds {
             guard audioPlayers[sound] == nil else { continue }
 
@@ -321,16 +306,24 @@ class WindDownManager: ObservableObject, Codable {
         let shouldTrack = await MainActor.run(body: { userSettingsViewModel?.settings?.trackSleep == true })
         guard shouldTrack else { return }
         
+        self.logPath = logPath
+        
         AVAudioApplication.requestRecordPermission { granted in
             DispatchQueue.main.async {
                 if granted {
-                    self.setupSharedAudioSession()
+                    AudioSessionManager.shared.configurePlayAndRecord()
                     self.setupMeterRecorder()
                     self.meterTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-                        self?.checkAudioLevel(logPath: logPath)
+                        guard let self = self else { return }
+                        Task { @MainActor in
+                            self.checkAudioLevel(logPath: logPath)
+                        }
                     }
                     print("🎧 Sleep monitoring started")
                 } else {
+                    if self.isPlaying {
+                        AudioSessionManager.shared.configurePlayback()
+                    }
                     print("🚫 Microphone permission denied — sleep tracking not started.")
                 }
             }
@@ -345,17 +338,8 @@ class WindDownManager: ObservableObject, Codable {
         }
         meterRecorder?.stop()
         meterRecorder = nil
-        deactivateRecordingSession()
+        AudioSessionManager.shared.deactivate()
         logPath = nil
-    }
-    
-    private func deactivateRecordingSession() {
-        do {
-            try AVAudioSession.sharedInstance().setActive(false)
-            audioSessionConfigured = false
-        } catch {
-            print("❌ Could not deactivate recording session: \(error)")
-        }
     }
 
     private func startRecordingClip(logPath: String) {
@@ -443,6 +427,18 @@ class WindDownManager: ObservableObject, Codable {
             if avg >= silenceThreshold {
                 startRecordingClip(logPath: logPath)
             }
+        }
+    }
+    
+    func prepareAudioSessionForCurrentState() {
+        if bedtimeActive {
+            // User reopened the app while bedtime was active → sleep monitoring resumed
+            AudioSessionManager.shared.configurePlayAndRecord()
+        } else if !selectedSounds.isEmpty {
+            // User had sounds selected → restore playback
+            AudioSessionManager.shared.configurePlayback()
+        } else {
+            AudioSessionManager.shared.deactivate()
         }
     }
 }
