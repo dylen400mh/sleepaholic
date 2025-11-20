@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ActivitiesView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
     @EnvironmentObject private var activityViewModel: ActivityViewModel
 
     @State private var selectedDate = Date()
@@ -89,6 +90,7 @@ struct ActivitiesView: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            .padding(.bottom, adaptivePadding)
         }
     }
 

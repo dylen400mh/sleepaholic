@@ -63,7 +63,8 @@ struct MainTabView: View {
                 .guidedTourTarget(.tabBar)
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, adaptivePadding)
+        .padding(.top, adaptivePadding + 8)
+        .padding(.bottom, adaptivePadding)
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
         .overlayPreferenceValue(GuidedTourTargetPreferenceKey.self) { targets in

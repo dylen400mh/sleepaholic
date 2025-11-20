@@ -9,6 +9,7 @@ import SwiftUI
 import FamilyControls
 
 struct WindDownView: View {
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
     @EnvironmentObject var windDown: WindDownManager
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
@@ -175,8 +176,8 @@ struct WindDownView: View {
                             .disabled(!(userSettingsViewModel.settings?.restrictApps ?? false))
                         }
                     }
-                   
                 }
+                .padding(.bottom, adaptivePadding)
             }
             
             // Bottom anchored bar
