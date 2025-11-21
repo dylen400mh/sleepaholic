@@ -213,6 +213,7 @@ struct SleepaholicApp: App {
                 await userProfileViewModel.loadProfile()
                 await userSettingsViewModel.loadSettings()
                 windDownManager.bindUserSettings(userSettingsViewModel)
+                await windDownManager.scheduleNotifications()
                 print("📄 User profile preloaded at app launch.")
             } else {
                 // Clear data on sign-out

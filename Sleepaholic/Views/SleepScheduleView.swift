@@ -71,7 +71,6 @@ struct SleepScheduleView: View {
             
         // Persist changes
         await userSettingsViewModel.saveSettings(settings)
-        await windDown.scheduleNotifications()
         
         print("Updated bedtime and wake-up time, rescheduled notifications.")
     }
