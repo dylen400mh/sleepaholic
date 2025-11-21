@@ -48,6 +48,25 @@ class AuthService: NSObject, ObservableObject {
                     } else {
                         print("ℹ️ Existing profile found for \(user.uid)")
                     }
+                    
+                    // Ensure Firestore settings exist too
+                    let settingsCollection = "users/\(user.uid)/settings"
+                    let documentId = "settings"
+                    let existingSettings: UserSettings? = try? await service.fetch(from: settingsCollection, id: documentId)
+
+                    if existingSettings == nil {
+                        let defaultSettings = UserSettings(
+                            bedtime: 0,
+                            wakeUpTime: 0,
+                            trackSleep: false,
+                            restrictApps: false
+                        )
+
+                        try? await service.save(defaultSettings, to: settingsCollection, id: documentId)
+                        print("🆕 Created Firestore settings for \(user.uid)")
+                    } else {
+                        print("ℹ️ Existing settings found for \(user.uid)")
+                    }
 
                     // Now update published state after everything is ready
                     await MainActor.run {
