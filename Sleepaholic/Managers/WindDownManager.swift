@@ -73,8 +73,10 @@ class WindDownManager: ObservableObject {
     @Published var restrictedApps: FamilyActivitySelection = .init() {
         didSet {
             saveState()
-            Task {
-                await applyShield()
+            Task { @MainActor in
+                // read latest toggle value safely on the main actor
+                guard let restrictOn = userSettingsViewModel?.settings?.restrictApps else { return }
+                applyShield(restrictOn: restrictOn)
             }
         }
     }
@@ -105,12 +107,7 @@ class WindDownManager: ObservableObject {
     }
     
     // MARK: - Screen Time (Shielding)
-    func applyShield() async {
-        // If settings not loaded yet — do nothing
-        guard let restrictOn = await MainActor.run(body: { userSettingsViewModel?.settings?.restrictApps }) else {
-            return
-        }
-        
+    func applyShield(restrictOn: Bool) {
         // If toggle is OFF — clear shield
         if !restrictOn {
             clearShield()

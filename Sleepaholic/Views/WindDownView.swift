@@ -145,13 +145,15 @@ struct WindDownView: View {
                                         Binding(
                                             get: { userSettingsViewModel.settings?.restrictApps ?? false },
                                             set: { newValue in
-                                                if newValue {
-                                                    Task { await handleRestrictAppsOn() }
-                                                } else {
-                                                    showPicker = false
-                                                    Task { await saveSettingChange(\.restrictApps, newValue: false) }
+                                                Task {
+                                                    if newValue {
+                                                        await handleRestrictAppsOn()
+                                                    } else {
+                                                        showPicker = false
+                                                        await saveSettingChange(\.restrictApps, newValue: false)
+                                                    }
+                                                    windDown.applyShield(restrictOn: newValue)
                                                 }
-                                                Task { await windDown.applyShield() }
                                             }
                                         )
                                 )
