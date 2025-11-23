@@ -70,6 +70,7 @@ struct OnboardingView: View {
                 QuizView(
                     next: {
                         skipAnalysisAnimation = false
+                        quizViewModel.calculateTotalScore()
                         goToNext()
                     },
                     previous: goToPrevious,
@@ -84,7 +85,8 @@ struct OnboardingView: View {
                         quizStartIndex = 12
                         goToPrevious()
                     },
-                    skipAnimation: skipAnalysisAnimation
+                    skipAnimation: skipAnalysisAnimation,
+                    score: quizViewModel.score
                 )
             case .symptoms:
                 SymptomsView(

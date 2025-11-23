@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import SwiftUI
 
 @MainActor
 final class QuizViewModel: ObservableObject {
     @Published var questions: [QuizQuestion] = []
     @Published var currentIndex: Int = 0
+    @AppStorage("quizScore") var score: Int = 0
 
     init() {
         loadQuestions()
@@ -63,7 +65,7 @@ final class QuizViewModel: ObservableObject {
             .init(id: 1, text: "What is your gender?", options: ["Male", "Female", "Other"], isRequired: false, type: .multipleChoice),
             .init(id: 2, text: "How many hours of sleep do you typically get each night?", options: ["<6 hours", "6-8 hours", "8-10 hours", "10+ hours"], isRequired: false, type: .multipleChoice),
             .init(id: 3, text: "Where did you hear about us?", options: ["TikTok", "Instagram", "YouTube", "Google", "X", "App Store"], isRequired: false, type: .multipleChoice),
-            .init(id: 4, text: "How satisfied are you with your sleep?", options: ["Satisifed", "Neutral", "Unsatisfied"], isRequired: false, type: .multipleChoice),
+            .init(id: 4, text: "How satisfied are you with your sleep?", options: ["Satisified", "Neutral", "Unsatisfied"], isRequired: false, type: .multipleChoice),
             .init(id: 5, text: "How long does it take for you to fall asleep?", options: ["Less than 10 minutes", "10-20 minutes", "20-40 minutes", "40+ minutes"], isRequired: false, type: .multipleChoice),
             .init(id: 6, text: "Do you find it difficult to fall asleep without your phone or a screen?", options: ["Frequently", "Occasionally", "Rarely / Never"], isRequired: false, type: .multipleChoice),
             .init(id: 7, text: "Do you often stay up late even when you know you should be sleeping?", options: ["Frequently", "Occasionally", "Rarely / Never"], isRequired: false, type: .multipleChoice),
@@ -75,5 +77,62 @@ final class QuizViewModel: ObservableObject {
             .init(id: 13, text: "What is your target wake-up time?", options: [], isRequired: true, type: .timePicker),
         ]
         currentIndex = 0
+    }
+    
+    func calculateTotalScore() -> Void {
+        var total = 0
+
+        for q in questions {
+            guard let answer = q.answer else { continue }
+
+            total += scoreFor(q.id, answer: answer)
+        }
+
+        score = total
+    }
+    
+    func scoreFor(_ questionID: Int, answer: String) -> Int {
+        switch questionID {
+
+        // Sleep hours (Q2)
+        case 2:
+            switch answer {
+            case "<6 hours": return 3
+            case "6-8 hours": return 2
+            case "8-10 hours": return 1
+            default: return 0
+            }
+            
+        case 4:
+            switch answer {
+            case "Unsatisfied": return 3
+            case "Neutral": return 1
+            default: return 0
+            }
+            
+        case 5:
+            switch answer {
+            case "40+ minutes": return 3
+            case "20-40 minutes": return 2
+            case "10-20 minutes": return 1
+            default: return 0
+            }
+
+        // Q6–9
+        case 6,7,8,9:
+            switch answer {
+            case "Frequently": return 3
+            case "Occasionally": return 1
+            case "Rarely / Never": return 0
+            default: return 0
+            }
+
+        // yes/no
+        case 10:
+            return answer == "Yes" ? 1 : 0
+
+        default:
+            return 0
+        }
     }
 }
