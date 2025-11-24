@@ -20,7 +20,7 @@
     "_applicationInternalID" : "6753325437",
     "_developerTeamID" : "TQA45A7B6K",
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 783475447.736485,
+    "_lastSynchronizedDate" : 785641339.24413502,
     "_locale" : "en_US",
     "_storefront" : "USA",
     "_storeKitErrors" : [
@@ -86,12 +86,45 @@
           "codeOffers" : [
 
           ],
+          "displayPrice" : "12.99",
+          "familyShareable" : false,
+          "groupNumber" : 5,
+          "internalID" : "6755664769",
+          "introductoryOffer" : {
+            "internalID" : "77EE06BF",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "7 day trial + monthly subscription to Sleepaholic",
+              "displayName" : "7 Day Trial + Monthly Subscription",
+              "locale" : "en_CA"
+            }
+          ],
+          "productID" : "7d_trial_monthly_13",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "7 Day Trial + Monthly",
+          "subscriptionGroupID" : "21803235",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
           "displayPrice" : "29.99",
           "familyShareable" : false,
           "groupNumber" : 2,
           "internalID" : "6753949822",
           "introductoryOffer" : {
-            "internalID" : "D4BF8969",
+            "internalID" : "8F520BC8",
             "numberOfPeriods" : 1,
             "paymentMode" : "free",
             "subscriptionPeriod" : "P1W"
@@ -145,7 +178,19 @@
 
           ],
           "codeOffers" : [
-
+            {
+              "eligibility" : [
+                "new",
+                "expired",
+                "existing"
+              ],
+              "internalID" : "AE90A666",
+              "isStackable" : true,
+              "numberOfPeriods" : 1,
+              "paymentMode" : "free",
+              "referenceName" : "Free",
+              "subscriptionPeriod" : "P1Y"
+            }
           ],
           "displayPrice" : "12.99",
           "familyShareable" : false,

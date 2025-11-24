@@ -17,6 +17,34 @@ struct AnalysisView: View {
     let next: () -> Void
     let previous: () -> Void
     var skipAnimation: Bool = false
+    let score: Int
+    
+    var severityTitle: String {
+        switch score {
+        case 0...4: "You have little to no issues with your sleep"
+        case 5...12: "You are showing some signs of sleep issues"
+        default: "Your sleep needs some serious attention"
+        }
+    }
+    
+    var severitySubtitle: String {
+        switch score {
+        case 0...4:
+            return "Your habits look good overall, but there’s still room to optimize."
+        case 5...12:
+            return "Some sleep disruptions are showing up. A few small changes can make a big difference."
+        default:
+            return "Your responses suggest your sleep is being heavily affected. Here are some things you can do starting tonight."
+        }
+    }
+    
+    let tips = [
+        "Put your phone away 30 minutes before bed.",
+        "Avoid caffeine within 8 hours of bedtime.",
+        "Keep a consistent wake-up time — even on weekends.",
+        "Dim lights and avoid bright screens during your wind-down.",
+        "Get 5–10 minutes of morning sunlight to regulate your rhythm."
+    ]
 
     // Timer for progress animation
     private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
@@ -88,47 +116,43 @@ struct AnalysisView: View {
             } else {
                 // MARK: - Results State
                 VStack(spacing: 24) {
-                    Spacer()
-                    
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Analysis Complete")
                             .font(.h2Semi)
                             .foregroundColor(.white100)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Text("We've got some news to break to you...")
-                            .font(.body2)
-                            .foregroundColor(.white80)
+                        Text(severityTitle)
+                            .font(.body1Semi)
+                            .foregroundColor(.white100)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        Text("Your responses indicate that you're struggling with poor sleep patterns that may be impacting your daily life*")
+                        Text(severitySubtitle)
                             .font(.body2)
                             .foregroundColor(.white80)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    // MARK: - Sleep Risk Chart
-                    VStack(spacing: 24) {
-                        VStack {
-                            Image("AnalysisChart")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity)
-                        }
-                        .padding(24)
-                        .background(Color.main)
-                        .cornerRadius(16)
+                    // MARK: - Sleep Tips
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("5 ways to sleep better tonight:")
+                            .font(.body1Semi)
+                            .foregroundColor(.white100)
 
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("72% higher risk of unhealthy sleep habits")
-                                .font(.body1)
-                                .foregroundColor(.white100)
-                            Text("* This result is an indication only, not a medical diagnosis")
-                                .font(.body2)
-                                .foregroundColor(.white80)
+                        ForEach(tips, id: \.self) { tip in
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.white100)
+                                    .font(.body1)
+
+                                Text(tip)
+                                    .font(.body2)
+                                    .foregroundColor(.white80)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     
                     Spacer()
 
@@ -200,5 +224,5 @@ struct AnalysisView: View {
 }
 
 #Preview {
-    AnalysisView(next: {}, previous: {})
+    AnalysisView(next: {}, previous: {}, score: 0)
 }
