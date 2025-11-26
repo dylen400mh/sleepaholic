@@ -222,26 +222,7 @@ struct SleepaholicApp: App {
         case .sendFeedback:
             openURL(feedbackFormURL)
         case .tryForFree:
-            Task {
-                await preloadUserProfileIfNeeded()
-                
-                guard let userAge = userProfileViewModel.profile?.age else {
-                    SuperwallService.shared.presentPaywall(placement: "no_age")
-                    return
-                }
-                
-                if userAge < 18 {
-                    SuperwallService.shared.presentPaywall(placement: "under18")
-                } else if userAge <= 22 {
-                    SuperwallService.shared.presentPaywall(placement: "age18to22")
-                } else if userAge <= 28 {
-                    SuperwallService.shared.presentPaywall(placement: "age23to28")
-                } else if userAge <= 40 {
-                    SuperwallService.shared.presentPaywall(placement: "age29to40")
-                } else {
-                    SuperwallService.shared.presentPaywall(placement: "over40")
-                }
-            }
+            SuperwallService.shared.presentPaywall(placement: "quick_action")
         }
     }
     
