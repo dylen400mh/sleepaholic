@@ -50,6 +50,11 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
             .sink { [weak self] status in
                 Task { @MainActor in
                     self?.isSubscribed = status.isActive
+                    
+                    if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                        appDelegate.updateQuickActions(for: UIApplication.shared)
+                    }
+                    
                     print("🔄 Subscription status changed (published): \(self?.isSubscribed == true ? "Active" : "Inactive")")
                 }
             }
@@ -59,6 +64,12 @@ final class SuperwallService: NSObject, ObservableObject, SuperwallDelegate {
     func subscriptionStatusDidChange(from oldValue: SubscriptionStatus, to newValue: SubscriptionStatus) {
         Task { @MainActor in
             self.isSubscribed = newValue.isActive
+            
+            // Refresh quick actions
+            if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                appDelegate.updateQuickActions(for: UIApplication.shared)
+            }
+            
             print("🔄 Subscription status changed (delegate): \(self.isSubscribed ? "Active" : "Inactive")")
         }
     }
