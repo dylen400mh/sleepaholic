@@ -16,6 +16,8 @@ struct ContentView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var sleepClipViewModel: SleepClipViewModel
+    @EnvironmentObject var dailyGoalsViewModel: DailyGoalsViewModel
+    @Environment(\.adaptiveVerticalPadding) var adaptivePadding
     
     @State private var lastSleep: FormattedSleep?
     
@@ -201,6 +203,7 @@ struct ContentView: View {
         .task {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
+            dailyGoalsViewModel.refreshForCurrentDayIfNeeded()
             
             lastSleep = await sleepLogViewModel.getLastSleep()
             
