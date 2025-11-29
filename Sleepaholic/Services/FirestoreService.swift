@@ -34,14 +34,13 @@ final class FirestoreService {
                           id: String) async throws {
         let ref = db.collection(collection).document(id)
         
-        // this removes the user's age if its empty (age is optional)
-        if let userProfile = item as? UserProfile {
-            if userProfile.age == nil {
-                try await ref.updateData(["age": FieldValue.delete()])
-            }
+        var data = try Firestore.Encoder().encode(item)
+        
+        if let profile = item as? UserProfile, profile.age == nil {
+            data["age"] = nil
         }
         
-        try ref.setData(from: item, merge: true)
+        try await ref.setData(data, merge: true)
     }
 
     // MARK: - Read All

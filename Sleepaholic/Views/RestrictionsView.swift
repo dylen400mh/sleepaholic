@@ -45,7 +45,7 @@ struct RestrictionsView: View {
                             set: { newValue in
                                 Task {
                                     await handleRestrictAppsToggle(newValue)
-                                    await windDown.applyShield()
+                                    windDown.applyShield(restrictOn: newValue)
                                 }
                             }
                         )

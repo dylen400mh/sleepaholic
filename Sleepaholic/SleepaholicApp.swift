@@ -15,6 +15,7 @@ import FirebaseAuth
 
 enum QuickAction: String {
     case sendFeedback = "com.sleepaholic.sendFeedback"
+    case tryForFree = "com.sleepaholic.tryForFree"
 }
 
 @MainActor
@@ -100,15 +101,28 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         completionHandler()
     }
     
-    private func updateQuickActions(for application: UIApplication) {
+    func updateQuickActions(for application: UIApplication) {
+        var items: [UIApplicationShortcutItem] = []
+        
         let feedbackItem = UIApplicationShortcutItem(
             type: QuickAction.sendFeedback.rawValue,
             localizedTitle: "Deleting? Tell us why.",
             localizedSubtitle: "Send quick feedback before deleting",
             icon: UIApplicationShortcutIcon(systemImageName: "square.and.pencil")
         )
-
-        application.shortcutItems = [feedbackItem]
+        items.append(feedbackItem)
+        
+        // only add "Try For Free" if user is not subscribed
+        if !Superwall.shared.subscriptionStatus.isActive {
+            let tryForFreeItem = UIApplicationShortcutItem(
+                type: QuickAction.tryForFree.rawValue,
+                localizedTitle: "TRY FOR FREE",
+                localizedSubtitle: "Fix your sleep now",
+                icon: UIApplicationShortcutIcon(systemImageName: "star.fill")
+            )
+            items.append(tryForFreeItem)
+        }
+        application.shortcutItems = items
     }
     
     func application(_ application: UIApplication,
@@ -172,10 +186,17 @@ struct SleepaholicApp: App {
                     handleQuickAction(action)
                 }
             }
-            .onAppear {      
+            .onReceive(AuthService.shared.$currentUser) { _ in
+                Task {
+                    await preloadUserProfileIfNeeded()
+                }
+            }
+            .onAppear {
                 consumePendingQuickActionIfAny()
-                preloadUserProfileIfNeeded()
-                identifyCurrentUserIfNeeded()
+                Task {
+                    await preloadUserProfileIfNeeded()
+                    identifyCurrentUserIfNeeded()
+                }
             }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
@@ -202,20 +223,24 @@ struct SleepaholicApp: App {
         switch action {
         case .sendFeedback:
             openURL(feedbackFormURL)
+        case .tryForFree:
+            SuperwallService.shared.presentPaywall(placement: "quick_action")
         }
     }
     
     @MainActor
-    private func preloadUserProfileIfNeeded() {
-        Task {
-            if Auth.auth().currentUser != nil {
-                await userProfileViewModel.loadProfile()
-                await userSettingsViewModel.loadSettings()
-                windDownManager.bindUserSettings(userSettingsViewModel)
-                print("📄 User profile preloaded at app launch.")
-            } else {
-                print("ℹ️ No signed-in user; skipping profile preload.")
-            }
+    private func preloadUserProfileIfNeeded() async {
+        if Auth.auth().currentUser != nil {
+            await userProfileViewModel.loadProfile()
+            await userSettingsViewModel.loadSettings()
+            windDownManager.bindUserSettings(userSettingsViewModel)
+            await windDownManager.scheduleNotifications()
+            print("📄 User profile preloaded at app launch.")
+        } else {
+            // Clear data on sign-out
+            userProfileViewModel.profile = nil
+            userSettingsViewModel.settings = nil
+            print("ℹ️ Cleared user state (signed-out).")
         }
     }
     

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseAuth
+import FamilyControls
 
 struct ContentView: View {
     @EnvironmentObject var windDown: WindDownManager
@@ -19,6 +20,9 @@ struct ContentView: View {
     @Environment(\.adaptiveVerticalPadding) var adaptivePadding
     
     @State private var lastSleep: FormattedSleep?
+    
+    @State private var showPicker = false
+    @State private var requestingAuth = false
 
     var debtProgress: CGFloat {
         let parts = sleepLogViewModel.sleepDebt.split(separator: " ")
@@ -73,6 +77,60 @@ struct ContentView: View {
                             progress: debtProgress,
                             sleepDebt: sleepLogViewModel.sleepDebt
                         )
+                        
+                        VStack(alignment: .leading, spacing: 24) {
+                            HeaderWithSeparator(title: "Restrictions")
+
+                            VStack(alignment: .leading, spacing: 14) {
+                                HStack(spacing: 16) {
+                                    Image("apps") // your icon; otherwise "lock.iphone" SF Symbol
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 24, height: 24)
+                                        .foregroundColor(.white100)
+
+                                    Text("Restrict Apps")
+                                        .font(.body1Semi)
+                                        .foregroundColor(.white100)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                                    Toggle("", isOn:
+                                            Binding(
+                                                get: { userSettingsViewModel.settings?.restrictApps ?? false },
+                                                set: { newValue in
+                                                    Task {
+                                                        if newValue {
+                                                            await handleRestrictAppsOn()
+                                                        } else {
+                                                            showPicker = false
+                                                            await saveSettingChange(\.restrictApps, newValue: false)
+                                                        }
+                                                        windDown.applyShield(restrictOn: newValue)
+                                                    }
+                                                }
+                                            )
+                                    )
+                                    .toggleStyle(ToggleButton())
+                                }
+
+                                Text(summaryText)
+                                    .font(.body2)
+                                    .foregroundColor(.white70)
+
+                                Button {
+                                    showPicker = true
+                                } label: {
+                                    SecondaryButton(
+                                        title: "Modify Restricted Apps",
+                                        icon: nil,
+                                        size: .small,
+                                        isDisabled: !(userSettingsViewModel.settings?.restrictApps ?? false)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(!(userSettingsViewModel.settings?.restrictApps ?? false))
+                            }
+                        }
                         
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
@@ -140,7 +198,8 @@ struct ContentView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.bottom, adaptivePadding)
+        .padding(.bottom, 24)
+        .familyActivityPicker(isPresented: $showPicker, selection: $windDown.restrictedApps)
         .task {
             await activityViewModel.loadActivities()
             await sleepLogViewModel.loadSleepLogs()
@@ -156,6 +215,36 @@ struct ContentView: View {
                 sleepLogViewModel.startListeningForSleepLogs(userAge: nil)
             }
         }
+    }
+    
+    private var summaryText: String {
+        let a = windDown.restrictedApps.applicationTokens.count
+        let c = windDown.restrictedApps.categoryTokens.count
+        let w = windDown.restrictedApps.webDomainTokens.count
+        return "Selected \(a) apps, \(c) categories, \(w) websites"
+    }
+
+    // MARK: - Auth + Picker flow
+    private func handleRestrictAppsOn() async {
+        requestingAuth = true
+        do {
+            let status = AuthorizationCenter.shared.authorizationStatus
+            if status != .approved {
+                try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
+            }
+            // Mark enabled and prompt for the selection (first-time or to edit)
+            await saveSettingChange(\.restrictApps, newValue: true)
+            showPicker = true
+        } catch {
+            await saveSettingChange(\.restrictApps, newValue: false)
+        }
+        requestingAuth = false
+    }
+    
+    private func saveSettingChange<T>(_ keyPath: WritableKeyPath<UserSettings, T>, newValue: T) async {
+        guard var settings = userSettingsViewModel.settings else { return }
+        settings[keyPath: keyPath] = newValue
+        await userSettingsViewModel.saveSettings(settings)
     }
 }
 
