@@ -15,10 +15,38 @@
 		0F37A3B52E7F0BF20036C7EC /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 0F37A3B42E7F0BF20036C7EC /* FirebaseStorage */; };
 		0F4429CC2E99C95200B7F4A5 /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4429CB2E99C95200B7F4A5 /* SuperwallKit */; };
 		0F4A50422E9D83A4008FAA68 /* Mixpanel in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4A50412E9D83A4008FAA68 /* Mixpanel */; };
+		0F5FB7362EDCDD35001C37B9 /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F5FB7352EDCDD35001C37B9 /* DeviceActivity.framework */; };
+		0F5FB73E2EDCDD35001C37B9 /* SleepaholicDeviceMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0F5FB7332EDCDD35001C37B9 /* SleepaholicDeviceMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		0F7A522C2EAC74A900F0982D /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 0F7A522B2EAC74A900F0982D /* Collections */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		0F5FB73C2EDCDD35001C37B9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0F6EDB992E7606E000A7595D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0F5FB7322EDCDD35001C37B9;
+			remoteInfo = SleepaholicDeviceMonitor;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0F5FB73F2EDCDD35001C37B9 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				0F5FB73E2EDCDD35001C37B9 /* SleepaholicDeviceMonitor.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		0F5FB7332EDCDD35001C37B9 /* SleepaholicDeviceMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SleepaholicDeviceMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0F5FB7352EDCDD35001C37B9 /* DeviceActivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DeviceActivity.framework; path = System/Library/Frameworks/DeviceActivity.framework; sourceTree = SDKROOT; };
 		0F6EDBA12E7606E000A7595D /* Sleepaholic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sleepaholic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -30,13 +58,36 @@
 			);
 			target = 0F6EDBA02E7606E000A7595D /* Sleepaholic */;
 		};
+		0F5FB7432EDCDD35001C37B9 /* Exceptions for "SleepaholicDeviceMonitor" folder in "SleepaholicDeviceMonitor" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0F5FB7322EDCDD35001C37B9 /* SleepaholicDeviceMonitor */;
+		};
+		0F5FB7492EDCE241001C37B9 /* Exceptions for "Sleepaholic" folder in "SleepaholicDeviceMonitor" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Managers/ShieldController.swift,
+			);
+			target = 0F5FB7322EDCDD35001C37B9 /* SleepaholicDeviceMonitor */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		0F5FB7372EDCDD35001C37B9 /* SleepaholicDeviceMonitor */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0F5FB7432EDCDD35001C37B9 /* Exceptions for "SleepaholicDeviceMonitor" folder in "SleepaholicDeviceMonitor" target */,
+			);
+			path = SleepaholicDeviceMonitor;
+			sourceTree = "<group>";
+		};
 		0F6EDBA32E7606E000A7595D /* Sleepaholic */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				0F40554C2E888F4F005DD9D0 /* Exceptions for "Sleepaholic" folder in "Sleepaholic" target */,
+				0F5FB7492EDCE241001C37B9 /* Exceptions for "Sleepaholic" folder in "SleepaholicDeviceMonitor" target */,
 			);
 			path = Sleepaholic;
 			sourceTree = "<group>";
@@ -44,6 +95,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0F5FB7302EDCDD35001C37B9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F5FB7362EDCDD35001C37B9 /* DeviceActivity.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0F6EDB9E2E7606E000A7595D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -63,10 +122,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0F5FB7342EDCDD35001C37B9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0F5FB7352EDCDD35001C37B9 /* DeviceActivity.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		0F6EDB982E7606E000A7595D = {
 			isa = PBXGroup;
 			children = (
 				0F6EDBA32E7606E000A7595D /* Sleepaholic */,
+				0F5FB7372EDCDD35001C37B9 /* SleepaholicDeviceMonitor */,
+				0F5FB7342EDCDD35001C37B9 /* Frameworks */,
 				0F6EDBA22E7606E000A7595D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -75,6 +144,7 @@
 			isa = PBXGroup;
 			children = (
 				0F6EDBA12E7606E000A7595D /* Sleepaholic.app */,
+				0F5FB7332EDCDD35001C37B9 /* SleepaholicDeviceMonitor.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -82,6 +152,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0F5FB7322EDCDD35001C37B9 /* SleepaholicDeviceMonitor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0F5FB7422EDCDD35001C37B9 /* Build configuration list for PBXNativeTarget "SleepaholicDeviceMonitor" */;
+			buildPhases = (
+				0F5FB72F2EDCDD35001C37B9 /* Sources */,
+				0F5FB7302EDCDD35001C37B9 /* Frameworks */,
+				0F5FB7312EDCDD35001C37B9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0F5FB7372EDCDD35001C37B9 /* SleepaholicDeviceMonitor */,
+			);
+			name = SleepaholicDeviceMonitor;
+			packageProductDependencies = (
+			);
+			productName = SleepaholicDeviceMonitor;
+			productReference = 0F5FB7332EDCDD35001C37B9 /* SleepaholicDeviceMonitor.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		0F6EDBA02E7606E000A7595D /* Sleepaholic */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0F6EDBAD2E7606E100A7595D /* Build configuration list for PBXNativeTarget "Sleepaholic" */;
@@ -89,10 +181,12 @@
 				0F6EDB9D2E7606E000A7595D /* Sources */,
 				0F6EDB9E2E7606E000A7595D /* Frameworks */,
 				0F6EDB9F2E7606E000A7595D /* Resources */,
+				0F5FB73F2EDCDD35001C37B9 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				0F5FB73D2EDCDD35001C37B9 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				0F6EDBA32E7606E000A7595D /* Sleepaholic */,
@@ -123,6 +217,9 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					0F5FB7322EDCDD35001C37B9 = {
+						CreatedOnToolsVersion = 16.4;
+					};
 					0F6EDBA02E7606E000A7595D = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -150,11 +247,19 @@
 			projectRoot = "";
 			targets = (
 				0F6EDBA02E7606E000A7595D /* Sleepaholic */,
+				0F5FB7322EDCDD35001C37B9 /* SleepaholicDeviceMonitor */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0F5FB7312EDCDD35001C37B9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0F6EDB9F2E7606E000A7595D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -165,6 +270,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0F5FB72F2EDCDD35001C37B9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0F6EDB9D2E7606E000A7595D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -174,7 +286,72 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		0F5FB73D2EDCDD35001C37B9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0F5FB7322EDCDD35001C37B9 /* SleepaholicDeviceMonitor */;
+			targetProxy = 0F5FB73C2EDCDD35001C37B9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		0F5FB7402EDCDD35001C37B9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SleepaholicDeviceMonitor/SleepaholicDeviceMonitor.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TQA45A7B6K;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SleepaholicDeviceMonitor/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SleepaholicDeviceMonitor;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dylen.Sleepaholic.SleepaholicDeviceMonitor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0F5FB7412EDCDD35001C37B9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SleepaholicDeviceMonitor/SleepaholicDeviceMonitor.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TQA45A7B6K;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SleepaholicDeviceMonitor/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SleepaholicDeviceMonitor;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dylen.Sleepaholic.SleepaholicDeviceMonitor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		0F6EDBAB2E7606E100A7595D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -380,6 +557,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0F5FB7422EDCDD35001C37B9 /* Build configuration list for PBXNativeTarget "SleepaholicDeviceMonitor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F5FB7402EDCDD35001C37B9 /* Debug */,
+				0F5FB7412EDCDD35001C37B9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		0F6EDB9C2E7606E000A7595D /* Build configuration list for PBXProject "Sleepaholic" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

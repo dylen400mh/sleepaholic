@@ -45,7 +45,6 @@ struct RestrictionsView: View {
                             set: { newValue in
                                 Task {
                                     await handleRestrictAppsToggle(newValue)
-                                    windDown.applyShield(restrictOn: newValue)
                                 }
                             }
                         )
@@ -82,6 +81,18 @@ struct RestrictionsView: View {
                     Text(summaryText)
                         .font(.body2)
                         .foregroundColor(.white70)
+                    
+                    if userSettingsViewModel.settings?.restrictApps == true {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(windDown.isRestrictionActiveNow ? Color.green : Color.gray)
+                                .frame(width: 10, height: 10)
+
+                            Text(windDown.isRestrictionActiveNow ? "Active Now" : "Not Active Now")
+                                .font(.body3)
+                                .foregroundColor(.white70)
+                        }
+                    }
                 }
             }
         }
@@ -99,7 +110,14 @@ struct RestrictionsView: View {
         let a = windDown.restrictedApps.applicationTokens.count
         let c = windDown.restrictedApps.categoryTokens.count
         let w = windDown.restrictedApps.webDomainTokens.count
-        return "Selected \(a) apps, \(c) categories, \(w) websites"
+        
+        let start = windDown.restrictionStartText
+        let end = windDown.restrictionEndText
+        
+        return """
+        Selected \(a) apps, \(c) categories, \(w) websites.
+        Restrictions apply daily from \(start) until \(end).
+        """
     }
 
     // MARK: - Toggle handling

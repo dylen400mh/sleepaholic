@@ -69,6 +69,7 @@ final class UserSettingsViewModel: ObservableObject {
                 try await service.save(settings, to: path(for: uid), id: docId)
                 self.settings = settings
                 await WindDownManager.shared.scheduleNotifications()
+                await WindDownManager.shared.updateDeviceActivitySchedule()
             } catch {
                 print("Error saving settings: \(error)")
             }
