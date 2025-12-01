@@ -12,7 +12,7 @@ import AVFoundation
 import FirebaseStorage
 import FirebaseAuth
 import FamilyControls
-import ManagedSettings
+import DeviceActivity
 
 @MainActor
 class WindDownManager: ObservableObject {
@@ -62,8 +62,6 @@ class WindDownManager: ObservableObject {
     
     @AppStorage("logPath") private var logPath: String?
     
-    private let store = ManagedSettingsStore()
-    
     @AppStorage("bedtimeActive") private var bedtimeActive: Bool = false
 
     enum CodingKeys: String, CodingKey {
@@ -73,10 +71,24 @@ class WindDownManager: ObservableObject {
     @Published var restrictedApps: FamilyActivitySelection = .init() {
         didSet {
             saveState()
+            
+            if let data = try? JSONEncoder().encode(restrictedApps) {
+                UserDefaults(suiteName: "group.sleepaholic")?
+                    .set(data, forKey: "shieldSelection")
+            }
+            
+            ShieldController.shared.latestSelection = restrictedApps
+            
             Task { @MainActor in
+                guard let settings = userSettingsViewModel?.settings else { return }
+                
                 // read latest toggle value safely on the main actor
-                guard let restrictOn = userSettingsViewModel?.settings?.restrictApps else { return }
-                applyShield(restrictOn: restrictOn)
+                if settings.restrictApps == true, WindDownManager.isNowInRestrictionWindow(settings: settings) {
+                    ShieldController.shared.applyShield()
+                } else {
+                    ShieldController.shared.clearShield()
+                }
+                
             }
         }
     }
@@ -106,34 +118,6 @@ class WindDownManager: ObservableObject {
         bedtimeActive = false
     }
     
-    // MARK: - Screen Time (Shielding)
-    func applyShield(restrictOn: Bool) {
-        // If toggle is OFF — clear shield
-        if !restrictOn {
-            clearShield()
-            return
-        }
-        
-        // toggle is on - apply shield
-        // Tokens the user selected via FamilyActivityPicker
-        let apps = restrictedApps.applicationTokens
-        let categories = restrictedApps.categoryTokens
-        let webDomains = restrictedApps.webDomainTokens
-
-        // Apply only what’s non-empty (Apple recommends nil when unused)
-        store.shield.applications = apps.isEmpty ? nil : apps
-        store.shield.applicationCategories = categories.isEmpty ? nil : .specific(categories)
-        store.shield.webDomains = webDomains.isEmpty ? nil : webDomains
-
-        print("🛡️ Shield applied. apps=\(apps.count) categories=\(categories.count) webDomains=\(webDomains.count)")
-    }
-
-
-    func clearShield() {
-        store.clearAllSettings()
-        print("🧹 Shield cleared.")
-    }
-    
     // MARK: - Helpers
     static func dateFromMinutes(_ minutes: Int) -> Date {
         Calendar.current.date(
@@ -147,6 +131,21 @@ class WindDownManager: ObservableObject {
     static func minutesFromDate(_ date: Date) -> Int {
         let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
         return (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
+    }
+    
+    static func isNowInRestrictionWindow(settings: UserSettings) -> Bool {
+        let now = Date()
+
+        let bedtime = dateFromMinutes(settings.bedtime)
+        let windDownStart = Calendar.current.date(byAdding: .hour, value: -1, to: bedtime) ?? bedtime
+        let wakeDate = dateFromMinutes(settings.wakeUpTime)
+
+        // Handles crossing midnight correctly
+        if windDownStart <= wakeDate {
+            return now >= windDownStart && now <= wakeDate
+        } else {
+            return now >= windDownStart || now <= wakeDate
+        }
     }
     
     func scheduleNotifications() async {
@@ -457,4 +456,83 @@ class WindDownManager: ObservableObject {
     }
 }
 
+extension WindDownManager {
+    func updateDeviceActivitySchedule() async {
+        guard let settings = await MainActor.run(body: { userSettingsViewModel?.settings }) else {
+            return
+        }
 
+        let center = DeviceActivityCenter()
+        
+        // If OFF → stop monitoring
+        if settings.restrictApps == false {
+            center.stopMonitoring()
+            ShieldController.shared.clearShield()
+            print("⏹ DeviceActivity: stopped monitoring")
+            return
+        }
+
+        // Convert your minutes → DateComponents (required)
+        let bedtime = settings.bedtime
+        let wake = settings.wakeUpTime
+
+        let restrictionStart = (bedtime - 60 + 1440) % 1440
+
+        let startComponents = DateComponents(
+            calendar: Calendar.current,
+            hour: restrictionStart / 60,
+            minute: restrictionStart % 60
+        )
+
+        let endComponents = DateComponents(
+            calendar: Calendar.current,
+            hour: wake / 60,
+            minute: wake % 60
+        )
+
+        let schedule = DeviceActivitySchedule(
+            intervalStart: startComponents,
+            intervalEnd: endComponents,
+            repeats: true   // NOT .daily — it's literally a Bool
+        )
+
+        do {
+            try center.startMonitoring(
+                DeviceActivityName("sleepaholic_schedule"),
+                during: schedule
+            )
+            print("📆 DeviceActivity: schedule updated")
+        } catch {
+            print("❌ Failed to update schedule: \(error)")
+        }
+        
+        // Enforce correct shield state immediately
+        let inWindow = WindDownManager.isNowInRestrictionWindow(settings: settings)
+
+        if inWindow {
+            ShieldController.shared.applyShield()
+            print("🛡️ Immediate applyShield (inside restriction window)")
+        } else {
+            ShieldController.shared.clearShield()
+            print("🧹 Immediate clearShield (outside restriction window)")
+        }
+    }
+    
+    var restrictionStartText: String {
+        guard let settings = userSettingsViewModel?.settings else { return "" }
+        let start = (settings.bedtime - 60 + 1440) % 1440
+        let date = WindDownManager.dateFromMinutes(start)
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    var restrictionEndText: String {
+        guard let settings = userSettingsViewModel?.settings else { return "" }
+        let date = WindDownManager.dateFromMinutes(settings.wakeUpTime)
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    var isRestrictionActiveNow: Bool {
+        guard let settings = userSettingsViewModel?.settings else { return false }
+        return WindDownManager.isNowInRestrictionWindow(settings: settings)
+    }
+}
