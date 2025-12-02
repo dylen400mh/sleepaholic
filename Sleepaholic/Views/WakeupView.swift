@@ -14,6 +14,7 @@ struct WakeupView: View {
     @EnvironmentObject var sleepLogViewModel: SleepLogViewModel
     @EnvironmentObject var userProfileViewModel: UserProfileViewModel
     @EnvironmentObject var windDown: WindDownManager
+    @EnvironmentObject var sleepReflectionViewModel: SleepReflectionViewModel
     
     @State private var manualWakeTime = Date()
     @State private var showAlert = false
@@ -120,6 +121,9 @@ struct WakeupView: View {
                                 profile: userProfileViewModel.profile
                             )
                             windDown.reset()
+                            await sleepReflectionViewModel.presentAfterLoggedSleep(
+                                activeSleepLog: sleepLogViewModel.activeLog
+                            )
                             dismiss()
                         }
                     },
@@ -136,6 +140,9 @@ struct WakeupView: View {
                                 profile: userProfileViewModel.profile
                             )
                             windDown.reset()
+                            await sleepReflectionViewModel.presentAfterLoggedSleep(
+                                activeSleepLog: sleepLogViewModel.activeLog
+                            )
                             dismiss()
                         }
                     },
@@ -153,6 +160,6 @@ struct WakeupView: View {
     WakeupView()
         .environmentObject(SleepLogViewModel())
         .environmentObject(WindDownManager())
+        .environmentObject(UserProfileViewModel())
+        .environmentObject(SleepReflectionViewModel())
 }
-
-
