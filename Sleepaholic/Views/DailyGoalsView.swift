@@ -61,7 +61,7 @@ private extension DailyGoalsView {
                     Text(goalStatusTitle)
                         .font(.h3Semi)
                         .foregroundStyle(Gradients.main)
-                        .lineLimit(1)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(goalStatusSubtitle)
                         .font(.body2)
                         .foregroundColor(.white80)
