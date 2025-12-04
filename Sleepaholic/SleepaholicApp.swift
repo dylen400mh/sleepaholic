@@ -159,6 +159,7 @@ struct SleepaholicApp: App {
     @StateObject private var sleepClipViewModel = SleepClipViewModel()
     @StateObject private var guidedTourManager = GuidedTourManager.shared
     @StateObject private var dailyGoalsViewModel = DailyGoalsViewModel()
+    @StateObject private var sleepReflectionViewModel = SleepReflectionViewModel()
     
     private let feedbackFormURL = URL(string: "https://forms.gle/r9qt8PP5YFs8SzWSA")!
     
@@ -180,6 +181,7 @@ struct SleepaholicApp: App {
             .environmentObject(sleepClipViewModel)
             .environmentObject(guidedTourManager)
             .environmentObject(dailyGoalsViewModel)
+            .environmentObject(sleepReflectionViewModel)
             .onReceive(NotificationCenter.default.publisher(for: .didTriggerQuickAction)) { note in
                 if let action = (note.userInfo?["action"] as? QuickAction) ?? AppDelegate.pendingQuickAction {
                     AppDelegate.pendingQuickAction = nil
@@ -205,6 +207,12 @@ struct SleepaholicApp: App {
                     // If permission was revoked in Health app → disable integration
                     if !allowed {
                         useAppleHealthSleep = false
+                    }
+                    
+                    Task {
+                        await sleepReflectionViewModel.evaluateDailyReminder(
+                            activeSleepLog: sleepLogViewModel.activeLog
+                        )
                     }
                 }
             }

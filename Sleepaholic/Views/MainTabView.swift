@@ -39,6 +39,8 @@ struct MainTabView: View {
     @Environment(\.adaptiveVerticalPadding) var adaptivePadding
     @EnvironmentObject private var guidedTourManager: GuidedTourManager
     @EnvironmentObject private var userSettingsViewModel: UserSettingsViewModel
+    @EnvironmentObject private var sleepLogViewModel: SleepLogViewModel
+    @EnvironmentObject private var sleepReflectionViewModel: SleepReflectionViewModel
     
     @State private var selection: AppTab = .sleep
 
@@ -100,6 +102,18 @@ struct MainTabView: View {
             Task {
                 await userSettingsViewModel.markGuidedTourCompletedIfNeeded()
             }
+        }
+        .task {
+            await sleepReflectionViewModel.evaluateDailyReminder(
+                activeSleepLog: sleepLogViewModel.activeLog
+            )
+        }
+        .fullScreenCover(isPresented: $sleepReflectionViewModel.isPresenting) {
+            SleepReflectionModalView()
+                .environmentObject(sleepReflectionViewModel)
+                .environmentObject(userSettingsViewModel)
+                .transition(.move(edge: .bottom))
+                .presentationBackground(.clear)
         }
     }
 }
@@ -220,5 +234,6 @@ private struct TabButtonView: View {
         .environmentObject(SleepLogViewModel())
         .environmentObject(UserProfileViewModel())
         .environmentObject(SleepClipViewModel())
+        .environmentObject(SleepReflectionViewModel())
         .enableAdaptivePadding()
 }
