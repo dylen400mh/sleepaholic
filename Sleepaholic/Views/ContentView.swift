@@ -144,6 +144,7 @@ struct ContentView: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 16) {
+                            HeaderWithSeparator(title: "")
                             HStack {
                                 Text("Today's Activities")
                                     .font(.h3Semi)
