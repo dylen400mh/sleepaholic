@@ -239,7 +239,7 @@ struct ContentView: View {
 
         return """
         Selected \(a) apps, \(c) categories, \(w) websites.
-        Restrictions apply daily from \(start) until \(end).
+        Restrictions apply daily from \(start) until \(end) (based on sleep schdule set in wind-down).
         """
     }
 
